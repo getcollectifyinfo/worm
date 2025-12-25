@@ -37,6 +37,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [hintText, setHintText] = useState('');
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
   const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
+  
+  // Reaction time tracking
+  const lockStartTimes = useRef<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
+  const [reactionTimes, setReactionTimes] = useState<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
+
   const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Helper to show hint
@@ -128,6 +133,20 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             // Correct key!
             setGaugeLocks(prev => ({ ...prev, [gaugeId]: false })); // Release lock
             setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+            
+            // Calculate and set reaction time
+            const startTime = lockStartTimes.current[gaugeId];
+            if (startTime) {
+                const reactionTime = Date.now() - startTime;
+                setReactionTimes(prev => ({ ...prev, [gaugeId]: reactionTime }));
+                lockStartTimes.current[gaugeId] = null; // Reset start time
+
+                // Clear reaction time display after 2 seconds
+                setTimeout(() => {
+                    setReactionTimes(prev => ({ ...prev, [gaugeId]: null }));
+                }, 2000);
+            }
+            
             matched = true;
           }
         }
@@ -146,7 +165,14 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   }, [gaugeLocks, assignments, gameOver, triggerHint]);
 
   const handleRedZoneEnter = (id: GaugeId) => {
-    setGaugeLocks(prev => ({ ...prev, [id]: true }));
+    setGaugeLocks(prev => {
+        if (!prev[id]) {
+            // Only set start time if not already locked
+            lockStartTimes.current[id] = Date.now();
+            return { ...prev, [id]: true };
+        }
+        return prev;
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -172,7 +198,12 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       <div className="flex flex-col items-center gap-16 scale-75 md:scale-100 relative">
         
         {/* Top Center Gauge */}
-        <div className="mb-8">
+        <div className="mb-8 relative flex flex-col items-center">
+            {reactionTimes.top !== null && (
+                <div className="absolute -top-12 text-red-500 text-3xl font-mono font-bold animate-pulse z-10">
+                    {reactionTimes.top}ms
+                </div>
+            )}
             <Gauge 
                 size={300} 
                 initialValue={75} 
@@ -184,12 +215,19 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         {/* Bottom Row */}
         <div className="flex items-center gap-16 md:gap-32">
             {/* Left Gauge */}
-            <Gauge 
-                size={300} 
-                initialValue={25} 
-                isLockedInRed={gaugeLocks.left}
-                onRedZoneEnter={() => handleRedZoneEnter('left')}
-            />
+            <div className="relative flex flex-col items-center">
+                {reactionTimes.left !== null && (
+                    <div className="absolute -top-12 text-red-500 text-3xl font-mono font-bold animate-pulse z-10">
+                        {reactionTimes.left}ms
+                    </div>
+                )}
+                <Gauge 
+                    size={300} 
+                    initialValue={25} 
+                    isLockedInRed={gaugeLocks.left}
+                    onRedZoneEnter={() => handleRedZoneEnter('left')}
+                />
+            </div>
 
             {/* Center Digital Display & Hint */}
             <div className="relative flex flex-col items-center justify-center w-64">
@@ -205,12 +243,19 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             </div>
 
             {/* Right Gauge */}
-            <Gauge 
-                size={300} 
-                initialValue={80} 
-                isLockedInRed={gaugeLocks.right}
-                onRedZoneEnter={() => handleRedZoneEnter('right')}
-            />
+            <div className="relative flex flex-col items-center">
+                {reactionTimes.right !== null && (
+                    <div className="absolute -top-12 text-red-500 text-3xl font-mono font-bold animate-pulse z-10">
+                        {reactionTimes.right}ms
+                    </div>
+                )}
+                <Gauge 
+                    size={300} 
+                    initialValue={80} 
+                    isLockedInRed={gaugeLocks.right}
+                    onRedZoneEnter={() => handleRedZoneEnter('right')}
+                />
+            </div>
         </div>
       </div>
 
