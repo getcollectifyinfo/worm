@@ -19,8 +19,8 @@ export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) =
       if (Math.abs(value - targetValueRef.current) < 1) {
         // Pick a new random target (0-100)
         targetValueRef.current = Math.random() * 100;
-        // Pick a new random speed (0.2 to 1.5)
-        animationSpeedRef.current = 0.2 + Math.random() * 1.3;
+        // Pick a new random speed (lower speed as requested)
+        animationSpeedRef.current = 0.1 + Math.random() * 0.4;
       }
 
       // 2. Move towards target
@@ -67,32 +67,60 @@ export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) =
         />
 
         {/* Colored Arcs */}
-        {/* Green Segment (0-25%) */}
+        {/* Dark Green Segment (0-12.5%) */}
         <path
-          d={describeArc(center, center, innerRadius, 225, 292.5)}
+          d={describeArc(center, center, innerRadius, 225, 258.75)}
           fill="none"
-          stroke="#22c55e" // Green-500
+          stroke="#166534" // Green-800
           strokeWidth={strokeWidth}
         />
-        {/* Yellow Segment (25-50%) */}
+        {/* Light Green Segment (12.5-25%) */}
         <path
-          d={describeArc(center, center, innerRadius, 292.5, 360)}
+          d={describeArc(center, center, innerRadius, 258.75, 292.5)}
           fill="none"
-          stroke="#eab308" // Yellow-500
+          stroke="#4ade80" // Green-400
           strokeWidth={strokeWidth}
         />
-        {/* Orange Segment (50-75%) */}
+        {/* Dark Yellow Segment (25-37.5%) */}
         <path
-          d={describeArc(center, center, innerRadius, 360, 427.5)}
+          d={describeArc(center, center, innerRadius, 292.5, 326.25)}
           fill="none"
-          stroke="#f97316" // Orange-500
+          stroke="#854d0e" // Yellow-800
           strokeWidth={strokeWidth}
         />
-        {/* Red Segment (75-100%) */}
+        {/* Light Yellow Segment (37.5-50%) */}
         <path
-          d={describeArc(center, center, innerRadius, 427.5, 495)}
+          d={describeArc(center, center, innerRadius, 326.25, 360)}
           fill="none"
-          stroke="#ef4444" // Red-500
+          stroke="#facc15" // Yellow-400
+          strokeWidth={strokeWidth}
+        />
+        {/* Orange Segment (50-62.5%) */}
+        <path
+          d={describeArc(center, center, innerRadius, 360, 393.75)}
+          fill="none"
+          stroke="#fb923c" // Orange-400
+          strokeWidth={strokeWidth}
+        />
+        {/* Dark Orange Segment (62.5-75%) */}
+        <path
+          d={describeArc(center, center, innerRadius, 393.75, 427.5)}
+          fill="none"
+          stroke="#ea580c" // Orange-600
+          strokeWidth={strokeWidth}
+        />
+        {/* Red Segment (75-87.5%) */}
+        <path
+          d={describeArc(center, center, innerRadius, 427.5, 461.25)}
+          fill="none"
+          stroke="#f87171" // Red-400
+          strokeWidth={strokeWidth}
+        />
+        {/* Dark Red Segment (87.5-100%) */}
+        <path
+          d={describeArc(center, center, innerRadius, 461.25, 495)}
+          fill="none"
+          stroke="#991b1b" // Red-800
           strokeWidth={strokeWidth}
         />
 
