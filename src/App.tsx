@@ -1,13 +1,38 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Grid } from './components/Grid';
 import { Controls } from './components/Controls';
 import { LogPanel } from './components/LogPanel';
 import { MissionPanel } from './components/MissionPanel';
-import { GRID_SIZE } from './types';
-import type { Position, LogEntry } from './types';
+import { GRID_SIZE, DIFFICULTY_SETTINGS } from './types';
+import type { Position, LogEntry, MissionStep, GameMode, ExamState, ExamOption, DifficultyLevel } from './types';
+
+const MOTIVATIONAL_MESSAGES = [
+  "UMAY, YOU ARE GREAT!",
+  "UMAY, I'M PROUD OF YOU!",
+  "UMAY IS THE BEST!",
+  "SUPER UMAY!",
+  "BRAVO UMAY!",
+  "UMAY, YOU ROCK!",
+  "AMAZING UMAY!"
+];
 
 function App() {
-  // Game State
+  // Global State
+  const [gameMode, setGameMode] = useState<GameMode>('PRACTISE');
+  
+  // Settings State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [instructionSpeed, setInstructionSpeed] = useState(1000); // ms
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('EASY');
+  const [totalQuestions, setTotalQuestions] = useState(5);
+
+  // Exam Session State
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [resultMessage, setResultMessage] = useState('');
+  const [messageIndex, setMessageIndex] = useState(0); // For rotating messages deterministically
+
+  // Practise Mode State
   const [position, setPosition] = useState<Position>(() => {
     const startX = Math.floor(Math.random() * GRID_SIZE);
     const startY = Math.floor(Math.random() * GRID_SIZE);
@@ -15,8 +40,20 @@ function App() {
   });
   const [rotation, setRotation] = useState<number>(() => Math.floor(Math.random() * 4) * 90);
   const [targetPosition, setTargetPosition] = useState<Position | undefined>(undefined);
-  const [missionInstructions, setMissionInstructions] = useState<string[]>([]);
+  const [missionInstructions, setMissionInstructions] = useState<MissionStep[]>([]);
   
+  // Mission Progress State
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentSubStepIndex, setCurrentSubStepIndex] = useState(0); // For multi-key steps (e.g. Turn + Move)
+  const [isError, setIsError] = useState(false);
+
+  // Exam Mode State
+  const [examState, setExamState] = useState<ExamState>('IDLE');
+  const [examInstructions, setExamInstructions] = useState<MissionStep[]>([]);
+  const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
+  const [examOptions, setExamOptions] = useState<ExamOption[]>([]);
+  const [examResult, setExamResult] = useState<'CORRECT' | 'FALSE' | null>(null);
+
   // UI State
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
@@ -25,14 +62,14 @@ function App() {
   const getNormalizedRotation = (rot: number) => ((rot % 360) + 360) % 360;
 
   // BFS to find shortest path instructions
-  const findShortestPath = (startPos: Position, startRot: number, targetPos: Position) => {
+  const findShortestPath = useCallback((startPos: Position, startRot: number, targetPos: Position): MissionStep[] | null => {
     // Queue stores: { x, y, rot, instructions }
     // Visited stores: "x,y,normalizedRot"
     const queue = [{
       x: startPos.x,
       y: startPos.y,
       rot: startRot,
-      instructions: [] as string[]
+      instructions: [] as MissionStep[]
     }];
     
     const visited = new Set<string>();
@@ -47,14 +84,16 @@ function App() {
       }
 
       // Possible moves:
-      // 1. Move Forward ("GO AHEAD")
-      // 2. Turn Left + Move Forward ("TURN TO THE LEFT AND GO AHEAD")
-      // 3. Turn Right + Move Forward ("TURN TO THE RIGHT AND GO AHEAD")
+      // 1. Move Forward ("GO AHEAD") -> [' ']
+      // 2. Turn Left + Move Forward ("TURN TO THE LEFT AND GO AHEAD") -> ['ArrowLeft', ' ']
+      // 3. Turn Right + Move Forward ("TURN TO THE RIGHT AND GO AHEAD") -> ['ArrowRight', ' ']
+      // 4. Turn Back + Move Forward ("TURN BACK AND GO AHEAD") -> ['ArrowDown', ' ']
 
       const moves = [
-        { rotOffset: 0, label: "GO AHEAD" },
-        { rotOffset: -90, label: "TURN TO THE LEFT AND GO AHEAD" },
-        { rotOffset: 90, label: "TURN TO THE RIGHT AND GO AHEAD" }
+        { rotOffset: 0, label: "GO AHEAD", actions: [' '] },
+        { rotOffset: -90, label: "TURN TO THE LEFT AND GO AHEAD", actions: ['ArrowLeft', ' '] },
+        { rotOffset: 90, label: "TURN TO THE RIGHT AND GO AHEAD", actions: ['ArrowRight', ' '] },
+        { rotOffset: 180, label: "TURN BACK AND GO AHEAD", actions: ['ArrowDown', ' '] }
       ];
 
       for (const move of moves) {
@@ -76,55 +115,357 @@ function App() {
           const stateKey = `${nextX},${nextY},${nextNormRot}`;
           if (!visited.has(stateKey)) {
             visited.add(stateKey);
+            
+            const newStep: MissionStep = {
+                id: Math.random().toString(36).substr(2, 9),
+                text: move.label,
+                actions: move.actions
+            };
+
             queue.push({
               x: nextX,
               y: nextY,
               rot: nextRot,
-              instructions: [...current.instructions, move.label]
+              instructions: [...current.instructions, newStep]
             });
           }
         }
       }
     }
     return null; // No path found
-  };
+  }, []);
 
-  // Generate a random mission
-  const generateMission = (startPos: Position, startRot: number) => {
-    // Retry to find a target that has a decent path
-    for (let attempt = 0; attempt < 100; attempt++) {
-        const targetX = Math.floor(Math.random() * GRID_SIZE);
-        const targetY = Math.floor(Math.random() * GRID_SIZE);
-        
-        // Skip if target is same as start
-        if (targetX === startPos.x && targetY === startPos.y) continue;
+  // Generate a mission using Smart Target Search (Flood Fill)
+  const generateMission = useCallback((startPos: Position, startRot: number): { target: Position, instructions: MissionStep[] } | null => {
+    const { min, max } = DIFFICULTY_SETTINGS[difficulty];
 
-        const targetPos = { x: targetX, y: targetY };
+    // Minimum required turns based on difficulty
+    let minTurns = 0;
+    if (difficulty === 'MEDIUM') minTurns = 2;
+    else if (difficulty === 'HARD') minTurns = 3;
+    else if (difficulty === 'EXPERT') minTurns = 3; // 4 might be too rare on 8x8
+
+    // 1. Flood Fill BFS to find shortest paths to ALL cells
+    // State: x, y, rot
+    const dist = new Map<string, number>(); // "x,y,rot" -> steps
+    const paths = new Map<string, MissionStep[]>(); // "x,y,rot" -> instructions
+    
+    const queue = [{
+      x: startPos.x,
+      y: startPos.y,
+      rot: startRot,
+      instructions: [] as MissionStep[]
+    }];
+
+    const startKey = `${startPos.x},${startPos.y},${getNormalizedRotation(startRot)}`;
+    dist.set(startKey, 0);
+    paths.set(startKey, []);
+
+    // We store completed paths to targets
+    const validCandidates: { target: Position, instructions: MissionStep[], turns: number }[] = [];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const { x, y, rot, instructions } = current;
+      const currentSteps = instructions.length;
+
+      // Optimization: Don't explore paths longer than max + 2 (buffer)
+      if (currentSteps > max + 2) continue;
+
+      // Check if this cell (at any rotation) is a valid target candidate
+      // We only consider the "first time" we reach a cell with a valid path length?
+      // Actually, since BFS guarantees shortest path to (x,y,rot), we check if this specific state is a valid end state.
+      // But for the snake, reaching (x,y) with ANY rotation counts as reaching the target.
+      // However, we want the SHORTEST path to (x,y).
+      // So we should track if we've found a "best path" to (x,y) yet.
+      // But wait, reaching (x,y) facing North vs East might have different costs.
+      // We process all states. When collecting candidates, we'll pick the best one for each cell.
+
+      // Store candidate if within length range
+      if (currentSteps >= min && currentSteps <= max && (x !== startPos.x || y !== startPos.y)) {
+          // Analyze turns
+          let turns = 0;
+          instructions.forEach(step => {
+              if (step.text.includes("TURN")) turns++;
+          });
+
+          // Filter by difficulty constraints
+          if (turns >= minTurns) {
+              validCandidates.push({
+                  target: { x, y },
+                  instructions,
+                  turns
+              });
+          }
+      }
+
+      // Explore neighbors
+      const moves = [
+        { rotOffset: 0, label: "GO AHEAD", actions: [' '] },
+        { rotOffset: -90, label: "TURN TO THE LEFT AND GO AHEAD", actions: ['ArrowLeft', ' '] },
+        { rotOffset: 90, label: "TURN TO THE RIGHT AND GO AHEAD", actions: ['ArrowRight', ' '] },
+        { rotOffset: 180, label: "TURN BACK AND GO AHEAD", actions: ['ArrowDown', ' '] }
+      ];
+
+      for (const move of moves) {
+        const nextRot = rot + move.rotOffset;
+        const nextNormRot = getNormalizedRotation(nextRot);
         
-        // Find shortest path
-        const instructions = findShortestPath(startPos, startRot, targetPos);
+        let dx = 0;
+        let dy = 0;
+        if (nextNormRot === 0) dy = -1;
+        else if (nextNormRot === 90) dx = 1;
+        else if (nextNormRot === 180) dy = 1;
+        else if (nextNormRot === 270) dx = -1;
+
+        const nextX = x + dx;
+        const nextY = y + dy;
+
+        if (nextX >= 0 && nextX < GRID_SIZE && nextY >= 0 && nextY < GRID_SIZE) {
+          const nextKey = `${nextX},${nextY},${nextNormRot}`;
+          const newCost = currentSteps + 1;
+
+          if (!dist.has(nextKey) || newCost < dist.get(nextKey)!) {
+            dist.set(nextKey, newCost);
+            const newStep: MissionStep = {
+                id: Math.random().toString(36).substr(2, 9),
+                text: move.label,
+                actions: move.actions
+            };
+            const newInstructions = [...instructions, newStep];
+            paths.set(nextKey, newInstructions);
+            
+            queue.push({
+              x: nextX,
+              y: nextY,
+              rot: nextRot,
+              instructions: newInstructions
+            });
+          }
+        }
+      }
+    }
+
+    // 2. Selection Strategy
+    // validCandidates contains all valid paths to all reachable states.
+    // We want to pick a Target. A target might be reached in multiple ways (rotations).
+    // But since BFS guarantees shortest path to (x,y,rot), and we filtered by length/turns...
+    // We should group by unique Target(x,y) and pick the "best" path for that target?
+    // Actually, usually the shortest path to (x,y) is unique in length.
+    // If there are multiple valid paths to (x,y) (different final rotations), they are all valid "solutions".
+    // We can just pick a random valid candidate.
+    
+    // However, we want to prioritize "Harder" paths if possible (more turns).
+    // Sort candidates by turns (descending) then length (descending)?
+    
+    if (validCandidates.length > 0) {
+        // Filter candidates to ensure we don't just pick the first one.
+        // Group by Target to avoid bias towards targets with multiple valid approach angles?
+        // Actually, let's just score them.
         
-        // Use this mission if path is found and has between 5 and 8 steps (inclusive)
-        if (instructions && instructions.length >= 5 && instructions.length <= 8) {
-            setTargetPosition(targetPos);
-            setMissionInstructions(instructions);
-            return;
+        // Score = turns * 2 + length
+        const scored = validCandidates.map(c => ({
+            ...c,
+            score: c.turns * 2 + c.instructions.length
+        }));
+        
+        // Sort by score descending
+        scored.sort((a, b) => b.score - a.score);
+        
+        // Take top 20% or top 10 to randomize
+        const topCount = Math.max(1, Math.min(10, Math.floor(scored.length * 0.3)));
+        const topCandidates = scored.slice(0, topCount);
+        
+        const selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+        return { target: selected.target, instructions: selected.instructions };
+    }
+
+    // Fallback: If no strict candidate found (e.g. Expert mode on small grid might be hard),
+    // relax turn constraints.
+    console.warn("No strict candidate found, relaxing turn constraints...");
+    
+    // Retry with relaxed constraint (minTurns - 1)
+    if (minTurns > 0) {
+         // Re-scan? No, we didn't store invalid ones.
+         // We need to re-run or modify the loop logic. 
+         // Better: Collect ALL valid length candidates in the loop, then filter/sort at the end.
+         return null; // Let the wrapper handle retry or just return simple path?
+    }
+    
+    return null;
+  }, [difficulty]);
+
+  // Wrapper to handle fallbacks
+  const getMission = useCallback((startPos: Position, startRot: number) => {
+      // Try generate with current difficulty
+      const result = generateMission(startPos, startRot);
+      
+      // If failed (too strict), try one level lower? 
+      // Or just find ANY path of correct length (ignore turns)
+      if (!result) {
+          // Simple search (Length only)
+          const { min, max } = DIFFICULTY_SETTINGS[difficulty];
+          for (let i=0; i<100; i++) {
+              const tx = Math.floor(Math.random() * GRID_SIZE);
+              const ty = Math.floor(Math.random() * GRID_SIZE);
+              if (tx === startPos.x && ty === startPos.y) continue;
+              const path = findShortestPath(startPos, startRot, {x: tx, y: ty});
+              if (path && path.length >= min && path.length <= max) {
+                  return { target: {x: tx, y: ty}, instructions: path };
+              }
+          }
+      }
+      return result;
+  }, [generateMission, findShortestPath, difficulty]);
+
+  // Start Practise Mission
+  const startPractiseMission = useCallback((startPos: Position, startRot: number) => {
+     const result = getMission(startPos, startRot);
+     if (result) {
+         setTargetPosition(result.target);
+         setMissionInstructions(result.instructions);
+         setCurrentStepIndex(0);
+         setCurrentSubStepIndex(0);
+         setLogs(prev => [
+            { id: Date.now().toString(), message: `New Mission: ${DIFFICULTY_SETTINGS[difficulty].label}`, timestamp: Date.now() },
+            ...prev
+         ]);
+         setIsError(false);
+     }
+  }, [getMission, difficulty]);
+
+  // Start Exam Mode (Generate Question)
+  const startExam = useCallback(() => {
+    setGameMode('EXAM');
+    setExamState('SHOWING_INSTRUCTIONS');
+    setExamResult(null);
+    setCurrentInstructionIndex(0);
+    
+    // 1. Generate Correct Scenario
+    const startX = Math.floor(Math.random() * GRID_SIZE);
+    const startY = Math.floor(Math.random() * GRID_SIZE);
+    const startRot = Math.floor(Math.random() * 4) * 90;
+    const startPos = { x: startX, y: startY };
+    
+    const correctMission = getMission(startPos, startRot);
+    
+    if (!correctMission) {
+        console.error("Failed to generate exam mission");
+        return;
+    }
+
+    setExamInstructions(correctMission.instructions);
+
+    // 2. Generate Options (1 Correct + 3 Distractors)
+    const options: ExamOption[] = [];
+    
+    // Add Correct Option
+    options.push({
+        id: 'correct',
+        snakePosition: startPos,
+        snakeRotation: startRot,
+        targetPosition: correctMission.target,
+        isCorrect: true
+    });
+
+    // Add Distractors
+    while (options.length < 4) {
+        const dX = Math.floor(Math.random() * GRID_SIZE);
+        const dY = Math.floor(Math.random() * GRID_SIZE);
+        const dRot = Math.floor(Math.random() * 4) * 90;
+        const dTargetX = Math.floor(Math.random() * GRID_SIZE);
+        const dTargetY = Math.floor(Math.random() * GRID_SIZE);
+
+        // Simple check to ensure it's not identical to correct one (though path validity is what matters)
+        // For distractors, we just want random configurations that likely DON'T match the instructions.
+        // In a real exam, we might want "near misses", but random is good for now.
+        
+        // Ensure unique ID
+        options.push({
+            id: `distractor-${options.length}`,
+            snakePosition: { x: dX, y: dY },
+            snakeRotation: dRot,
+            targetPosition: { x: dTargetX, y: dTargetY },
+            isCorrect: false
+        });
+    }
+
+    // Shuffle Options
+    setExamOptions(options.sort(() => Math.random() - 0.5));
+
+  }, [getMission]);
+
+  // Exam Timer for Instructions
+  useEffect(() => {
+    if (gameMode === 'EXAM') {
+        if (examState === 'SHOWING_INSTRUCTIONS') {
+            const timer = setTimeout(() => {
+                setExamState('WAITING_BETWEEN_INSTRUCTIONS');
+            }, instructionSpeed); // Show instruction for configured time
+            return () => clearTimeout(timer);
+        } else if (examState === 'WAITING_BETWEEN_INSTRUCTIONS') {
+            const timer = setTimeout(() => {
+                setCurrentInstructionIndex(prev => {
+                    if (prev + 1 >= examInstructions.length) {
+                        setExamState('SELECTION');
+                        return prev;
+                    }
+                    setExamState('SHOWING_INSTRUCTIONS');
+                    return prev + 1;
+                });
+            }, 500); // 500ms gap
+            return () => clearTimeout(timer);
         }
     }
-    console.warn("Could not generate a valid mission after multiple attempts");
+  }, [gameMode, examState, examInstructions]);
+
+  // Initialize Game
+  useEffect(() => {
+      // For now, let's start a mission on mount if practise
+      // Use setTimeout to avoid synchronous state update warning during render phase (though useEffect runs after render)
+      // The warning is about cascading updates.
+      if (gameMode === 'PRACTISE' && !targetPosition) {
+           const timer = setTimeout(() => startPractiseMission(position, rotation), 0);
+           return () => clearTimeout(timer);
+      }
+  }, [gameMode, targetPosition, startPractiseMission, position, rotation]);
+
+  // Start New Exam Session
+  const startExamSession = useCallback(() => {
+      setCorrectAnswersCount(0);
+      setCurrentQuestionNumber(1);
+      startExam();
+  }, [startExam]);
+
+  const handleOptionSelect = (option: ExamOption) => {
+      const isCorrect = option.isCorrect;
+      setExamResult(isCorrect ? 'CORRECT' : 'FALSE');
+      
+      if (isCorrect) {
+          setCorrectAnswersCount(prev => prev + 1);
+          setResultMessage(MOTIVATIONAL_MESSAGES[messageIndex % MOTIVATIONAL_MESSAGES.length]);
+          setMessageIndex(prev => prev + 1);
+      } else {
+          setResultMessage('FALSE');
+      }
+
+      setExamState('RESULT');
   };
 
-  // Initialize random position and direction on mount
-  const initialized = useRef(false);
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+  const handleNextExam = () => {
+      if (currentQuestionNumber < totalQuestions) {
+          setCurrentQuestionNumber(prev => prev + 1);
+          startExam();
+      } else {
+          setExamState('SESSION_FINISHED');
+      }
+  };
 
-    // Generate mission from initial state
-    setTimeout(() => {
-        generateMission(position, rotation);
-    }, 0);
-  }, []);
+  const switchToPractise = () => {
+      setGameMode('PRACTISE');
+      setExamState('IDLE');
+      startPractiseMission(position, rotation);
+  };
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, {
@@ -144,6 +485,34 @@ function App() {
     setPressedKey(e.key);
 
     if (e.repeat) return;
+
+    // Mission Validation Logic
+    if (missionInstructions.length > 0 && currentStepIndex < missionInstructions.length) {
+        const currentInstruction = missionInstructions[currentStepIndex];
+        const expectedKey = currentInstruction.actions[currentSubStepIndex];
+        
+        // Map user input to standardized keys if needed (already standard)
+        // Check if input matches expected
+        if (e.key === expectedKey) {
+            setIsError(false);
+            
+            // Advance sub-step
+            if (currentSubStepIndex + 1 < currentInstruction.actions.length) {
+                setCurrentSubStepIndex(prev => prev + 1);
+            } else {
+                // Advance main step
+                setCurrentStepIndex(prev => prev + 1);
+                setCurrentSubStepIndex(0);
+            }
+        } else {
+            // Wrong key!
+            // Ignore irrelevant keys? Or penalize all?
+            // Let's penalize direction keys and space
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
+                setIsError(true);
+            }
+        }
+    }
 
     switch (e.key) {
       case 'ArrowLeft':
@@ -184,7 +553,7 @@ function App() {
                  // Small delay to let render happen
                  setTimeout(() => {
                      // We pass rotation because state update might be pending, but actually rotation doesn't change on move
-                     generateMission({ x: newX, y: newY }, rotation);
+                     startPractiseMission({ x: newX, y: newY }, rotation);
                  }, 500);
             }
 
@@ -192,7 +561,7 @@ function App() {
         });
         break;
     }
-  }, [rotation, targetPosition]); // Added targetPosition dependency for win check
+  }, [rotation, targetPosition, missionInstructions, currentStepIndex, currentSubStepIndex, startPractiseMission]);
 
   const handleKeyUp = useCallback(() => {
     setPressedKey(null);
@@ -207,37 +576,389 @@ function App() {
     };
   }, [handleKeyDown, handleKeyUp]);
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800 tracking-tight">Snake Exam Mode</h1>
-        
-        <div className="flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-7xl">
-            {/* Left Column: Mission */}
-            <div className="w-full xl:w-80 h-96 xl:h-[600px]">
-                <MissionPanel instructions={missionInstructions} />
-            </div>
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+    if (gameMode === 'PRACTISE') {
+        // Regenerate mission with new difficulty settings
+        // We use a timeout to allow state to settle if needed, though usually not required for synchronous updates
+        // but safe to do.
+        setTimeout(() => {
+            startPractiseMission(position, rotation);
+        }, 0);
+    }
+  };
 
-            {/* Middle Column: Grid */}
-            <div className="flex-1 w-full flex justify-center">
-                <Grid 
-                    snakePosition={position} 
-                    snakeRotation={rotation} 
-                    targetPosition={targetPosition}
-                />
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
+        
+        {/* Top Right Controls */}
+        <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
+            {/* Settings Button */}
+            <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
+                title="Settings"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Settings
+                </span>
+            </button>
+
+            {/* Practise Mode Button */}
+            <button 
+                onClick={switchToPractise}
+                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'PRACTISE' ? 'bg-blue-600 text-white ring-4 ring-blue-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
+                title="Practise Mode"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Practise Mode
+                </span>
+            </button>
+
+            {/* Exam Mode Button */}
+            <button 
+                onClick={startExamSession}
+                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'EXAM' ? 'bg-purple-600 text-white ring-4 ring-purple-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
+                title="Exam Mode"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                </svg>
+                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Exam Mode
+                </span>
+            </button>
+        </div>
+
+        {/* Settings Modal */}
+        {isSettingsOpen && (
+            <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+                    <button 
+                        onClick={handleSettingsClose}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                    >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Game Settings</h2>
+                    
+                    {/* Instruction Speed */}
+                    <div className="mb-8">
+                        <label className="block text-gray-700 font-semibold mb-2">
+                            Instruction Speed: <span className="text-purple-600">{instructionSpeed}ms</span>
+                        </label>
+                        <input 
+                            type="range" 
+                            min="200" 
+                            max="2000" 
+                            step="100"
+                            value={instructionSpeed}
+                            onChange={(e) => setInstructionSpeed(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Fast (200ms)</span>
+                            <span>Slow (2000ms)</span>
+                        </div>
+                    </div>
+
+                    {/* Difficulty */}
+                    <div className="mb-6">
+                        <h3 className="text-gray-700 font-semibold mb-4">Difficulty</h3>
+                        
+                        {/* Question Count */}
+                        <div className="mb-4">
+                            <label className="block text-sm text-gray-500 mb-1">Number of Questions</label>
+                            <input 
+                                type="number" 
+                                min="1" 
+                                max="20"
+                                value={totalQuestions}
+                                onChange={(e) => {
+                                    const val = Math.max(1, Math.min(Number(e.target.value), 20));
+                                    setTotalQuestions(val);
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            {(Object.keys(DIFFICULTY_SETTINGS) as DifficultyLevel[]).map((level) => (
+                                <button
+                                    key={level}
+                                    onClick={() => setDifficulty(level)}
+                                    className={`p-3 rounded-lg border-2 text-sm font-bold transition-all
+                                        ${difficulty === level 
+                                            ? 'border-purple-600 bg-purple-50 text-purple-700' 
+                                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                        }`}
+                                >
+                                    <div className="uppercase mb-1">{level}</div>
+                                    <div className="text-xs opacity-75">
+                                        {DIFFICULTY_SETTINGS[level].min}-{DIFFICULTY_SETTINGS[level].max} Steps
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-8">
+                        <button 
+                            onClick={handleSettingsClose}
+                            className="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg"
+                        >
+                            Save & Close
+                        </button>
+                    </div>
+                </div>
+                {/* Session Finished Screen */}
+                {examState === 'SESSION_FINISHED' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
+                        <h2 className="text-5xl font-black mb-8 text-purple-400">EXAM FINISHED!</h2>
+                        
+                        <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-lg border-4 border-gray-700">
+                            <div className="mb-8">
+                                <div className="text-gray-400 text-xl mb-2">ACCURACY</div>
+                                <div className={`text-7xl font-black ${correctAnswersCount === totalQuestions ? 'text-green-500' : 'text-blue-500'}`}>
+                                    {Math.round((correctAnswersCount / totalQuestions) * 100)}%
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-center gap-12 text-2xl font-bold mb-8">
+                                <div className="text-green-400">
+                                    <div className="text-sm text-gray-500 uppercase">Correct</div>
+                                    {correctAnswersCount}
+                                </div>
+                                <div className="text-red-400">
+                                    <div className="text-sm text-gray-500 uppercase">Wrong</div>
+                                    {totalQuestions - correctAnswersCount}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <button 
+                                    onClick={startExamSession}
+                                    className="w-full py-4 bg-purple-600 rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors"
+                                >
+                                    Restart Exam
+                                </button>
+                                <button 
+                                    onClick={switchToPractise}
+                                    className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
+                                >
+                                    Back to Menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-            
-            {/* Right Column: Controls & Logs */}
-            <div className="flex flex-col gap-6 w-full xl:w-80">
-                <Controls pressedKey={pressedKey} />
-                <div className="h-64 xl:h-[400px] w-full">
-                    <LogPanel logs={logs} />
+        )}
+
+        {gameMode === 'PRACTISE' && (
+            <div className="flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-7xl">
+                {/* Left Column: Mission */}
+                <div className="w-full xl:w-80 h-96 xl:h-[600px]">
+                    <MissionPanel 
+                        instructions={missionInstructions} 
+                        currentStepIndex={currentStepIndex}
+                        isError={isError}
+                    />
+                </div>
+
+                {/* Middle Column: Grid */}
+                <div className="flex-1 w-full flex justify-center">
+                    <Grid 
+                        snakePosition={position} 
+                        snakeRotation={rotation} 
+                        targetPosition={targetPosition}
+                    />
+                </div>
+                
+                {/* Right Column: Controls & Logs */}
+                <div className="flex flex-col gap-6 w-full xl:w-80">
+                    <Controls pressedKey={pressedKey} />
+                    <div className="h-64 xl:h-[400px] w-full">
+                        <LogPanel logs={logs} />
+                    </div>
+                </div>
+                
+                <div className="fixed bottom-8 text-gray-500 text-sm">
+                    Use <kbd className="bg-gray-200 px-1 rounded">←</kbd> <kbd className="bg-gray-200 px-1 rounded">→</kbd> to rotate, <kbd className="bg-gray-200 px-1 rounded">↓</kbd> to turn back, and <kbd className="bg-gray-200 px-1 rounded">Space</kbd> to move.
                 </div>
             </div>
-        </div>
-        
-        <div className="mt-8 text-gray-500 text-sm">
-          Use <kbd className="bg-gray-200 px-1 rounded">←</kbd> <kbd className="bg-gray-200 px-1 rounded">→</kbd> to rotate, <kbd className="bg-gray-200 px-1 rounded">↓</kbd> to turn back, and <kbd className="bg-gray-200 px-1 rounded">Space</kbd> to move.
-        </div>
+        )}
+
+        {gameMode === 'EXAM' && (
+            <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden bg-gray-900">
+                
+                {/* Instructions Flasher */}
+                {(examState === 'SHOWING_INSTRUCTIONS' || examState === 'WAITING_BETWEEN_INSTRUCTIONS') && examInstructions.length > 0 && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-white">
+                        {/* Exit Exam Button */}
+                        <button 
+                            onClick={switchToPractise}
+                            className="absolute top-6 left-6 px-6 py-3 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition-colors flex items-center gap-2 shadow-sm"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                            </svg>
+                            Exit Exam
+                        </button>
+
+                         {examState === 'SHOWING_INSTRUCTIONS' && (
+                            <div className="flex flex-col items-center justify-center animate-pulse">
+                                <div className="text-6xl md:text-8xl font-black text-gray-900 text-center leading-tight">
+                                    {examInstructions[currentInstructionIndex].text}
+                                </div>
+                            </div>
+                        )}
+                         {/* Progress Bar */}
+                         <div className="absolute bottom-20 flex gap-4">
+                            {examInstructions.map((_, i) => (
+                                <div 
+                                    key={i} 
+                                    className={`h-3 rounded-full transition-all duration-300 ${i === currentInstructionIndex ? 'w-12 bg-gray-800' : 'w-3 bg-gray-300'}`} 
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Grid Selection */}
+                {(examState === 'SELECTION' || examState === 'RESULT') && (
+                    <div className="w-full h-full p-4 flex flex-col">
+                        {/* Exit Exam Button (Selection Screen) */}
+                        <button 
+                            onClick={switchToPractise}
+                            className="absolute top-6 left-6 px-4 py-2 bg-gray-800/50 backdrop-blur text-white/80 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all flex items-center gap-2 z-50 text-sm"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                            </svg>
+                            Exit
+                        </button>
+
+                        <div className="text-center mb-2">
+                             <span className="text-xl font-bold text-gray-400">Question {currentQuestionNumber} / {totalQuestions}</span>
+                        </div>
+
+                        {examState === 'RESULT' && (
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none w-full text-center">
+                                <div className={`text-6xl md:text-8xl font-black drop-shadow-2xl animate-bounce ${examResult === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`}>
+                                    {resultMessage}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Instructions Summary - In-flow for RESULT state */}
+                        {examState === 'RESULT' && (
+                             <div className="w-full max-w-4xl mx-auto mb-4 px-4">
+                                <div className="bg-white/95 backdrop-blur-md border-4 border-purple-200 rounded-2xl p-4 shadow-xl">
+                                    <h3 className="text-purple-600 font-black text-sm uppercase mb-2 tracking-wider text-center">Mission Instructions</h3>
+                                    <div className="flex flex-wrap gap-2 justify-center">
+                                        {examInstructions.map((step, index) => (
+                                            <span key={index} className="px-3 py-1 bg-purple-50 text-gray-800 text-base font-bold rounded-lg border-2 border-purple-100 shadow-sm">
+                                                {index + 1}. {step.text}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                             </div>
+                        )}
+
+                        <div className="flex-1 grid grid-cols-2 gap-4 w-full h-full pb-24">
+                            {examOptions.map((option) => (
+                                <div 
+                                    key={option.id}
+                                    onClick={() => examState === 'SELECTION' && handleOptionSelect(option)}
+                                    className={`
+                                        relative w-full h-full cursor-pointer transition-all duration-300 overflow-hidden rounded-2xl bg-white
+                                        border-8 
+                                        ${examState === 'SELECTION' ? 'border-transparent hover:border-purple-500 hover:shadow-2xl hover:scale-[1.02] z-0 hover:z-10' : ''}
+                                        ${examState === 'RESULT' && option.isCorrect ? 'border-green-500 ring-8 ring-green-500/30' : ''}
+                                        ${examState === 'RESULT' && !option.isCorrect && examResult === 'FALSE' ? 'opacity-30 grayscale' : ''}
+                                    `}
+                                >
+                                    <div className="w-full h-full flex items-center justify-center p-2">
+                                        <div className="aspect-square landscape:h-full landscape:w-auto portrait:w-full portrait:h-auto max-w-full max-h-full flex items-center justify-center">
+                                            <Grid 
+                                                snakePosition={option.snakePosition}
+                                                snakeRotation={option.snakeRotation}
+                                                targetPosition={option.targetPosition}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Overlay for selection state */}
+                                    {examState === 'SELECTION' && (
+                                        <div className="absolute inset-0 bg-transparent hover:bg-purple-500/5 transition-colors" />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {examState === 'RESULT' && (
+                            <div className="absolute bottom-8 right-8 z-50">
+                                <button 
+                                    onClick={handleNextExam}
+                                    className="px-10 py-5 bg-white text-gray-900 text-2xl font-black rounded-full shadow-2xl hover:scale-110 transform transition-all border-4 border-gray-900"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Session Finished Summary */}
+                {examState === 'SESSION_FINISHED' && (
+                    <div className="absolute inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl p-8 md:p-12 w-full max-w-2xl shadow-2xl text-center animate-fade-in transform transition-all">
+                            <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-8">EXAM COMPLETED!</h2>
+                            
+                            <div className="grid grid-cols-2 gap-8 mb-12">
+                                <div className="bg-green-50 p-6 rounded-2xl border-2 border-green-100">
+                                    <div className="text-green-600 text-lg font-bold uppercase mb-2">Correct</div>
+                                    <div className="text-5xl font-black text-green-600">{correctAnswersCount}</div>
+                                </div>
+                                <div className="bg-red-50 p-6 rounded-2xl border-2 border-red-100">
+                                    <div className="text-red-500 text-lg font-bold uppercase mb-2">Wrong</div>
+                                    <div className="text-5xl font-black text-red-500">{totalQuestions - correctAnswersCount}</div>
+                                </div>
+                            </div>
+
+                            <div className="mb-12">
+                                <div className="text-gray-400 font-bold uppercase mb-2 tracking-widest">Success Rate</div>
+                                <div className="text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+                                    {Math.round((correctAnswersCount / totalQuestions) * 100)}%
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={switchToPractise}
+                                className="w-full py-4 bg-gray-900 text-white text-xl font-bold rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                            >
+                                Return to Main Menu
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )}
     </div>
   );
 }

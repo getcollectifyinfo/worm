@@ -31,7 +31,7 @@ export const Grid: React.FC<GridProps> = ({ snakePosition, snakeRotation, target
   ));
 
   return (
-    <div className="relative w-full max-w-md aspect-square border-2 border-black bg-white shadow-lg mx-auto p-8 box-content">
+    <div className="relative w-full h-full aspect-square border-2 border-black bg-white shadow-lg mx-auto p-4 md:p-8 box-border">
       <div className="relative w-full h-full">
         {/* Grid Lines */}
         {verticalLines}
