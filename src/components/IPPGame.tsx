@@ -29,8 +29,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   return (
     <div className="w-full h-screen bg-[#4a4a4a] flex flex-col items-center justify-center relative p-8">
-      {/* Top Right Exit */}
-      <div className="absolute top-8 right-8 flex flex-col items-end">
+      {/* Top Left Exit */}
+      <div className="absolute top-8 left-8 flex flex-col items-start">
         <div className="text-white text-xl font-bold mb-1">{formatTime(timer)}</div>
         <button 
           onClick={onExit}
