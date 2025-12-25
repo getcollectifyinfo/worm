@@ -3,24 +3,66 @@ import React, { useEffect, useState, useRef } from 'react';
 interface GaugeProps {
   size?: number;
   initialValue?: number; // 0 to 100
+  isLockedInRed?: boolean;
+  onRedZoneEnter?: () => void;
 }
 
-export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) => {
+export const Gauge: React.FC<GaugeProps> = ({ 
+  size = 200, 
+  initialValue = 50,
+  isLockedInRed = false,
+  onRedZoneEnter
+}) => {
   // Value is 0-100. 0 is min (left), 100 is max (right)
   const [value, setValue] = useState(initialValue);
   const targetValueRef = useRef(initialValue);
   const animationSpeedRef = useRef(0.5); // steps per frame
+  const isLockedInRedRef = useRef(isLockedInRed);
+  const wasInRedRef = useRef(initialValue >= 75);
+
+  // Update ref when prop changes
+  useEffect(() => {
+    isLockedInRedRef.current = isLockedInRed;
+    // If we are unlocked and currently in red, force a move out
+    if (!isLockedInRed && value >= 75) {
+       targetValueRef.current = Math.random() * 70; // Target somewhere safe
+    }
+  }, [isLockedInRed, value]);
 
   useEffect(() => {
     let animationFrameId: number;
 
     const update = () => {
+      // Check Red Zone Entry
+      const inRed = value >= 75;
+      if (inRed && !wasInRedRef.current) {
+        if (onRedZoneEnter) onRedZoneEnter();
+      }
+      wasInRedRef.current = inRed;
+
       // 1. Check if we reached the target
       if (Math.abs(value - targetValueRef.current) < 1) {
         // Pick a new random target (0-100)
-        targetValueRef.current = Math.random() * 100;
+        let newTarget = Math.random() * 100;
+        
+        // If locked in red, ensure target is in red (75-100)
+        if (isLockedInRedRef.current && inRed) {
+             newTarget = 75 + Math.random() * 25;
+        } 
+        // If NOT locked but currently in red, we probably want to get out? 
+        // The natural random * 100 will eventually take us out. 
+        // But if we just got unlocked, the useEffect above handles the immediate force-out.
+        // So here we just behave normally, unless we are locked.
+
+        targetValueRef.current = newTarget;
+        
         // Pick a new random speed (lower speed as requested)
         animationSpeedRef.current = 0.1 + Math.random() * 0.4;
+      }
+      
+      // Enforce lock if we are in red: Don't let target be outside red
+      if (isLockedInRedRef.current && inRed && targetValueRef.current < 75) {
+          targetValueRef.current = 75 + Math.random() * 25;
       }
 
       // 2. Move towards target
@@ -37,7 +79,7 @@ export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) =
 
     animationFrameId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [value]); // Depend on value to trigger re-renders, but ref logic handles continuity
+  }, [value, onRedZoneEnter]); // Depend on value to trigger re-renders, but ref logic handles continuity
 
   // Gauge Drawing Math
   // Start angle: 135 degrees (bottom left)
