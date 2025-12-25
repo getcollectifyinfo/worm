@@ -17,7 +17,12 @@ const MOTIVATIONAL_MESSAGES = [
   "AMAZING UMAY!"
 ];
 
+import { LandingPage } from './components/LandingPage';
+
 function App() {
+  // Navigation State
+  const [currentPage, setCurrentPage] = useState<'LANDING' | 'WORM' | 'IPP'>('LANDING');
+
   // Global State
   const [gameMode, setGameMode] = useState<GameMode>('PRACTISE');
   
@@ -589,8 +594,26 @@ function App() {
     }
   };
 
+  if (currentPage === 'LANDING') {
+    return <LandingPage onSelectGame={(game) => setCurrentPage(game)} />;
+  }
+
+  if (currentPage === 'IPP') {
+    return <IPPGame onExit={() => setCurrentPage('LANDING')} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
+        {/* Back Button */}
+        <button 
+            onClick={() => setCurrentPage('LANDING')}
+            className="fixed top-4 left-4 z-[60] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group"
+            title="Back to Menu"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        </button>
         
         {/* Top Right Controls */}
         <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
@@ -640,7 +663,8 @@ function App() {
                 </span>
             </button>
 
-            {/* IPP Mode Button */}
+            {/* IPP Mode Button - Removed as requested */}
+            {/* 
             <button 
                 onClick={() => setGameMode('IPP')}
                 className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'IPP' ? 'bg-orange-600 text-white ring-4 ring-orange-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
@@ -653,6 +677,7 @@ function App() {
                     IPP Mode
                 </span>
             </button>
+            */}
         </div>
 
         {/* Settings Modal */}

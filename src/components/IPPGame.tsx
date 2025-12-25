@@ -24,6 +24,7 @@ const getRandomKeys = () => {
 };
 
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
+  const [hasStarted, setHasStarted] = useState(false);
   const [timer, setTimer] = useState(120); // 2 minutes in seconds
   const [gameOver, setGameOver] = useState(false);
   const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>(getRandomKeys);
@@ -58,16 +59,18 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     }, 1000);
   }, []);
 
-  // Show hint on initial mount
+  // Show hint on initial mount (only if started)
   useEffect(() => {
+    if (!hasStarted) return;
     const t = setTimeout(() => {
         triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
     }, 0);
     return () => clearTimeout(t);
-  }, []); 
+  }, [hasStarted]); 
 
   // Random reassignment loop - changes ONE key at a time
   useEffect(() => {
+    if (!hasStarted) return;
     const reassignmentInterval = setInterval(() => {
       if (gameOver) return;
       
@@ -100,11 +103,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
       clearInterval(reassignmentInterval);
     };
-  }, [gameOver, triggerHint]);
+  }, [gameOver, triggerHint, hasStarted]);
 
   // Timer
   useEffect(() => {
-    if (gameOver) return;
+    if (!hasStarted || gameOver) return;
     const interval = setInterval(() => {
       setTimer(prev => {
         if (prev <= 0) {
@@ -121,7 +124,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   // Key Down Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameOver) return;
+      if (!hasStarted || gameOver) return;
       const key = e.key.toUpperCase();
       
       let matched = false;
@@ -164,7 +167,22 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gaugeLocks, assignments, gameOver, triggerHint]);
+  }, [gaugeLocks, assignments, gameOver, triggerHint, hasStarted]);
+
+  // Fix: Move reaction times calculation to state to avoid ref access during render
+  const [avgReactionTime, setAvgReactionTime] = useState(0);
+
+  useEffect(() => {
+    if (gameOver) {
+        const times = recordedReactionTimes.current;
+        if (times.length > 0) {
+            const avg = times.reduce((a, b) => a + b, 0) / times.length;
+            setAvgReactionTime(avg);
+        } else {
+            setAvgReactionTime(0);
+        }
+    }
+  }, [gameOver]);
 
   const handleRedZoneEnter = (id: GaugeId) => {
     setGaugeLocks(prev => {
@@ -190,6 +208,25 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   return (
     <div className="w-full h-screen bg-[#4a4a4a] flex flex-col items-center justify-center relative p-8">
+      {/* Start Screen */}
+      {!hasStarted && (
+        <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
+          <h1 className="text-white text-6xl font-bold mb-12 tracking-wider">IPP GAME</h1>
+          <button 
+            onClick={() => setHasStarted(true)}
+            className="bg-green-500 text-white text-4xl font-bold px-12 py-6 rounded-xl hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg border-4 border-green-400"
+          >
+            START
+          </button>
+          <button 
+            onClick={onExit}
+            className="mt-8 text-gray-400 hover:text-white text-xl font-bold transition-colors border-b-2 border-transparent hover:border-white"
+          >
+            BACK TO MENU
+          </button>
+        </div>
+      )}
+
       {/* Top Left Exit */}
       <div className="absolute top-8 left-8 flex flex-col items-start">
         <div className="text-white text-xl font-bold mb-1">{formatTime(timer)}</div>
@@ -277,9 +314,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
           <div className="text-white text-2xl mb-4">Wrong Presses: <span className="text-red-500">{stats.wrong}</span></div>
           <div className="text-white text-2xl mb-8">
             Avg Reaction Time: <span className="text-yellow-400">
-              {recordedReactionTimes.current.length > 0 
-                ? (recordedReactionTimes.current.reduce((a, b) => a + b, 0) / recordedReactionTimes.current.length).toFixed(0) 
-                : 0}ms
+              {avgReactionTime.toFixed(0)}ms
             </span>
           </div>
           <button 
