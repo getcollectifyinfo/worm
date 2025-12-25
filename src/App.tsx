@@ -3,6 +3,7 @@ import { Grid } from './components/Grid';
 import { Controls } from './components/Controls';
 import { LogPanel } from './components/LogPanel';
 import { MissionPanel } from './components/MissionPanel';
+import { IPPGame } from './components/IPPGame';
 import { GRID_SIZE, DIFFICULTY_SETTINGS } from './types';
 import type { Position, LogEntry, MissionStep, GameMode, ExamState, ExamOption, DifficultyLevel } from './types';
 
@@ -638,6 +639,20 @@ function App() {
                     Exam Mode
                 </span>
             </button>
+
+            {/* IPP Mode Button */}
+            <button 
+                onClick={() => setGameMode('IPP')}
+                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'IPP' ? 'bg-orange-600 text-white ring-4 ring-orange-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
+                title="IPP Mode"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    IPP Mode
+                </span>
+            </button>
         </div>
 
         {/* Settings Modal */}
@@ -803,160 +818,132 @@ function App() {
         )}
 
         {gameMode === 'EXAM' && (
-            <div className="w-full h-screen flex flex-col items-center justify-center relative overflow-hidden bg-gray-900">
-                
-                {/* Instructions Flasher */}
-                {(examState === 'SHOWING_INSTRUCTIONS' || examState === 'WAITING_BETWEEN_INSTRUCTIONS') && examInstructions.length > 0 && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-white">
-                        {/* Exit Exam Button */}
-                        <button 
-                            onClick={switchToPractise}
-                            className="absolute top-6 left-6 px-6 py-3 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition-colors flex items-center gap-2 shadow-sm"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                            </svg>
-                            Exit Exam
-                        </button>
-
-                         {examState === 'SHOWING_INSTRUCTIONS' && (
-                            <div className="flex flex-col items-center justify-center animate-pulse">
-                                <div className="text-6xl md:text-8xl font-black text-gray-900 text-center leading-tight">
-                                    {examInstructions[currentInstructionIndex].text}
-                                </div>
-                            </div>
-                        )}
-                         {/* Progress Bar */}
-                         <div className="absolute bottom-20 flex gap-4">
-                            {examInstructions.map((_, i) => (
-                                <div 
-                                    key={i} 
-                                    className={`h-3 rounded-full transition-all duration-300 ${i === currentInstructionIndex ? 'w-12 bg-gray-800' : 'w-3 bg-gray-300'}`} 
-                                />
-                            ))}
+            <div className="flex flex-col items-center w-full max-w-4xl">
+                {/* Header */}
+                <div className="w-full flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-lg border-2 border-purple-100">
+                    <div>
+                        <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">
+                            Exam Session
+                        </div>
+                        <h2 className="text-3xl font-black text-gray-800">
+                            Question {currentQuestionNumber} <span className="text-gray-300">/ {totalQuestions}</span>
+                        </h2>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                            Difficulty
+                        </div>
+                        <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-bold text-sm">
+                            {DIFFICULTY_SETTINGS[difficulty].label}
                         </div>
                     </div>
-                )}
+                </div>
 
-                {/* Grid Selection */}
-                {(examState === 'SELECTION' || examState === 'RESULT') && (
-                    <div className="w-full h-full p-4 flex flex-col">
-                        {/* Exit Exam Button (Selection Screen) */}
-                        <button 
-                            onClick={switchToPractise}
-                            className="absolute top-6 left-6 px-4 py-2 bg-gray-800/50 backdrop-blur text-white/80 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all flex items-center gap-2 z-50 text-sm"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                            </svg>
-                            Exit
-                        </button>
-
-                        <div className="text-center mb-2">
-                             <span className="text-xl font-bold text-gray-400">Question {currentQuestionNumber} / {totalQuestions}</span>
-                        </div>
-
-                        {examState === 'RESULT' && (
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none w-full text-center">
-                                <div className={`text-6xl md:text-8xl font-black drop-shadow-2xl animate-bounce ${examResult === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`}>
-                                    {resultMessage}
+                {/* Exam Content */}
+                <div className="w-full relative min-h-[600px] flex justify-center">
+                    
+                    {/* Instructions Overlay */}
+                    {examState === 'SHOWING_INSTRUCTIONS' && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                            <div className="bg-gray-900/90 backdrop-blur text-white px-12 py-8 rounded-3xl shadow-2xl transform transition-all animate-bounce-in text-center border-4 border-purple-500">
+                                <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-4">Instruction {currentInstructionIndex + 1}</div>
+                                <div className="text-4xl md:text-5xl font-black leading-tight">
+                                    {examInstructions[currentInstructionIndex]?.text}
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Instructions Summary - In-flow for RESULT state */}
-                        {examState === 'RESULT' && (
-                             <div className="w-full max-w-4xl mx-auto mb-4 px-4">
-                                <div className="bg-white/95 backdrop-blur-md border-4 border-purple-200 rounded-2xl p-4 shadow-xl">
-                                    <h3 className="text-purple-600 font-black text-sm uppercase mb-2 tracking-wider text-center">Mission Instructions</h3>
-                                    <div className="flex flex-wrap gap-2 justify-center">
-                                        {examInstructions.map((step, index) => (
-                                            <span key={index} className="px-3 py-1 bg-purple-50 text-gray-800 text-base font-bold rounded-lg border-2 border-purple-100 shadow-sm">
-                                                {index + 1}. {step.text}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                             </div>
-                        )}
-
-                        <div className="flex-1 grid grid-cols-2 gap-4 w-full h-full pb-24">
+                    {/* Options Selection */}
+                    {examState === 'SELECTION' && (
+                        <div className="grid grid-cols-2 gap-6 w-full animate-fade-in">
                             {examOptions.map((option) => (
-                                <div 
+                                <button
                                     key={option.id}
-                                    onClick={() => examState === 'SELECTION' && handleOptionSelect(option)}
-                                    className={`
-                                        relative w-full h-full cursor-pointer transition-all duration-300 overflow-hidden rounded-2xl bg-white
-                                        border-8 
-                                        ${examState === 'SELECTION' ? 'border-transparent hover:border-purple-500 hover:shadow-2xl hover:scale-[1.02] z-0 hover:z-10' : ''}
-                                        ${examState === 'RESULT' && option.isCorrect ? 'border-green-500 ring-8 ring-green-500/30' : ''}
-                                        ${examState === 'RESULT' && !option.isCorrect && examResult === 'FALSE' ? 'opacity-30 grayscale' : ''}
-                                    `}
+                                    onClick={() => handleOptionSelect(option)}
+                                    className="relative bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-purple-400 group overflow-hidden"
                                 >
-                                    <div className="w-full h-full flex items-center justify-center p-2">
-                                        <div className="aspect-square landscape:h-full landscape:w-auto portrait:w-full portrait:h-auto max-w-full max-h-full flex items-center justify-center">
-                                            <Grid 
-                                                snakePosition={option.snakePosition}
-                                                snakeRotation={option.snakeRotation}
-                                                targetPosition={option.targetPosition}
-                                            />
-                                        </div>
+                                    <div className="absolute top-4 left-4 z-10 bg-gray-900 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-lg group-hover:bg-purple-600 transition-colors">
+                                        {option.id.includes('correct') ? '?' : '?'}
                                     </div>
-                                    
-                                    {/* Overlay for selection state */}
-                                    {examState === 'SELECTION' && (
-                                        <div className="absolute inset-0 bg-transparent hover:bg-purple-500/5 transition-colors" />
-                                    )}
-                                </div>
+                                    <div className="pointer-events-none transform scale-90">
+                                        <Grid 
+                                            snakePosition={option.snakePosition}
+                                            snakeRotation={option.snakeRotation}
+                                            targetPosition={option.targetPosition}
+                                        />
+                                    </div>
+                                </button>
                             ))}
                         </div>
+                    )}
 
-                        {examState === 'RESULT' && (
-                            <div className="absolute bottom-8 right-8 z-50">
-                                <button 
-                                    onClick={handleNextExam}
-                                    className="px-10 py-5 bg-white text-gray-900 text-2xl font-black rounded-full shadow-2xl hover:scale-110 transform transition-all border-4 border-gray-900"
-                                >
-                                    Next →
-                                </button>
+                    {/* Result Feedback */}
+                    {examState === 'RESULT' && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/90 backdrop-blur-md rounded-3xl animate-fade-in">
+                            <div className={`text-8xl mb-6 animate-bounce-in ${examResult === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`}>
+                                {examResult === 'CORRECT' ? '✓' : '✗'}
                             </div>
-                        )}
-                    </div>
-                )}
+                            <h2 className={`text-5xl font-black mb-8 ${examResult === 'CORRECT' ? 'text-green-600' : 'text-red-600'}`}>
+                                {resultMessage}
+                            </h2>
+                            <button 
+                                onClick={handleNextExam}
+                                className="px-12 py-4 bg-gray-900 text-white rounded-xl font-bold text-xl hover:bg-black transition-all hover:scale-105 shadow-xl"
+                            >
+                                {currentQuestionNumber < totalQuestions ? 'Next Question →' : 'Finish Exam'}
+                            </button>
+                        </div>
+                    )}
+                </div>
 
-                {/* Session Finished Summary */}
+                {/* Session Finished Screen */}
                 {examState === 'SESSION_FINISHED' && (
-                    <div className="absolute inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center p-4">
-                        <div className="bg-white rounded-3xl p-8 md:p-12 w-full max-w-2xl shadow-2xl text-center animate-fade-in transform transition-all">
-                            <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-8">EXAM COMPLETED!</h2>
-                            
-                            <div className="grid grid-cols-2 gap-8 mb-12">
-                                <div className="bg-green-50 p-6 rounded-2xl border-2 border-green-100">
-                                    <div className="text-green-600 text-lg font-bold uppercase mb-2">Correct</div>
-                                    <div className="text-5xl font-black text-green-600">{correctAnswersCount}</div>
-                                </div>
-                                <div className="bg-red-50 p-6 rounded-2xl border-2 border-red-100">
-                                    <div className="text-red-500 text-lg font-bold uppercase mb-2">Wrong</div>
-                                    <div className="text-5xl font-black text-red-500">{totalQuestions - correctAnswersCount}</div>
-                                </div>
-                            </div>
-
-                            <div className="mb-12">
-                                <div className="text-gray-400 font-bold uppercase mb-2 tracking-widest">Success Rate</div>
-                                <div className="text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
+                        <h2 className="text-5xl font-black mb-8 text-purple-400">EXAM FINISHED!</h2>
+                        
+                        <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-lg border-4 border-gray-700">
+                            <div className="mb-8">
+                                <div className="text-gray-400 text-xl mb-2">ACCURACY</div>
+                                <div className={`text-7xl font-black ${correctAnswersCount === totalQuestions ? 'text-green-500' : 'text-blue-500'}`}>
                                     {Math.round((correctAnswersCount / totalQuestions) * 100)}%
                                 </div>
                             </div>
+                            
+                            <div className="flex justify-center gap-12 text-2xl font-bold mb-8">
+                                <div className="text-green-400">
+                                    <div className="text-sm text-gray-500 uppercase">Correct</div>
+                                    {correctAnswersCount}
+                                </div>
+                                <div className="text-red-400">
+                                    <div className="text-sm text-gray-500 uppercase">Wrong</div>
+                                    {totalQuestions - correctAnswersCount}
+                                </div>
+                            </div>
 
-                            <button 
-                                onClick={switchToPractise}
-                                className="w-full py-4 bg-gray-900 text-white text-xl font-bold rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                            >
-                                Return to Main Menu
-                            </button>
+                            <div className="flex flex-col gap-4">
+                                <button 
+                                    onClick={startExamSession}
+                                    className="w-full py-4 bg-purple-600 rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors"
+                                >
+                                    Restart Exam
+                                </button>
+                                <button 
+                                    onClick={switchToPractise}
+                                    className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
+                                >
+                                    Back to Menu
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
+            </div>
+        )}
+
+        {gameMode === 'IPP' && (
+            <div className="absolute inset-0 z-50">
+                <IPPGame onExit={switchToPractise} />
             </div>
         )}
     </div>

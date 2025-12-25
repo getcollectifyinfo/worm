@@ -17,7 +17,7 @@ export interface MissionStep {
   actions: string[]; // Expected keys e.g. ['ArrowLeft', ' ']
 }
 
-export type GameMode = 'PRACTISE' | 'EXAM';
+export type GameMode = 'PRACTISE' | 'EXAM' | 'IPP';
 export type ExamState = 'IDLE' | 'SHOWING_INSTRUCTIONS' | 'WAITING_BETWEEN_INSTRUCTIONS' | 'SELECTION' | 'RESULT' | 'SESSION_FINISHED';
 
 export interface ExamOption {
