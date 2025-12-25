@@ -48,17 +48,10 @@ export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) =
   const innerRadius = radius - strokeWidth;
 
   // Calculate needle rotation
-  // 0 -> -135deg (physically pointing bottom left)
-  // 100 -> +135deg (physically pointing bottom right)
+  // 0 -> 225deg (bottom left)
+  // 100 -> 495deg (bottom right)
   // Range is 270 degrees.
-  // We want 0 to be at 135 degrees on the circle (if 0 is right, 90 is down, 180 is left, 270 is up)
-  // Let's stick to standard SVG angles: 0 is right.
-  // We want start at 135 (bottom right? no wait).
-  // Standard CSS rotation: 0 is Up.
-  // Let's simplify: Rotate the needle group.
-  // -135deg is Left-Down. +135deg is Right-Down. 0 is Up.
-  // Map 0-100 input to -135 to 135.
-  const rotation = (value / 100) * 270 - 135;
+  const rotation = 225 + (value / 100) * 270;
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -74,31 +67,30 @@ export const Gauge: React.FC<GaugeProps> = ({ size = 200, initialValue = 50 }) =
         />
 
         {/* Colored Arcs */}
-        {/* We use stroke-dasharray for simplicity or multiple path segments */}
         {/* Green Segment (0-25%) */}
         <path
-          d={describeArc(center, center, innerRadius, 135, 202.5)}
+          d={describeArc(center, center, innerRadius, 225, 292.5)}
           fill="none"
           stroke="#22c55e" // Green-500
           strokeWidth={strokeWidth}
         />
         {/* Yellow Segment (25-50%) */}
         <path
-          d={describeArc(center, center, innerRadius, 202.5, 270)}
+          d={describeArc(center, center, innerRadius, 292.5, 360)}
           fill="none"
           stroke="#eab308" // Yellow-500
           strokeWidth={strokeWidth}
         />
         {/* Orange Segment (50-75%) */}
         <path
-          d={describeArc(center, center, innerRadius, 270, 337.5)}
+          d={describeArc(center, center, innerRadius, 360, 427.5)}
           fill="none"
           stroke="#f97316" // Orange-500
           strokeWidth={strokeWidth}
         />
         {/* Red Segment (75-100%) */}
         <path
-          d={describeArc(center, center, innerRadius, 337.5, 405)}
+          d={describeArc(center, center, innerRadius, 427.5, 495)}
           fill="none"
           stroke="#ef4444" // Red-500
           strokeWidth={strokeWidth}
