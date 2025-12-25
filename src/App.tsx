@@ -23,7 +23,7 @@ function App() {
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [instructionSpeed, setInstructionSpeed] = useState(1000); // ms
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('EASY');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM');
   const [totalQuestions, setTotalQuestions] = useState(5);
 
   // Exam Session State
