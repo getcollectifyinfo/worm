@@ -41,6 +41,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   // Reaction time tracking
   const lockStartTimes = useRef<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
   const [reactionTimes, setReactionTimes] = useState<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
+  const recordedReactionTimes = useRef<number[]>([]); // Store all reaction times for average calculation
 
   const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -139,6 +140,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             if (startTime) {
                 const reactionTime = Date.now() - startTime;
                 setReactionTimes(prev => ({ ...prev, [gaugeId]: reactionTime }));
+                recordedReactionTimes.current.push(reactionTime); // Add to history
                 lockStartTimes.current[gaugeId] = null; // Reset start time
 
                 // Clear reaction time display after 2 seconds
@@ -272,7 +274,14 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
           <h2 className="text-white text-6xl font-bold mb-8">GAME OVER</h2>
           <div className="text-white text-2xl mb-4">Correct Presses: <span className="text-green-500">{stats.correct}</span></div>
-          <div className="text-white text-2xl mb-8">Wrong Presses: <span className="text-red-500">{stats.wrong}</span></div>
+          <div className="text-white text-2xl mb-4">Wrong Presses: <span className="text-red-500">{stats.wrong}</span></div>
+          <div className="text-white text-2xl mb-8">
+            Avg Reaction Time: <span className="text-yellow-400">
+              {recordedReactionTimes.current.length > 0 
+                ? (recordedReactionTimes.current.reduce((a, b) => a + b, 0) / recordedReactionTimes.current.length).toFixed(0) 
+                : 0}ms
+            </span>
+          </div>
           <button 
             onClick={onExit}
             className="bg-white text-black text-2xl font-bold px-8 py-4 rounded hover:bg-gray-200 transition-colors"
