@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Check, ArrowRight, Brain, Clock, Target, Award, Play, Zap } from 'lucide-react';
 import { NewsletterModal } from './NewsletterModal';
 
+import type { Page } from '../types';
+
 interface MarketingPageProps {
   onStartDemo: () => void;
   onViewProduct: () => void;
-  onViewMollymawk: () => void;
+  onNavigate: (page: Page) => void;
 }
 
-export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct, onViewMollymawk }) => {
+export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct, onNavigate }) => {
   const [newsletterOpen, setNewsletterOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
 
@@ -224,32 +226,31 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
                </button>
              </div>
 
-             {/* Mollymawk (Live) */}
-             <div className="p-8 rounded-2xl bg-orange-600/20 border border-orange-500/50 flex flex-col relative transition-all hover:scale-[1.02]">
-               <div className="absolute top-0 right-0 bg-orange-500 text-xs font-bold px-3 py-1 rounded-bl-lg">YENİ</div>
+             {/* Mollymawk (Coming Soon) */}
+             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
                <div className="mb-6">
-                 <div className="text-orange-400 font-bold mb-2">Mollymawk Paketi</div>
-                 <div className="text-3xl font-bold">499 TL <span className="text-lg text-gray-400 font-normal">/ Ay</span></div>
+                 <div className="flex justify-between items-start">
+                    <div className="text-orange-400 font-bold mb-2">Mollymawk Paketi</div>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
+                 </div>
+                 <div className="text-3xl font-bold">---</div>
                </div>
                <ul className="space-y-4 mb-8 flex-1">
-                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                   <Check size={16} className="text-orange-400" /> SunExpress Süreci
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> SunExpress Süreci
                  </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                   <Check size={16} className="text-orange-400" /> Bilişsel Testler
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Bilişsel Testler
                  </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                   <Check size={16} className="text-orange-400" /> Gerçekçi Simülasyon
-                 </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                   <Check size={16} className="text-orange-400" /> Detaylı Analiz
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Gerçekçi Simülasyon
                  </li>
                </ul>
                <button 
-                 onClick={onViewMollymawk}
-                 className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-orange-600/20"
+                 onClick={() => openNewsletter('Mollymawk')}
+                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
                >
-                 Paketi İncele
+                 Haber Ver
                </button>
              </div>
 
@@ -289,32 +290,40 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
             <div>
               <h3 className="text-xl font-bold mb-4 text-white">CadetPrep Academy</h3>
               <p className="text-sm text-gray-500 max-w-sm">
-                CadetPrep Academy is an independent training platform.
-                All trademarks and test names mentioned are the property of their respective owners.
-                This platform is not affiliated with, approved, or endorsed by any airline or official testing organization.
+                CadetPrep Academy bağımsız bir eğitim platformudur.
+                Bahsi geçen tüm ticari markalar ve test isimleri ilgili sahiplerinin mülkiyetindedir.
+                Bu platform herhangi bir havayolu veya resmi test kuruluşu ile ilişkili değildir, onaylanmamıştır veya desteklenmemektedir.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-8 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-sm">
               <div>
                 <h4 className="font-bold text-white mb-4">Platform</h4>
                 <ul className="space-y-2 text-gray-500">
-                  <li><a href="#" className="hover:text-blue-400">Modules</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Pricing</a></li>
-                  <li><a href="#" className="hover:text-blue-400">About Us</a></li>
+                  <li><a href="#" className="hover:text-blue-400">Modüller</a></li>
+                  <li><a href="#" className="hover:text-blue-400">Fiyatlandırma</a></li>
+                  <li><a href="#" className="hover:text-blue-400">Hakkımızda</a></li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-bold text-white mb-4">Legal</h4>
+                <h4 className="font-bold text-white mb-4">Bilgi Merkezi</h4>
                 <ul className="space-y-2 text-gray-500">
-                  <li><a href="#" className="hover:text-blue-400">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Disclaimer</a></li>
+                  <li><button onClick={() => onNavigate('SKYTEST_BLOG_1')} className="hover:text-blue-400 text-left">Skytest Nedir?</button></li>
+                  <li><button onClick={() => onNavigate('SKYTEST_PREPARATION_BLOG')} className="hover:text-blue-400 text-left">Skytest'e Nasıl Hazırlanılır?</button></li>
+                  <li><button onClick={() => onNavigate('SKYTEST_PEGASUS_BLOG')} className="hover:text-blue-400 text-left">Skytest ve Cadet Seçimleri</button></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-bold text-white mb-4">Yasal</h4>
+                <ul className="space-y-2 text-gray-500">
+                  <li><a href="#" className="hover:text-blue-400">Gizlilik Politikası</a></li>
+                  <li><a href="#" className="hover:text-blue-400">Kullanım Şartları</a></li>
+                  <li><a href="#" className="hover:text-blue-400">Yasal Uyarı</a></li>
                 </ul>
               </div>
             </div>
           </div>
           <div className="mt-12 pt-8 border-t border-white/5 text-center text-sm text-gray-600">
-            © 2024 CadetPrep Academy. All rights reserved.
+            © {new Date().getFullYear()} CadetPrep Academy. Tüm hakları saklıdır.
           </div>
         </div>
       </footer>

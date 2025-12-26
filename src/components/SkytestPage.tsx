@@ -8,13 +8,17 @@ import {
   Clock, 
   Activity, 
   Target,
-  Plane
+  Plane,
+  ArrowRight
 } from 'lucide-react';
+
+import type { Page } from '../types';
 
 interface SkytestPageProps {
   onBack: () => void;
   onStartFree: () => void;
   onBuy: () => void;
+  onNavigate: (page: Page) => void;
 }
 
 const MODULES = [
@@ -99,7 +103,7 @@ const MODULES = [
   }
 ];
 
-export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onBuy }) => {
+export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onBuy, onNavigate }) => {
   const [selectedModule, setSelectedModule] = useState<typeof MODULES[0] | null>(null);
 
   return (
@@ -352,6 +356,45 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                 <p className="text-sm text-slate-500">{pack.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BLOG LINKS */}
+      <section className="py-16 bg-slate-50 border-t border-slate-200">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">Skytest Hakkında Merak Edilenler</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <button 
+              onClick={() => onNavigate('SKYTEST_BLOG_1')}
+              className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
+            >
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Skytest Nedir?</h3>
+              <p className="text-sm text-slate-500">Kapsamlı rehber ve detaylar.</p>
+              <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
+                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+            <button 
+              onClick={() => onNavigate('SKYTEST_PREPARATION_BLOG')}
+              className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
+            >
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Skytest Sınavına Nasıl Hazırlanılır?</h3>
+              <p className="text-sm text-slate-500">Gerçekçi hazırlık yöntemleri.</p>
+              <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
+                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+            <button 
+              onClick={() => onNavigate('SKYTEST_PEGASUS_BLOG')}
+              className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
+            >
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Pegasus Cadet Sürecinde Skytest</h3>
+              <p className="text-sm text-slate-500">Süreç ve gereklilikler.</p>
+              <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
+                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
           </div>
         </div>
       </section>

@@ -91,7 +91,7 @@ export const useVIGI1GameLogic = () => {
             toneHistoryRef.current = []; 
         }
     }
-  }, [audioDifficulty]);
+  }, [audioDifficulty, TONES]);
 
 
   // Refactored State Update Logic to ensure synchronization
