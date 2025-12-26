@@ -24,6 +24,7 @@ const MOTIVATIONAL_MESSAGES = [
 
 import { LandingPage } from './components/LandingPage';
 import { MarketingPage } from './components/MarketingPage';
+import { StatisticsPage } from './components/StatisticsPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -34,7 +35,7 @@ function App() {
   const { user, loading, signOut } = useAuth();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1'>('MARKETING');
+  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'STATISTICS'>('MARKETING');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
@@ -647,8 +648,19 @@ function App() {
     return <MarketingPage onStartDemo={() => setCurrentPage('LANDING')} />;
   }
 
+  if (currentPage === 'STATISTICS') {
+    return <StatisticsPage onBack={() => setCurrentPage('LANDING')} />;
+  }
+
   if (currentPage === 'LANDING') {
-    return <LandingPage onSelectGame={(game) => setCurrentPage(game)} onSignOut={signOut} user={user} />;
+    return (
+        <LandingPage 
+            onSelectGame={(game) => setCurrentPage(game)} 
+            onSignOut={signOut} 
+            onShowStats={() => setCurrentPage('STATISTICS')}
+            user={user} 
+        />
+    );
   }
 
   if (currentPage === 'VIGI') {
