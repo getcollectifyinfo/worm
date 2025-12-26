@@ -1,8 +1,8 @@
 import React from 'react';
-import { Gamepad2, Gauge } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain } from 'lucide-react';
 
 interface LandingPageProps {
-  onSelectGame: (game: 'WORM' | 'IPP') => void;
+  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame }) => {
@@ -31,6 +31,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame }) => {
             <Gauge size={64} className="text-white" />
           </div>
           <span className="text-3xl font-bold text-white tracking-widest group-hover:text-blue-400">IPP</span>
+        </button>
+
+        {/* VIGI Button */}
+        <button 
+          onClick={() => onSelectGame('VIGI')}
+          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-purple-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+        >
+          <div className="p-6 bg-purple-500 rounded-full group-hover:scale-110 transition-transform duration-300">
+            <Zap size={64} className="text-white" />
+          </div>
+          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-purple-400">VIGI</span>
+        </button>
+
+        {/* CAPACITY Button */}
+        <button 
+          onClick={() => onSelectGame('CAPACITY')}
+          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-yellow-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+        >
+          <div className="p-6 bg-yellow-500 rounded-full group-hover:scale-110 transition-transform duration-300">
+            <Brain size={64} className="text-white" />
+          </div>
+          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-yellow-400">CAPACITY</span>
         </button>
       </div>
     </div>

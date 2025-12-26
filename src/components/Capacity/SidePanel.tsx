@@ -1,0 +1,463 @@
+import React, { useState, useEffect, useRef } from 'react';
+import type { CapacitySettings, CapacityStats } from './types';
+
+// --- VISUAL COMPONENTS ---
+
+// Helper component to render Dice faces
+interface DiceProps {
+    value: number;
+    isReference: boolean;
+}
+
+const Dice: React.FC<DiceProps> = ({ value, isReference }) => {
+  const getDots = (val: number) => {
+    switch(val) {
+      case 1: return [{top: '50%', left: '50%'}];
+      case 2: return [{top: '25%', left: '25%'}, {top: '75%', left: '75%'}];
+      case 3: return [{top: '25%', left: '25%'}, {top: '50%', left: '50%'}, {top: '75%', left: '75%'}];
+      case 4: return [{top: '25%', left: '25%'}, {top: '25%', left: '75%'}, {top: '75%', left: '25%'}, {top: '75%', left: '75%'}];
+      case 5: return [{top: '25%', left: '25%'}, {top: '25%', left: '75%'}, {top: '50%', left: '50%'}, {top: '75%', left: '25%'}, {top: '75%', left: '75%'}];
+      case 6: return [{top: '25%', left: '25%'}, {top: '25%', left: '75%'}, {top: '50%', left: '25%'}, {top: '50%', left: '75%'}, {top: '75%', left: '25%'}, {top: '75%', left: '75%'}];
+      default: return [];
+    }
+  };
+
+  return (
+    <div style={{
+      width: '150px', height: '150px', backgroundColor: '#f8f1e5',
+      borderRadius: '20px', border: '2px solid #333', position: 'relative',
+      boxShadow: '5px 5px 10px rgba(0,0,0,0.2)', display: 'flex',
+      flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
+    }}>
+      {getDots(value).map((pos, idx) => (
+        <div key={idx} style={{
+          position: 'absolute', width: '24px', height: '24px', borderRadius: '50%',
+          backgroundColor: 'black', transform: 'translate(-50%, -50%)', ...pos
+        }}></div>
+      ))}
+      {isReference && (
+        <div style={{ position: 'absolute', bottom: '-40px', fontSize: '20px', fontWeight: 'bold', color: '#333' }}>
+            REFERENCE
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper component for Rod Figure
+interface RodFigureProps {
+    config: boolean[];
+}
+
+const RodFigure: React.FC<RodFigureProps> = ({ config }) => {
+    // config is array of 12 booleans (true = red, false = gray)
+    // Segments: 
+    // 0: Top, 1: Bot, 2: TL Vert, 3: TR Vert, 4: BL Vert, 5: BR Vert
+    // 6: Mid Left, 7: Mid Right, 8: TL Diag, 9: TR Diag, 10: BL Diag, 11: BR Diag
+    
+    const getColor = (idx: number) => config[idx] ? '#c0392b' : '#bdc3c7'; // Red : Gray
+    
+    // SVG Coordinate System: 100x150
+    // Stroke width: 8
+    
+    return (
+        <svg width="100" height="150" viewBox="0 0 100 150" style={{ overflow: 'visible' }}>
+            {/* 0: Top Horizontal */}
+            <line x1="10" y1="5" x2="90" y2="5" stroke={getColor(0)} strokeWidth="8" strokeLinecap="round" />
+            {/* 1: Bottom Horizontal */}
+            <line x1="10" y1="145" x2="90" y2="145" stroke={getColor(1)} strokeWidth="8" strokeLinecap="round" />
+            
+            {/* 2: Top Left Vertical */}
+            <line x1="5" y1="10" x2="5" y2="70" stroke={getColor(2)} strokeWidth="8" strokeLinecap="round" />
+            {/* 3: Top Right Vertical */}
+            <line x1="95" y1="10" x2="95" y2="70" stroke={getColor(3)} strokeWidth="8" strokeLinecap="round" />
+            
+            {/* 4: Bottom Left Vertical */}
+            <line x1="5" y1="80" x2="5" y2="140" stroke={getColor(4)} strokeWidth="8" strokeLinecap="round" />
+            {/* 5: Bottom Right Vertical */}
+            <line x1="95" y1="80" x2="95" y2="140" stroke={getColor(5)} strokeWidth="8" strokeLinecap="round" />
+            
+            {/* 6: Middle Left Horizontal */}
+            <line x1="10" y1="75" x2="45" y2="75" stroke={getColor(6)} strokeWidth="8" strokeLinecap="round" />
+            {/* 7: Middle Right Horizontal */}
+            <line x1="55" y1="75" x2="90" y2="75" stroke={getColor(7)} strokeWidth="8" strokeLinecap="round" />
+            
+            {/* 8: Top Left Diagonal (Top-Left to Center) */}
+            <line x1="15" y1="15" x2="45" y2="65" stroke={getColor(8)} strokeWidth="8" strokeLinecap="round" />
+            {/* 9: Top Right Diagonal */}
+            <line x1="85" y1="15" x2="55" y2="65" stroke={getColor(9)} strokeWidth="8" strokeLinecap="round" />
+            
+            {/* 10: Bot Left Diagonal */}
+            <line x1="15" y1="135" x2="45" y2="85" stroke={getColor(10)} strokeWidth="8" strokeLinecap="round" />
+            {/* 11: Bot Right Diagonal */}
+            <line x1="85" y1="135" x2="55" y2="85" stroke={getColor(11)} strokeWidth="8" strokeLinecap="round" />
+        </svg>
+    );
+};
+
+// --- GAME LOGIC COMPONENTS ---
+
+interface GameLogicProps {
+    gameState: string;
+    isPaused: boolean;
+    settings: CapacitySettings;
+    lastSpacePressTime: number;
+    onUpdateStats: (stats: Partial<CapacityStats>, reset?: boolean) => void;
+}
+
+const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings, lastSpacePressTime, onUpdateStats }) => {
+  const [referenceDice, setReferenceDice] = useState(1);
+  const [currentDice, setCurrentDice] = useState(1);
+  const [isDiceVisible, setIsDiceVisible] = useState(false);
+  
+  const currentDiceRef = useRef(1);
+  const referenceDiceRef = useRef(1);
+  const hitRegisteredRef = useRef(false);
+
+  const spawnDice = () => {
+    hitRegisteredRef.current = false;
+    let val;
+    do {
+      val = Math.floor(Math.random() * 6) + 1;
+    } while (val === currentDiceRef.current);
+    
+    setCurrentDice(val);
+    currentDiceRef.current = val;
+    setIsDiceVisible(true);
+    
+    if (val === referenceDiceRef.current) {
+        onUpdateStats({ targets: 1 }); // Increment targets
+    }
+  };
+
+  useEffect(() => {
+    if (gameState === 'reference') {
+        setTimeout(() => {
+            onUpdateStats({ hits: 0, targets: 0 }, true); // Reset
+            const ref = Math.floor(Math.random() * 6) + 1;
+            setReferenceDice(ref);
+            referenceDiceRef.current = ref;
+            setCurrentDice(ref);
+            setIsDiceVisible(true);
+        }, 0);
+    } else if (gameState === 'running') {
+        setTimeout(() => setIsDiceVisible(false), 0);
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    if (gameState !== 'running' || isPaused) return;
+    
+    // Initial spawn
+    setTimeout(() => spawnDice(), 0);
+    
+    const interval = setInterval(spawnDice, settings.taskChangeSpeed);
+    return () => clearInterval(interval);
+  }, [gameState, isPaused, settings.taskChangeSpeed]);
+
+  useEffect(() => {
+    if (gameState !== 'running' || isPaused) return;
+    if (lastSpacePressTime === 0) return;
+    
+    if (!hitRegisteredRef.current && isDiceVisible) {
+        if (currentDiceRef.current === referenceDiceRef.current) {
+            onUpdateStats({ hits: 1 }); // Increment hits
+            hitRegisteredRef.current = true;
+        } else {
+            // Wrong hit! Count as fail.
+            onUpdateStats({ fails: 1 });
+            hitRegisteredRef.current = true; // Prevent multiple fails for same dice
+        }
+    }
+  }, [lastSpacePressTime, isPaused]);
+
+  return (
+    <Dice 
+        value={gameState === 'reference' ? referenceDice : currentDice} 
+        isReference={gameState === 'reference'}
+    />
+  );
+};
+
+const RodGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings, lastSpacePressTime, onUpdateStats }) => {
+    const [topConfig, setTopConfig] = useState(Array(12).fill(false));
+    const [botConfig, setBotConfig] = useState(Array(12).fill(false));
+
+    const configsRef = useRef<{top: boolean[], bot: boolean[]}>({ top: [], bot: [] });
+    const hitRegisteredRef = useRef(false);
+
+    const generateConfig = () => {
+        // Random 12 bits
+        return Array.from({length: 12}, () => Math.random() > 0.5);
+    };
+
+    const spawnPattern = () => {
+        hitRegisteredRef.current = false;
+        
+        const newTop = generateConfig();
+        let newBot;
+        
+        // 30% chance to be identical
+        if (Math.random() < 0.3) {
+            newBot = [...newTop];
+            onUpdateStats({ targets: 1 }); // It's a match target
+        } else {
+            newBot = generateConfig();
+            // Ensure they are not accidentally identical
+            if (JSON.stringify(newTop) === JSON.stringify(newBot)) {
+                // Flip one bit to ensure difference
+                newBot[0] = !newBot[0];
+            }
+        }
+        
+        setTopConfig(newTop);
+        setBotConfig(newBot);
+        configsRef.current = { top: newTop, bot: newBot };
+    };
+
+    // Reset stats on mount
+    useEffect(() => {
+        onUpdateStats({ hits: 0, targets: 0 }, true);
+    }, []);
+
+    useEffect(() => {
+        if (gameState !== 'running' || isPaused) return;
+        
+        setTimeout(() => spawnPattern(), 0);
+        const interval = setInterval(spawnPattern, settings.taskChangeSpeed); 
+        return () => clearInterval(interval);
+    }, [gameState, isPaused, settings.taskChangeSpeed]);
+
+    useEffect(() => {
+        if (gameState !== 'running' || isPaused) return;
+        if (lastSpacePressTime === 0) return;
+
+        if (!hitRegisteredRef.current) {
+            const isMatch = JSON.stringify(configsRef.current.top) === JSON.stringify(configsRef.current.bot);
+            if (isMatch) {
+                onUpdateStats({ hits: 1 });
+                hitRegisteredRef.current = true;
+            } else {
+                onUpdateStats({ fails: 1 });
+                hitRegisteredRef.current = true;
+            }
+        }
+    }, [lastSpacePressTime, isPaused]);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>
+            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
+                <RodFigure config={topConfig} />
+                <div style={{ height: '30px' }}></div>
+                <RodFigure config={botConfig} />
+            </div>
+        </div>
+    );
+};
+
+// --- MAIN COMPONENT ---
+
+interface SidePanelProps {
+    lastSpacePressTime: number;
+    gameState: string;
+    gameMode: string | null;
+    timeLeft: number;
+    flightFails: number;
+    totalObstacles: number;
+    diceStats: CapacityStats;
+    rodStats: CapacityStats;
+    currentStats: CapacityStats;
+    isPaused: boolean;
+    settings: CapacitySettings;
+    onRestart: () => void;
+    onStartGame: () => void;
+    onTogglePause: () => void;
+    onExitGame: () => void;
+    onOpenSettings: () => void;
+    onUpdateTaskStats: (stats: Partial<CapacityStats>, reset?: boolean) => void;
+}
+
+const SidePanel: React.FC<SidePanelProps> = ({ 
+    lastSpacePressTime, gameState, gameMode, timeLeft, flightFails, totalObstacles,
+    diceStats, rodStats, currentStats,
+    isPaused, settings, onRestart, onTogglePause, onExitGame, onOpenSettings,
+    onUpdateTaskStats 
+}) => {
+  
+  // Pause Overlay
+  if (isPaused) {
+      return (
+          <div style={{ 
+              width: '100%', height: '100%', display: 'flex', flexDirection: 'column', 
+              justifyContent: 'center', alignItems: 'center', gap: '20px',
+              backgroundColor: 'rgba(255,255,255,0.95)', zIndex: 10
+          }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 'bold' }}>PAUSED</h2>
+              <button onClick={onTogglePause} style={btnStyle}>RESUME</button>
+              <button onClick={onOpenSettings} style={btnStyle}>SETTINGS</button>
+              <button onClick={onExitGame} style={{...btnStyle, backgroundColor: '#c0392b'}}>EXIT GAME</button>
+          </div>
+      );
+  }
+
+  // "Waiting" state is effectively unused in new flow but kept for safety
+  if (gameState === 'waiting') {
+      return (
+          <div style={{ 
+              width: '100%', height: '100%', display: 'flex', flexDirection: 'column', 
+              justifyContent: 'center', alignItems: 'center', gap: '20px' 
+          }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>READY?</h2>
+          </div>
+      );
+  }
+
+  return (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '20px',
+      boxSizing: 'border-box',
+      color: '#333'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '50px'
+      }}>
+        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')} MIN</div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+            onClick={onTogglePause}
+            style={{
+                backgroundColor: '#333',
+                color: 'white',
+                border: 'none',
+                padding: '5px 15px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                cursor: 'pointer'
+            }}>
+            PAUSE
+            </button>
+            <button 
+            onClick={onRestart}
+            style={{
+                backgroundColor: '#330000',
+                color: 'white',
+                border: 'none',
+                padding: '5px 15px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                cursor: 'pointer'
+            }}>
+            RESTART
+            </button>
+        </div>
+      </div>
+      
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        {gameState === 'finished' ? (
+             <div style={{ textAlign: 'center', width: '100%' }}>
+                 <h2 style={{ fontSize: '32px', marginBottom: '30px' }}>GAME OVER</h2>
+                 
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', textAlign: 'left' }}>
+                    {/* FLIGHT STATS */}
+                    <div style={statBoxStyle}>
+                        <h3 style={statHeaderStyle}>FLIGHT</h3>
+                        <p>Total Obstacles: {totalObstacles}</p>
+                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{flightFails}</span></p>
+                        <p>Success Rate: {totalObstacles > 0 ? Math.round(((totalObstacles - flightFails) / totalObstacles) * 100) : 100}%</p>
+                    </div>
+
+                    {/* DICE STATS */}
+                    <div style={statBoxStyle}>
+                        <h3 style={statHeaderStyle}>DICE</h3>
+                        <p>Targets: {diceStats.targets}</p>
+                        <p>Hits: {diceStats.hits}</p>
+                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{diceStats.fails}</span></p>
+                        <p>Accuracy: {diceStats.targets > 0 ? Math.round((diceStats.hits / diceStats.targets) * 100) : 0}%</p>
+                    </div>
+
+                    {/* ROD STATS */}
+                    <div style={statBoxStyle}>
+                        <h3 style={statHeaderStyle}>ROD</h3>
+                        <p>Targets: {rodStats.targets}</p>
+                        <p>Hits: {rodStats.hits}</p>
+                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{rodStats.fails}</span></p>
+                        <p>Accuracy: {rodStats.targets > 0 ? Math.round((rodStats.hits / rodStats.targets) * 100) : 0}%</p>
+                    </div>
+                 </div>
+
+                 <button onClick={onExitGame} style={{...btnStyle, marginTop: '40px', backgroundColor: '#27ae60'}}>
+                    MAIN MENU
+                 </button>
+             </div>
+        ) : (
+            <>
+                {gameMode === 'DICE' && (
+                    <DiceGameLogic 
+                        gameState={gameState} 
+                        isPaused={isPaused}
+                        settings={settings}
+                        lastSpacePressTime={lastSpacePressTime} 
+                        onUpdateStats={onUpdateTaskStats} 
+                    />
+                )}
+                {gameMode === 'ROD' && (
+                    <RodGameLogic 
+                        gameState={gameState} 
+                        isPaused={isPaused}
+                        settings={settings}
+                        lastSpacePressTime={lastSpacePressTime} 
+                        onUpdateStats={onUpdateTaskStats} 
+                    />
+                )}
+                
+                {gameState === 'running' && (
+                    <div style={{ marginTop: '40px', fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>
+                        <div>{gameMode} Score: {currentStats.hits} / {currentStats.targets}</div>
+                        <div style={{ color: '#d63031', fontSize: '20px' }}>Fail: {currentStats.fails}</div>
+                    </div>
+                )}
+            </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const btnStyle: React.CSSProperties = { 
+    padding: '15px 30px', 
+    fontSize: '20px', 
+    cursor: 'pointer', 
+    backgroundColor: '#333', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '5px' 
+};
+
+const statBoxStyle: React.CSSProperties = {
+    backgroundColor: '#f1f2f6',
+    padding: '15px',
+    borderRadius: '10px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+};
+
+const statHeaderStyle: React.CSSProperties = {
+    marginTop: 0,
+    marginBottom: '10px',
+    borderBottom: '2px solid #ccc',
+    paddingBottom: '5px'
+};
+
+export default SidePanel;

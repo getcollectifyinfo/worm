@@ -4,6 +4,10 @@ import { Controls } from './components/Controls';
 import { LogPanel } from './components/LogPanel';
 import { MissionPanel } from './components/MissionPanel';
 import { IPPGame } from './components/IPPGame';
+import VIGIGame from './components/VIGI/VIGIGame';
+import CapacityGame from './components/Capacity/CapacityGame';
+import { GameStartMenu } from './components/GameStartMenu';
+import { GameTutorial } from './components/GameTutorial';
 import { GRID_SIZE, DIFFICULTY_SETTINGS } from './types';
 import type { Position, LogEntry, MissionStep, GameMode, ExamState, ExamOption, DifficultyLevel } from './types';
 
@@ -21,7 +25,15 @@ import { LandingPage } from './components/LandingPage';
 
 function App() {
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'LANDING' | 'WORM' | 'IPP'>('LANDING');
+  const [currentPage, setCurrentPage] = useState<'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY'>('LANDING');
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Reset game started when page changes
+  useEffect(() => {
+    setIsGameStarted(false);
+    setIsTutorialOpen(false);
+  }, [currentPage]);
 
   // Global State
   const [gameMode, setGameMode] = useState<GameMode>('PRACTISE');
@@ -123,7 +135,7 @@ function App() {
             visited.add(stateKey);
             
             const newStep: MissionStep = {
-                id: Math.random().toString(36).substr(2, 9),
+                id: Math.random().toString(36).slice(2, 11),
                 text: move.label,
                 actions: move.actions
             };
@@ -430,11 +442,11 @@ function App() {
       // For now, let's start a mission on mount if practise
       // Use setTimeout to avoid synchronous state update warning during render phase (though useEffect runs after render)
       // The warning is about cascading updates.
-      if (gameMode === 'PRACTISE' && !targetPosition) {
+      if (isGameStarted && gameMode === 'PRACTISE' && !targetPosition) {
            const timer = setTimeout(() => startPractiseMission(position, rotation), 0);
            return () => clearTimeout(timer);
       }
-  }, [gameMode, targetPosition, startPractiseMission, position, rotation]);
+  }, [isGameStarted, gameMode, targetPosition, startPractiseMission, position, rotation]);
 
   // Start New Exam Session
   const startExamSession = useCallback(() => {
@@ -475,7 +487,7 @@ function App() {
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).slice(2, 11),
       message,
       timestamp: Date.now()
     }]);
@@ -598,89 +610,312 @@ function App() {
     return <LandingPage onSelectGame={(game) => setCurrentPage(game)} />;
   }
 
+  if (currentPage === 'VIGI') {
+    return <VIGIGame onExit={() => setCurrentPage('LANDING')} />;
+  }
+
+  if (currentPage === 'CAPACITY') {
+    return <CapacityGame onExit={() => setCurrentPage('LANDING')} />;
+  }
+
   if (currentPage === 'IPP') {
     return <IPPGame onExit={() => setCurrentPage('LANDING')} />;
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
-        {/* Back Button */}
-        <button 
-            onClick={() => setCurrentPage('LANDING')}
-            className="fixed top-4 left-4 z-[60] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group"
-            title="Back to Menu"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-        </button>
-        
-        {/* Top Right Controls */}
-        <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
-            {/* Settings Button */}
-            <button 
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
-                title="Settings"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    Settings
-                </span>
-            </button>
+        <GameTutorial
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+            title="WORM"
+            description="Master the art of navigation! Follow the generated flight instructions to guide your worm to the target. Precision is key."
+            rules={[
+                "Read the current instruction in the Mission Panel.",
+                "Execute the command precisely using the keyboard.",
+                "Turn the worm using arrow keys.",
+                "Move forward using the Space bar.",
+                "Reach the target (Red Circle) to complete the mission.",
+                "Avoid wrong inputs to maintain a perfect score."
+            ]}
+            controls={[
+                { key: "←", action: "Turn Left" },
+                { key: "→", action: "Turn Right" },
+                { key: "↓", action: "Turn Back" },
+                { key: "SPACE", action: "Move Forward" }
+            ]}
+        />
 
-            {/* Practise Mode Button */}
-            <button 
-                onClick={switchToPractise}
-                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'PRACTISE' ? 'bg-blue-600 text-white ring-4 ring-blue-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
-                title="Practise Mode"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    Practise Mode
-                </span>
-            </button>
+        {/* Game Start Menu */}
+        {!isGameStarted && !isSettingsOpen && (
+             <GameStartMenu 
+               title="WORM"
+               onStart={() => setIsGameStarted(true)}
+               onSettings={() => setIsSettingsOpen(true)}
+               onBack={() => setCurrentPage('LANDING')}
+               onTutorial={() => setIsTutorialOpen(true)}
+             />
+        )}
 
-            {/* Exam Mode Button */}
-            <button 
-                onClick={startExamSession}
-                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'EXAM' ? 'bg-purple-600 text-white ring-4 ring-purple-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
-                title="Exam Mode"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-                </svg>
-                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    Exam Mode
-                </span>
-            </button>
+        {/* Game UI - Only show when started */}
+        {isGameStarted && (
+           <>
+              {/* Back Button */}
+              <button 
+                  onClick={() => setCurrentPage('LANDING')}
+                  className="fixed top-4 left-4 z-[60] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group"
+                  title="Back to Menu"
+              >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+              </button>
+              
+              {/* Top Right Controls */}
+              <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
+                  {/* Settings Button */}
+                  <button 
+                      onClick={() => setIsSettingsOpen(true)}
+                      className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
+                      title="Settings"
+                  >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Settings
+                      </span>
+                  </button>
 
-            {/* IPP Mode Button - Removed as requested */}
-            {/* 
-            <button 
-                onClick={() => setGameMode('IPP')}
-                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'IPP' ? 'bg-orange-600 text-white ring-4 ring-orange-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
-                title="IPP Mode"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    IPP Mode
-                </span>
-            </button>
-            */}
-        </div>
+                  {/* Practise Mode Button */}
+                  <button 
+                      onClick={switchToPractise}
+                      className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'PRACTISE' ? 'bg-blue-600 text-white ring-4 ring-blue-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
+                      title="Practise Mode"
+                  >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Practise Mode
+                      </span>
+                  </button>
 
-        {/* Settings Modal */}
+                  {/* Exam Mode Button */}
+                  <button 
+                      onClick={startExamSession}
+                      className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'EXAM' ? 'bg-purple-600 text-white ring-4 ring-purple-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
+                      title="Exam Mode"
+                  >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                          <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                      </svg>
+                      <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Exam Mode
+                      </span>
+                  </button>
+              </div>
+
+              {gameMode === 'PRACTISE' && (
+                <div className="flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-7xl">
+                    {/* Left Column: Mission */}
+                    <div className="w-full xl:w-80 h-96 xl:h-[600px]">
+                        <MissionPanel 
+                            instructions={missionInstructions} 
+                            currentStepIndex={currentStepIndex}
+                            isError={isError}
+                        />
+                    </div>
+
+                    {/* Middle Column: Grid */}
+                    <div className="flex-1 w-full flex justify-center">
+                        <Grid 
+                            snakePosition={position} 
+                            snakeRotation={rotation} 
+                            targetPosition={targetPosition}
+                        />
+                    </div>
+                    
+                    {/* Right Column: Controls & Logs */}
+                    <div className="flex flex-col gap-6 w-full xl:w-80">
+                        <Controls pressedKey={pressedKey} />
+                        <div className="h-64 xl:h-[400px] w-full">
+                            <LogPanel logs={logs} />
+                        </div>
+                    </div>
+                    
+                    <div className="fixed bottom-8 text-gray-500 text-sm">
+                        Use <kbd className="bg-gray-200 px-1 rounded">←</kbd> <kbd className="bg-gray-200 px-1 rounded">→</kbd> to rotate, <kbd className="bg-gray-200 px-1 rounded">↓</kbd> to turn back, and <kbd className="bg-gray-200 px-1 rounded">Space</kbd> to move.
+                    </div>
+                </div>
+            )}
+
+            {gameMode === 'EXAM' && (
+                <div className="flex flex-col items-center w-full max-w-4xl">
+                    {/* Header */}
+                    <div className="w-full flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-lg border-2 border-purple-100">
+                        <div>
+                            <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">
+                                Exam Session
+                            </div>
+                            <h2 className="text-3xl font-black text-gray-800">
+                                Question {currentQuestionNumber} <span className="text-gray-300">/ {totalQuestions}</span>
+                            </h2>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                Difficulty
+                            </div>
+                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-bold text-sm">
+                                {DIFFICULTY_SETTINGS[difficulty].label}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Exam Content */}
+                    <div className="w-full relative min-h-[600px] flex justify-center">
+                        
+                        {/* Instructions Overlay */}
+                        {examState === 'SHOWING_INSTRUCTIONS' && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                <div className="bg-gray-900/90 backdrop-blur text-white px-12 py-8 rounded-3xl shadow-2xl transform transition-all animate-bounce-in text-center border-4 border-purple-500">
+                                    <div className="text-4xl md:text-5xl font-black leading-tight">
+                                        {examInstructions[currentInstructionIndex]?.text}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Options Selection */}
+                        {examState === 'SELECTION' && (
+                            <div className="grid grid-cols-2 gap-6 w-full animate-fade-in">
+                                {examOptions.map((option) => (
+                                    <button
+                                        key={option.id}
+                                        onClick={() => handleOptionSelect(option)}
+                                        className="relative bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-purple-400 group overflow-hidden"
+                                    >
+                                        <div className="absolute top-4 left-4 z-10 bg-gray-900 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-lg group-hover:bg-purple-600 transition-colors">
+                                            {option.id.includes('correct') ? '?' : '?'}
+                                        </div>
+                                        <div className="pointer-events-none transform scale-90">
+                                            <Grid 
+                                                snakePosition={option.snakePosition}
+                                                snakeRotation={option.snakeRotation}
+                                                targetPosition={option.targetPosition}
+                                            />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Result Feedback */}
+                        {examState === 'RESULT' && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-md rounded-3xl animate-fade-in p-8">
+                                <div className={`text-6xl md:text-8xl mb-6 animate-bounce-in ${examResult === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`}>
+                                    {examResult === 'CORRECT' ? '✓' : '✗'}
+                                </div>
+                                <h2 className={`text-4xl md:text-5xl font-black mb-8 text-center ${examResult === 'CORRECT' ? 'text-green-400' : 'text-red-400'}`}>
+                                    {resultMessage}
+                                </h2>
+
+                                {/* Show Correct Option and Instructions if Wrong */}
+                                {examResult === 'FALSE' && (
+                                    <div className="flex flex-col xl:flex-row gap-8 items-center justify-center w-full max-w-6xl mb-8">
+                                        {/* Correct Option Preview */}
+                                        {examOptions.find(o => o.isCorrect) && (
+                                            <div className="relative bg-white p-4 rounded-2xl shadow-2xl ring-4 ring-green-500 transform transition-all hover:scale-105">
+                                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded-full font-bold shadow-lg z-10 whitespace-nowrap border-2 border-white">
+                                                    CORRECT OPTION
+                                                </div>
+                                                <div className="w-[280px] h-[280px] md:w-[320px] md:h-[320px] pointer-events-none">
+                                                    <Grid 
+                                                        snakePosition={examOptions.find(o => o.isCorrect)!.snakePosition}
+                                                        snakeRotation={examOptions.find(o => o.isCorrect)!.snakeRotation}
+                                                        targetPosition={examOptions.find(o => o.isCorrect)!.targetPosition}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Instructions List */}
+                                        <div className="w-full max-w-md bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 overflow-y-auto max-h-[350px]">
+                                            <h3 className="text-gray-400 font-bold uppercase text-sm mb-4 border-b border-gray-600 pb-2">Correct Instructions</h3>
+                                            <ul className="space-y-3 text-left">
+                                                {examInstructions.map((step, idx) => (
+                                                    <li key={idx} className="flex items-start gap-3 text-white font-bold text-lg">
+                                                        <span className="bg-purple-600 text-white w-8 h-8 flex items-center justify-center rounded-full text-sm flex-shrink-0 shadow-lg border border-purple-400">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <span>{step.text}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button 
+                                    onClick={handleNextExam}
+                                    className="px-12 py-4 bg-purple-600 text-white rounded-xl font-bold text-xl hover:bg-purple-700 transition-all hover:scale-105 shadow-xl ring-4 ring-purple-900/50"
+                                >
+                                    {currentQuestionNumber < totalQuestions ? 'Next Question →' : 'Finish Exam'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Session Finished Screen */}
+                    {examState === 'SESSION_FINISHED' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
+                            <h2 className="text-5xl font-black mb-8 text-purple-400">EXAM FINISHED!</h2>
+                            
+                            <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-lg border-4 border-gray-700">
+                                <div className="mb-8">
+                                    <div className="text-gray-400 text-xl mb-2">ACCURACY</div>
+                                    <div className={`text-7xl font-black ${correctAnswersCount === totalQuestions ? 'text-green-500' : 'text-blue-500'}`}>
+                                        {Math.round((correctAnswersCount / totalQuestions) * 100)}%
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-center gap-12 text-2xl font-bold mb-8">
+                                    <div className="text-green-400">
+                                        <div className="text-sm text-gray-500 uppercase">Correct</div>
+                                        {correctAnswersCount}
+                                    </div>
+                                    <div className="text-red-400">
+                                        <div className="text-sm text-gray-500 uppercase">Wrong</div>
+                                        {totalQuestions - correctAnswersCount}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-4">
+                                    <button 
+                                        onClick={startExamSession}
+                                        className="w-full py-4 bg-purple-600 rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors"
+                                    >
+                                        Restart Exam
+                                    </button>
+                                    <button 
+                                        onClick={switchToPractise}
+                                        className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
+                                    >
+                                        Back to Menu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+           </>
+        )}
+
+        {/* Settings Modal - Always available if state is open */}
         {isSettingsOpen && (
             <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
@@ -764,211 +999,6 @@ function App() {
                         </button>
                     </div>
                 </div>
-                {/* Session Finished Screen */}
-                {examState === 'SESSION_FINISHED' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
-                        <h2 className="text-5xl font-black mb-8 text-purple-400">EXAM FINISHED!</h2>
-                        
-                        <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-lg border-4 border-gray-700">
-                            <div className="mb-8">
-                                <div className="text-gray-400 text-xl mb-2">ACCURACY</div>
-                                <div className={`text-7xl font-black ${correctAnswersCount === totalQuestions ? 'text-green-500' : 'text-blue-500'}`}>
-                                    {Math.round((correctAnswersCount / totalQuestions) * 100)}%
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-center gap-12 text-2xl font-bold mb-8">
-                                <div className="text-green-400">
-                                    <div className="text-sm text-gray-500 uppercase">Correct</div>
-                                    {correctAnswersCount}
-                                </div>
-                                <div className="text-red-400">
-                                    <div className="text-sm text-gray-500 uppercase">Wrong</div>
-                                    {totalQuestions - correctAnswersCount}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-4">
-                                <button 
-                                    onClick={startExamSession}
-                                    className="w-full py-4 bg-purple-600 rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors"
-                                >
-                                    Restart Exam
-                                </button>
-                                <button 
-                                    onClick={switchToPractise}
-                                    className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
-                                >
-                                    Back to Menu
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        )}
-
-        {gameMode === 'PRACTISE' && (
-            <div className="flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-7xl">
-                {/* Left Column: Mission */}
-                <div className="w-full xl:w-80 h-96 xl:h-[600px]">
-                    <MissionPanel 
-                        instructions={missionInstructions} 
-                        currentStepIndex={currentStepIndex}
-                        isError={isError}
-                    />
-                </div>
-
-                {/* Middle Column: Grid */}
-                <div className="flex-1 w-full flex justify-center">
-                    <Grid 
-                        snakePosition={position} 
-                        snakeRotation={rotation} 
-                        targetPosition={targetPosition}
-                    />
-                </div>
-                
-                {/* Right Column: Controls & Logs */}
-                <div className="flex flex-col gap-6 w-full xl:w-80">
-                    <Controls pressedKey={pressedKey} />
-                    <div className="h-64 xl:h-[400px] w-full">
-                        <LogPanel logs={logs} />
-                    </div>
-                </div>
-                
-                <div className="fixed bottom-8 text-gray-500 text-sm">
-                    Use <kbd className="bg-gray-200 px-1 rounded">←</kbd> <kbd className="bg-gray-200 px-1 rounded">→</kbd> to rotate, <kbd className="bg-gray-200 px-1 rounded">↓</kbd> to turn back, and <kbd className="bg-gray-200 px-1 rounded">Space</kbd> to move.
-                </div>
-            </div>
-        )}
-
-        {gameMode === 'EXAM' && (
-            <div className="flex flex-col items-center w-full max-w-4xl">
-                {/* Header */}
-                <div className="w-full flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-lg border-2 border-purple-100">
-                    <div>
-                        <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">
-                            Exam Session
-                        </div>
-                        <h2 className="text-3xl font-black text-gray-800">
-                            Question {currentQuestionNumber} <span className="text-gray-300">/ {totalQuestions}</span>
-                        </h2>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                            Difficulty
-                        </div>
-                        <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-bold text-sm">
-                            {DIFFICULTY_SETTINGS[difficulty].label}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Exam Content */}
-                <div className="w-full relative min-h-[600px] flex justify-center">
-                    
-                    {/* Instructions Overlay */}
-                    {examState === 'SHOWING_INSTRUCTIONS' && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                            <div className="bg-gray-900/90 backdrop-blur text-white px-12 py-8 rounded-3xl shadow-2xl transform transition-all animate-bounce-in text-center border-4 border-purple-500">
-                                <div className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-4">Instruction {currentInstructionIndex + 1}</div>
-                                <div className="text-4xl md:text-5xl font-black leading-tight">
-                                    {examInstructions[currentInstructionIndex]?.text}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Options Selection */}
-                    {examState === 'SELECTION' && (
-                        <div className="grid grid-cols-2 gap-6 w-full animate-fade-in">
-                            {examOptions.map((option) => (
-                                <button
-                                    key={option.id}
-                                    onClick={() => handleOptionSelect(option)}
-                                    className="relative bg-white p-4 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all border-2 border-transparent hover:border-purple-400 group overflow-hidden"
-                                >
-                                    <div className="absolute top-4 left-4 z-10 bg-gray-900 text-white w-8 h-8 flex items-center justify-center rounded-full font-bold shadow-lg group-hover:bg-purple-600 transition-colors">
-                                        {option.id.includes('correct') ? '?' : '?'}
-                                    </div>
-                                    <div className="pointer-events-none transform scale-90">
-                                        <Grid 
-                                            snakePosition={option.snakePosition}
-                                            snakeRotation={option.snakeRotation}
-                                            targetPosition={option.targetPosition}
-                                        />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Result Feedback */}
-                    {examState === 'RESULT' && (
-                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/90 backdrop-blur-md rounded-3xl animate-fade-in">
-                            <div className={`text-8xl mb-6 animate-bounce-in ${examResult === 'CORRECT' ? 'text-green-500' : 'text-red-500'}`}>
-                                {examResult === 'CORRECT' ? '✓' : '✗'}
-                            </div>
-                            <h2 className={`text-5xl font-black mb-8 ${examResult === 'CORRECT' ? 'text-green-600' : 'text-red-600'}`}>
-                                {resultMessage}
-                            </h2>
-                            <button 
-                                onClick={handleNextExam}
-                                className="px-12 py-4 bg-gray-900 text-white rounded-xl font-bold text-xl hover:bg-black transition-all hover:scale-105 shadow-xl"
-                            >
-                                {currentQuestionNumber < totalQuestions ? 'Next Question →' : 'Finish Exam'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Session Finished Screen */}
-                {examState === 'SESSION_FINISHED' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
-                        <h2 className="text-5xl font-black mb-8 text-purple-400">EXAM FINISHED!</h2>
-                        
-                        <div className="bg-gray-800 p-8 rounded-3xl shadow-2xl text-center w-full max-w-lg border-4 border-gray-700">
-                            <div className="mb-8">
-                                <div className="text-gray-400 text-xl mb-2">ACCURACY</div>
-                                <div className={`text-7xl font-black ${correctAnswersCount === totalQuestions ? 'text-green-500' : 'text-blue-500'}`}>
-                                    {Math.round((correctAnswersCount / totalQuestions) * 100)}%
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-center gap-12 text-2xl font-bold mb-8">
-                                <div className="text-green-400">
-                                    <div className="text-sm text-gray-500 uppercase">Correct</div>
-                                    {correctAnswersCount}
-                                </div>
-                                <div className="text-red-400">
-                                    <div className="text-sm text-gray-500 uppercase">Wrong</div>
-                                    {totalQuestions - correctAnswersCount}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-4">
-                                <button 
-                                    onClick={startExamSession}
-                                    className="w-full py-4 bg-purple-600 rounded-xl font-bold text-xl hover:bg-purple-700 transition-colors"
-                                >
-                                    Restart Exam
-                                </button>
-                                <button 
-                                    onClick={switchToPractise}
-                                    className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
-                                >
-                                    Back to Menu
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        )}
-
-        {gameMode === 'IPP' && (
-            <div className="absolute inset-0 z-50">
-                <IPPGame onExit={switchToPractise} />
             </div>
         )}
     </div>
