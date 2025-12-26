@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { statsService } from '../../services/statsService';
 
 export const useVIGI1GameLogic = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -200,12 +201,52 @@ export const useVIGI1GameLogic = () => {
     }, 1000);
   };
 
-  const stopGame = () => {
+  // Sync refs for cleanup/save
+  const statsRef = useRef({
+    score, gameTime, totalEvents, caughtEvents, wrongMoves,
+    audioEvents, caughtAudio, wrongAudio, audioDifficulty
+  });
+  const isPlayingRef = useRef(isPlaying);
+
+  useEffect(() => {
+    statsRef.current = {
+      score, gameTime, totalEvents, caughtEvents, wrongMoves,
+      audioEvents, caughtAudio, wrongAudio, audioDifficulty
+    };
+  }, [score, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio, audioDifficulty]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const stopGame = useCallback(() => {
+    // Check ref to see if we were playing (avoids saving if already stopped)
+    if (isPlayingRef.current) {
+        const s = statsRef.current;
+        statsService.saveSession({
+            game_type: 'VIGI1',
+            score: s.score,
+            duration_seconds: s.gameTime,
+            metadata: {
+                totalEvents: s.totalEvents,
+                caughtEvents: s.caughtEvents,
+                wrongMoves: s.wrongMoves,
+                audioEvents: s.audioEvents,
+                caughtAudio: s.caughtAudio,
+                wrongAudio: s.wrongAudio,
+                audioDifficulty: s.audioDifficulty,
+                accuracy: s.totalEvents > 0 ? Math.round((s.caughtEvents / s.totalEvents) * 100) : 0
+            }
+        }).catch(err => console.error("Failed to save VIGI1 stats:", err));
+    }
+
     setIsPlaying(false);
+    isPlayingRef.current = false;
+    
     if (timerRef.current) clearInterval(timerRef.current);
     if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
     if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
-  };
+  }, []); // Empty dependency array = stable function
 
   const handleEyeClick = () => {
     if (!isPlaying) return;
@@ -227,6 +268,8 @@ export const useVIGI1GameLogic = () => {
     // Optional: Immediately trigger next state or wait? 
     // Usually vigilance tests just continue.
   };
+
+
 
   // Cleanup
   useEffect(() => {

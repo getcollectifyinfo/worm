@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-export type GameType = 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY';
+export type GameType = 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1';
 
 export interface GameSession {
   game_type: GameType;
