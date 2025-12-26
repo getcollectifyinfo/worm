@@ -37,7 +37,7 @@ export const useVIGI1GameLogic = () => {
   const MISMATCH_CHANCE = 0.3; // 30% chance of mismatch
   const AUDIO_INTERVAL = 2000; // 1s play + 1s gap approx (or fixed interval)
 
-  const TONES = useRef(['ince', 'orta', 'kalin']).current;
+  const TONES = ['ince', 'orta', 'kalin'];
 
   const playRandomTone = useCallback(() => {
     // Reset target flag from previous turn if it wasn't caught

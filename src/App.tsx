@@ -454,7 +454,7 @@ function App() {
             return () => clearTimeout(timer);
         }
     }
-  }, [gameMode, examState, examInstructions]);
+  }, [gameMode, examState, examInstructions, instructionSpeed]);
 
   // Initialize Game
   useEffect(() => {
@@ -612,7 +612,7 @@ function App() {
         });
         break;
     }
-  }, [rotation, targetPosition, missionInstructions, currentStepIndex, currentSubStepIndex, startPractiseMission]);
+  }, [rotation, targetPosition, missionInstructions, currentStepIndex, currentSubStepIndex, startPractiseMission, getNormalizedRotation]);
 
   const handleKeyUp = useCallback(() => {
     setPressedKey(null);

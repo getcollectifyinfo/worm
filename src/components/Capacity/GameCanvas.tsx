@@ -92,7 +92,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       }
   }, [isPaused]);
 
-  const triggerFail = () => {
+  const triggerFail = React.useCallback(() => {
       failCountRef.current += 1;
       onFail(); // Notify App
       
@@ -102,7 +102,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       redTimeoutRef.current = setTimeout(() => {
           isRedRef.current = false;
       }, 500); // 500ms red flash
-  };
+  }, [onFail]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

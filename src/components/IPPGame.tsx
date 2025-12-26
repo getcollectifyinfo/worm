@@ -16,6 +16,7 @@ interface GameStats {
 
 type GaugeId = 'left' | 'top' | 'right';
 type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+type CalcRule = 'ADD' | 'DOUBLE_ADD' | 'SUBTRACT' | 'DOUBLE_SUBTRACT';
 
 const availableKeys = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
@@ -26,6 +27,24 @@ const getRandomKeys = () => {
     top: shuffled[1],
     right: shuffled[2]
   };
+};
+
+const getRuleText = (rule: CalcRule) => {
+  switch (rule) {
+    case 'ADD': return 'Add upcoming numbers';
+    case 'DOUBLE_ADD': return 'Add double of upcoming numbers';
+    case 'SUBTRACT': return 'Subtract upcoming numbers';
+    case 'DOUBLE_SUBTRACT': return 'Subtract double upcoming numbers';
+  }
+};
+
+const calculateNext = (current: number, num: number, rule: CalcRule) => {
+  switch (rule) {
+    case 'ADD': return current + num;
+    case 'DOUBLE_ADD': return current + (num * 2);
+    case 'SUBTRACT': return current - num;
+    case 'DOUBLE_SUBTRACT': return current - (num * 2);
+  }
 };
 
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
@@ -62,7 +81,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   }, [assignments]);
 
   // Calculation Game State
-  type CalcRule = 'ADD' | 'DOUBLE_ADD' | 'SUBTRACT' | 'DOUBLE_SUBTRACT';
   type CalcState = 'IDLE' | 'SHOWING_RULE' | 'SHOWING_NUM_1' | 'SHOWING_NUM_1_WAIT' | 'SHOWING_NUM_2' | 'SHOWING_NUM_2_WAIT' | 'INPUT' | 'FEEDBACK' | 'NEXT_NUM_DELAY' | 'SHOWING_NEXT_NUM' | 'SHOWING_NEXT_NUM_WAIT';
 
   const [calcState, setCalcState] = useState<CalcState>('IDLE');
@@ -73,26 +91,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [calcFeedback, setCalcFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [isInitialRound, setIsInitialRound] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Helper to get rule text
-  const getRuleText = (rule: CalcRule) => {
-    switch (rule) {
-      case 'ADD': return 'Add upcoming numbers';
-      case 'DOUBLE_ADD': return 'Add double of upcoming numbers';
-      case 'SUBTRACT': return 'Subtract upcoming numbers';
-      case 'DOUBLE_SUBTRACT': return 'Subtract double upcoming numbers';
-    }
-  };
-
-  // Helper to perform calculation
-  const calculateNext = (current: number, num: number, rule: CalcRule) => {
-    switch (rule) {
-      case 'ADD': return current + num;
-      case 'DOUBLE_ADD': return current + (num * 2);
-      case 'SUBTRACT': return current - num;
-      case 'DOUBLE_SUBTRACT': return current - (num * 2);
-    }
-  };
 
   // Start Calculation Game Loop
   useEffect(() => {
@@ -235,7 +233,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     }
 
     return () => clearTimeout(timeout);
-  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, isInitialRound]);
+  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, isInitialRound, ruleChangeFreq]);
 
   const handleCalcSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,7 +325,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
     }, 0);
     return () => clearTimeout(t);
-  }, [hasStarted]); 
+  }, [hasStarted, assignments, triggerHint]); 
 
   // Random reassignment loop - changes ONE key at a time
   useEffect(() => {
@@ -479,7 +477,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gaugeLocks, assignments, gameOver, triggerHint, hasStarted]);
+  }, [gaugeLocks, assignments, gameOver, triggerHint, hasStarted, isSettingsOpen]);
 
   // Fix: Move reaction times calculation to state to avoid ref access during render
   const [avgReactionTime, setAvgReactionTime] = useState(0);
