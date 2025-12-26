@@ -19,7 +19,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo }) => 
         <div className="container mx-auto px-4 pt-32 pb-24 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex justify-center mb-8">
-              <img src="/logo.png" alt="CadetPrep Academy" className="h-24 md:h-32 drop-shadow-2xl" />
+              <img src="/logo.png" alt="CadetPrep Academy" className="h-48 md:h-64 drop-shadow-2xl" />
             </div>
             <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-400 font-medium text-sm tracking-wide">
               Train Your Mind. Earn Your Wings.

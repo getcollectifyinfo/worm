@@ -59,7 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
     <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a] p-4">
       <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
         <div className="flex justify-center mb-6">
-          <img src="/logo.png" alt="CadetPrep Academy" className="h-16" />
+          <img src="/logo.png" alt="CadetPrep Academy" className="h-32" />
         </div>
         <h2 className="text-3xl font-bold text-white text-center mb-2">
           {isLogin ? 'Welcome Back' : 'Create Account'}
