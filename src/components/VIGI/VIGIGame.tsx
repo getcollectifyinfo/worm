@@ -92,7 +92,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
-        title="VIGI"
+        title="VIGI 2"
         description="Vigilance Test! Monitor the moving object and react instantly to specific changes in its behavior."
         rules={[
             "Watch the object moving in the circle.",

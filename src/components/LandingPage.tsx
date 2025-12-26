@@ -87,7 +87,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           <div className="p-6 bg-purple-500 rounded-full group-hover:scale-110 transition-transform duration-300">
             <Zap size={64} className="text-white" />
           </div>
-          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-purple-400">VIGI</span>
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-purple-400">VIGI 2</span>
+            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-purple-300">Dot Vigilance Test</span>
+          </div>
         </button>
 
         {/* CAPACITY Button */}
