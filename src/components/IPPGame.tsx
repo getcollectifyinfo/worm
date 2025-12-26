@@ -315,24 +315,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   }, [isMathBusy]);
   
   const showHintRef = useRef(showHint);
-  
-  // Use a different ref for the effect dependency if needed, or just remove dependency and trust updates
-  // Actually, the linter error "This value cannot be modified" usually refers to props or consts that are not refs.
-  // showHintRef IS a ref. But maybe the linter is confused because I declared it const? No.
-  // The error says "Modifying a value used previously in an effect function or as an effect dependency".
-  // showHintRef is NOT used as a dependency. showHint is.
-  // Wait, I might have used showHintRef in a previous effect?
-  // Ah, lines 230: `if (showHintRef.current) ...` inside handleCalcSubmit. That's fine.
-  // The issue is likely how I'm updating it. 
-  // Let's try removing the effect dependency on showHintRef (which it doesn't have).
-  // The linter might be flagging that I'm mutating a ref inside an effect that depends on the state that the ref mirrors? No.
-  // Let's try to just update the ref without the effect, or use useLayoutEffect.
-  // Or simply:
-  
-  // Use layout effect to ensure ref is updated synchronously before next paint/effects
-  React.useLayoutEffect(() => {
-      showHintRef.current = showHint;
-  }, [showHint]);
+  showHintRef.current = showHint; // Sync render value to ref
 
   // Show hint on initial mount (only if started)
   useEffect(() => {
@@ -416,6 +399,13 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     setStats({ correct: 0, wrong: 0 });
     setTimer(gameDuration * 60);
     setStartTime(Date.now());
+
+    // Reset Game State
+    setAssignments(getRandomKeys());
+    setGaugeLocks({ left: false, top: false, right: false });
+    setReactionTimes({ left: null, top: null, right: null });
+    recordedReactionTimes.current = [];
+    lockStartTimes.current = { left: null, top: null, right: null };
     
     // Reset Calc State
     setCalcState('IDLE');
@@ -559,7 +549,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       {!hasStarted && !isSettingsOpen && !gameOver && (
         <GameStartMenu 
           title="IPP" 
-          onStart={() => setHasStarted(true)}
+          onStart={handleStart}
           onSettings={() => setIsSettingsOpen(true)}
           onBack={onExit}
           onTutorial={() => setIsTutorialOpen(true)}

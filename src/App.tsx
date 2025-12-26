@@ -22,7 +22,7 @@ const MOTIVATIONAL_MESSAGES = [
 ];
 
 import { LandingPage } from './components/LandingPage';
-import { AuthPage } from './components/Auth/AuthPage';
+// import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 

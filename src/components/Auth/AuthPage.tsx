@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, Loader2, Chrome } from 'lucide-react';
+// import { useAuth } from '../../contexts/AuthContext';
+import { Mail, Lock, Loader2 /*, Chrome*/ } from 'lucide-react';
 
 interface AuthPageProps {
   onSuccess: () => void;
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
-  const { signInWithGoogle } = useAuth();
+  // const { signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
