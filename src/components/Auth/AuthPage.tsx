@@ -29,15 +29,27 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         if (error) throw error;
         onSuccess();
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        setError('Check your email for the confirmation link!');
+        
+        // If email confirmation is disabled, user is logged in automatically
+        if (data.session) {
+            onSuccess();
+        } else {
+            // Should not happen if email confirmation is disabled, but handle just in case
+            setError('Account created! Please sign in.');
+            setIsLogin(true);
+        }
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
