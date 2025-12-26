@@ -13,14 +13,69 @@ export const useVIGI1GameLogic = () => {
   const [caughtEvents, setCaughtEvents] = useState(0); // Correct clicks on mismatch
   const [wrongMoves, setWrongMoves] = useState(0); // Clicks on match (false alarm)
   
+  // Audio Challenge Stats
+  const [audioEvents, setAudioEvents] = useState(0); // Total audio targets (3 in a row)
+  const [caughtAudio, setCaughtAudio] = useState(0); // Correctly identified
+  const [wrongAudio, setWrongAudio] = useState(0); // False alarms
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
   const directionRef = useRef<1 | -1>(1); // 1: Clockwise, -1: Counter-clockwise
   const stepsUntilTurnRef = useRef<number>(0);
+
+  // Audio Logic Refs
+  const toneHistoryRef = useRef<string[]>([]);
+  const isAudioTargetRef = useRef<boolean>(false); // True if currently in the window after 3rd same tone
+  const canClickAudioRef = useRef<boolean>(true); // Prevent double clicking for same event
 
   // Difficulty settings (could be passed in)
   const UPDATE_SPEED = 1000; // ms per update
   const MISMATCH_CHANCE = 0.3; // 30% chance of mismatch
+  const AUDIO_INTERVAL = 2000; // 1s play + 1s gap approx (or fixed interval)
+
+  const TONES = ['ince', 'orta', 'kalin'];
+
+  const playRandomTone = useCallback(() => {
+    // Reset target flag from previous turn if it wasn't caught
+    if (isAudioTargetRef.current) {
+        // If we were in a target state and it's time for next sound, user missed it.
+        // We could count this as a miss if we wanted distinct 'miss' stats.
+        isAudioTargetRef.current = false;
+    }
+    canClickAudioRef.current = true; // Reset clickability for next sound window
+
+    const randomTone = TONES[Math.floor(Math.random() * TONES.length)];
+    const audio = new Audio(`/${randomTone}.m4a`);
+    audio.play().catch(e => console.error("Audio play failed", e));
+
+    // Update history
+    const history = toneHistoryRef.current;
+    history.push(randomTone);
+    if (history.length > 3) history.shift(); // Keep last 3
+
+    // Check for pattern
+    if (history.length === 3) {
+        if (history[0] === history[1] && history[1] === history[2]) {
+            // TARGET!
+            isAudioTargetRef.current = true;
+            setAudioEvents(prev => prev + 1);
+            // Clear history so we don't trigger again on 4th same tone (unless that's desired? 
+            // User said "3 times same tone". 
+            // If sequence is A A A A -> Is that two events? A A A (1) + A A A (2)?
+            // Usually "3 in a row" means reset or sliding window. 
+            // Let's assume sliding window: A A A -> event. Next is A. Now we have A A A again. 
+            // But usually for these tests, it's distinct sets.
+            // Let's keep it simple: Sliding window is standard for N-back, but this is "3 in a row".
+            // If I clear history, A A A A becomes (A A A) -> cleared -> (A). User needs 2 more A's.
+            // If I don't clear, A A A A triggers on index 3 and 4.
+            // Let's clear to be safe and distinct.
+            toneHistoryRef.current = []; 
+        }
+    }
+  }, []);
+
 
   // Refactored State Update Logic to ensure synchronization
   const updateGameLoop = useCallback(() => {
@@ -71,6 +126,24 @@ export const useVIGI1GameLogic = () => {
     });
   }, []);
 
+  const handleNoteClick = () => {
+    if (!isPlaying) return;
+    
+    if (!canClickAudioRef.current) return; // Prevent spamming in same window
+    canClickAudioRef.current = false;
+
+    if (isAudioTargetRef.current) {
+        // Success!
+        setScore(prev => prev + 10);
+        setCaughtAudio(prev => prev + 1);
+        isAudioTargetRef.current = false; // Consumed
+    } else {
+        // Fail
+        setScore(prev => Math.max(0, prev - 5));
+        setWrongAudio(prev => prev + 1);
+    }
+  };
+
   const startGame = () => {
     setIsPlaying(true);
     setScore(0);
@@ -78,6 +151,13 @@ export const useVIGI1GameLogic = () => {
     setTotalEvents(0);
     setCaughtEvents(0);
     setWrongMoves(0);
+    
+    // Reset Audio Stats
+    setAudioEvents(0);
+    setCaughtAudio(0);
+    setWrongAudio(0);
+    toneHistoryRef.current = [];
+    isAudioTargetRef.current = false;
     
     // Random start position
     const startPos = Math.floor(Math.random() * 36) + 1;
@@ -90,6 +170,7 @@ export const useVIGI1GameLogic = () => {
 
     // Game Loop
     updateIntervalRef.current = setInterval(updateGameLoop, UPDATE_SPEED);
+    audioIntervalRef.current = setInterval(playRandomTone, AUDIO_INTERVAL);
 
     // Timer
     timerRef.current = setInterval(() => {
@@ -107,6 +188,7 @@ export const useVIGI1GameLogic = () => {
     setIsPlaying(false);
     if (timerRef.current) clearInterval(timerRef.current);
     if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
   };
 
   const handleEyeClick = () => {
@@ -147,12 +229,16 @@ export const useVIGI1GameLogic = () => {
       digitalValue,
       totalEvents,
       caughtEvents,
-      wrongMoves
+      wrongMoves,
+      audioEvents,
+      caughtAudio,
+      wrongAudio
     },
     actions: {
       startGame,
       stopGame,
       handleEyeClick,
+      handleNoteClick,
       setGameDuration
     }
   };

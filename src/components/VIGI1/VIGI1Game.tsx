@@ -13,8 +13,21 @@ interface VIGI1GameProps {
 
 const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const { gameState, actions } = useVIGI1GameLogic();
-  const { isPlaying, score, gameTime, gameDuration, analogValue, digitalValue, totalEvents, caughtEvents, wrongMoves } = gameState;
-  const { startGame, handleEyeClick, setGameDuration } = actions;
+  const { 
+      isPlaying, 
+      score, 
+      gameTime, 
+      gameDuration, 
+      analogValue, 
+      digitalValue, 
+      totalEvents, 
+      caughtEvents, 
+      wrongMoves,
+      audioEvents,
+      caughtAudio,
+      wrongAudio 
+  } = gameState;
+  const { startGame, handleEyeClick, handleNoteClick, setGameDuration } = actions;
   
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -53,10 +66,10 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
 
       {/* Controls */}
       <div className="flex gap-16 mt-12">
-        {/* Note Button (Placeholder for now) */}
+        {/* Note Button */}
         <button 
-          className="w-24 h-24 bg-white rounded-xl shadow-lg border-2 border-gray-300 flex items-center justify-center active:scale-95 transition-transform"
-          onClick={() => {}} // No action yet
+          className="w-24 h-24 bg-white rounded-xl shadow-lg border-2 border-gray-300 flex items-center justify-center active:scale-95 transition-transform hover:bg-gray-50"
+          onClick={handleNoteClick}
         >
           <Music size={48} className="text-blue-500" />
         </button>
@@ -81,12 +94,13 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
           "The digital display should show: Analog Value × 10 (e.g., 3 -> 030).",
           "MISMATCH EXAMPLE: Needle moves to 6, but Digital shows 50 (stuck on previous value).",
           "If the values DO NOT match, press the EYE button immediately.",
-          "If they match, DO NOT press the button.",
-          "Be quick! The mismatch disappears with the next movement."
+          "AUDIO CHALLENGE: Listen to the tones (High, Medium, Low).",
+          "If you hear the SAME TONE 3 times in a row, press the NOTE button.",
+          "Be quick! You must press before the next tone plays."
         ]}
         controls={[
           { key: "EYE Button", action: "Report Visual Mismatch", icon: <Eye /> },
-          { key: "NOTE Button", action: "Coming Soon", icon: <Music /> }
+          { key: "NOTE Button", action: "Report 3 Consecutive Tones", icon: <Music /> }
         ]}
       />
 
@@ -104,23 +118,38 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             >
                 {gameTime > 0 && (
                     <div className="grid grid-cols-2 gap-3 mb-4 w-full">
-                        <div className="bg-gray-700 p-3 rounded-lg text-center">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider">Accuracy</div>
-                            <div className="text-2xl font-bold text-green-400">
+                        <div className="col-span-2 bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Total Score</div>
+                            <div className="text-3xl font-bold text-yellow-400">{score}</div>
+                        </div>
+
+                        {/* Visual Stats */}
+                        <div className="bg-gray-700 p-2 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Accuracy</div>
+                            <div className="text-xl font-bold text-green-400">
                                 {totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0}%
                             </div>
                         </div>
-                         <div className="bg-gray-700 p-3 rounded-lg text-center">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider">Score</div>
-                            <div className="text-2xl font-bold text-yellow-400">{score}</div>
-                        </div>
-                        <div className="bg-gray-700 p-3 rounded-lg text-center">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider">Caught</div>
+                         <div className="bg-gray-700 p-2 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Caught</div>
                             <div className="text-lg font-bold text-white">{caughtEvents} / {totalEvents}</div>
                         </div>
-                        <div className="bg-gray-700 p-3 rounded-lg text-center">
-                            <div className="text-xs text-gray-400 uppercase tracking-wider">False Alarms</div>
-                            <div className="text-lg font-bold text-red-400">{wrongMoves}</div>
+
+                        {/* Audio Stats */}
+                        <div className="bg-gray-700 p-2 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Accuracy</div>
+                            <div className="text-xl font-bold text-blue-400">
+                                {audioEvents > 0 ? Math.round((caughtAudio / audioEvents) * 100) : 0}%
+                            </div>
+                        </div>
+                        <div className="bg-gray-700 p-2 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Caught</div>
+                            <div className="text-lg font-bold text-white">{caughtAudio} / {audioEvents}</div>
+                        </div>
+
+                        <div className="col-span-2 bg-gray-700 p-2 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Total False Alarms</div>
+                            <div className="text-lg font-bold text-red-400">{wrongMoves + wrongAudio}</div>
                         </div>
                     </div>
                 )}
