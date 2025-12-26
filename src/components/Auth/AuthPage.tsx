@@ -65,7 +65,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
           {isLogin ? 'Welcome Back' : 'Create Account'}
         </h2>
         <p className="text-gray-400 text-center mb-8">
-          {isLogin ? 'Sign in to access SKYTEST SIMULATION' : 'Join SKYTEST SIMULATION today'}
+          {isLogin ? 'Sign in to access Cadetprep Academy' : 'Join Cadetprep Academy today'}
         </p>
 
         {error && (

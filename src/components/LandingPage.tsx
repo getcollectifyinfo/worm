@@ -53,7 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
 
       <div className="flex flex-col items-center">
         <img src="/logo.png" alt="CadetPrep Academy" className="h-64 mb-6 drop-shadow-2xl" />
-        <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">Cadetprep Academy</h1>
+        <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKY TEST SIMULATION</h1>
       </div>
       
       <div className="flex gap-16">
