@@ -6,6 +6,7 @@ export const useVIGI1GameLogic = () => {
   const [analogValue, setAnalogValue] = useState(36); // 1-36
   const [digitalValue, setDigitalValue] = useState(360);
   const [gameTime, setGameTime] = useState(0);
+  const [gameDuration, setGameDuration] = useState(60); // Default 60 seconds
   
   // Stats
   const [totalEvents, setTotalEvents] = useState(0); // Total mismatches presented
@@ -92,7 +93,13 @@ export const useVIGI1GameLogic = () => {
 
     // Timer
     timerRef.current = setInterval(() => {
-      setGameTime(prev => prev + 1);
+      setGameTime(prev => {
+        const nextTime = prev + 1;
+        if (nextTime >= gameDuration) {
+          stopGame();
+        }
+        return nextTime;
+      });
     }, 1000);
   };
 
@@ -135,6 +142,7 @@ export const useVIGI1GameLogic = () => {
       isPlaying,
       score,
       gameTime,
+      gameDuration,
       analogValue,
       digitalValue,
       totalEvents,
@@ -144,7 +152,8 @@ export const useVIGI1GameLogic = () => {
     actions: {
       startGame,
       stopGame,
-      handleEyeClick
+      handleEyeClick,
+      setGameDuration
     }
   };
 };

@@ -5,6 +5,7 @@ import { DigitalDisplay } from './DigitalDisplay';
 import { useVIGI1GameLogic } from './useVIGI1GameLogic';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
+import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
 
 interface VIGI1GameProps {
   onExit: () => void;
@@ -12,10 +13,11 @@ interface VIGI1GameProps {
 
 const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const { gameState, actions } = useVIGI1GameLogic();
-  const { isPlaying, score, gameTime, analogValue, digitalValue, totalEvents, caughtEvents, wrongMoves } = gameState;
-  const { startGame, handleEyeClick } = actions;
+  const { isPlaying, score, gameTime, gameDuration, analogValue, digitalValue, totalEvents, caughtEvents, wrongMoves } = gameState;
+  const { startGame, handleEyeClick, setGameDuration } = actions;
   
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -95,7 +97,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
                 title="VIGI 1"
                 startLabel={gameTime > 0 ? "PLAY AGAIN" : "START GAME"}
                 onStart={startGame}
-                onSettings={() => {}}
+                onSettings={() => setIsSettingsOpen(true)}
                 onBack={onExit}
                 highScore={0} // TODO: Persist high score
                 onTutorial={() => setIsTutorialOpen(true)}
@@ -125,6 +127,26 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             </GameStartMenu>
         </div>
       )}
+
+      <GameSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        title="VIGI 1 Settings"
+      >
+        <SettingsSection title="Game Duration">
+            <SettingsLabel>Duration (Minutes)</SettingsLabel>
+            <SettingsRange 
+                value={gameDuration / 60}
+                min={1}
+                max={10}
+                step={1}
+                onChange={(val) => setGameDuration(val * 60)}
+                leftLabel="1 min"
+                rightLabel="10 min"
+                valueLabel={`${gameDuration / 60} min`}
+            />
+        </SettingsSection>
+      </GameSettingsModal>
 
     </div>
   );
