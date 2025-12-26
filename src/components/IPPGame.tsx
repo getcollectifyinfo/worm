@@ -119,7 +119,18 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [gameOver]);
+  }, [gameOver, hasStarted]);
+
+  // Exit on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onExit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onExit]);
 
   // Key Down Listener
   useEffect(() => {
@@ -228,7 +239,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       )}
 
       {/* Top Left Exit */}
-      <div className="absolute top-8 left-8 flex flex-col items-start">
+      <div className="absolute top-8 left-8 flex flex-col items-start z-40">
         <div className="text-white text-xl font-bold mb-1">{formatTime(timer)}</div>
         <button 
           onClick={onExit}
