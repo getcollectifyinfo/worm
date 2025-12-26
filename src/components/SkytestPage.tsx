@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { 
   Check, 
   ChevronRight, 
@@ -103,6 +104,10 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      <Helmet>
+        <title>SKYTEST Hazırlık - Pegasus Psikometrik Test Simülasyonu</title>
+        <meta name="description" content="SKYTEST hazırlık modülleri ile Pegasus pilotluk sınavlarına hazırlanın. DLR, matematik, fizik ve dikkat testleri simülasyonu. Cadet adayları için özel psikometrik testler." />
+      </Helmet>
       
       {/* 1. HERO SECTION */}
       <section className="relative bg-slate-900 text-white overflow-hidden">
@@ -348,6 +353,28 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* 7. SEO CONTENT & FAQ */}
+      <section className="py-16 bg-white border-t border-slate-200">
+        <div className="container mx-auto px-4 max-w-4xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Skytest Hazırlık ve Simülasyon Rehberi</h2>
+            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
+                <p>
+                    <strong>Skytest hazırlık</strong> süreci, pilot adaylarının en çok zorlandığı aşamalardan biri olan psikometrik testler için kritik bir öneme sahiptir. Özellikle <strong>Pegasus</strong> gibi havayolu şirketlerinin cadet alımlarında kullandığı <strong>skytest sınavı</strong>, adayların bilişsel yeteneklerini, dikkat sürdürülebilirliğini ve stres altındaki performansını ölçer. Platformumuz, bu zorlu sürece yönelik geliştirdiği <strong>skytest psikometrik test</strong> simülasyonları ile adaylara gerçek sınav deneyimi sunar.
+                </p>
+                <p>
+                    <strong>Skytest Pegasus</strong> modülleri ile uyumlu olan sistemimiz, görsel hafıza, üç boyutlu düşünme, matematiksel işlem hızı ve çoklu görev (multitasking) becerilerinizi geliştirmenize yardımcı olur. Skytest sınavı hazırlık aşamasında karşılaşacağınız Cube Rotation, Flight Capacity ve VIGI gibi testler, sadece doğru cevabı bulmanızı değil, aynı zamanda hız ve doğruluğu dengede tutmanızı gerektirir.
+                </p>
+                <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-4">Neden Skytest Hazırlık Simülasyonu?</h3>
+                <p>
+                    Pilotluk mesleği, yüksek düzeyde durumsal farkındalık ve hızlı karar verme yetisi gerektirir. Skytest simülasyonlarımız, bu yetileri ölçen standart test bataryalarının birebir kopyası niteliğindedir. Düzenli pratik yaparak, zihinsel dayanıklılığınızı artırabilir ve gerçek sınavdaki performans kaygısını minimize edebilirsiniz. Skytest Pegasus süreçlerinde başarılı olmak için sadece teorik bilgi değil, pratik ve psikomotor beceriler de büyük önem taşır.
+                </p>
+                <p>
+                    Platformumuzdaki modüller, havacılık psikolojisi uzmanları tarafından analiz edilerek oluşturulmuştur. Her bir skytest psikometrik test modülü, sınavda karşınıza çıkabilecek farklı zorluk seviyelerini içerir. Böylece, skytest hazırlık sürecinizi adım adım ilerleterek, eksik olduğunuz alanları tespit edip geliştirebilirsiniz. Unutmayın, skytest sınavı bir zeka testi değil, bir yetenek ve performans testidir; doğru çalışma yöntemiyle geliştirilebilir.
+                </p>
+            </div>
         </div>
       </section>
 
