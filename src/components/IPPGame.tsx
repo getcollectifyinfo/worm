@@ -11,6 +11,7 @@ interface GameStats {
 }
 
 type GaugeId = 'left' | 'top' | 'right';
+type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
 const availableKeys = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
@@ -29,6 +30,10 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [gameOver, setGameOver] = useState(false);
   const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>(getRandomKeys);
   const assignmentsRef = useRef(assignments); // Ref to track assignments without triggering re-renders/interval resets
+  
+  // Settings State
+  const [difficulty, setDifficulty] = useState<Difficulty>('EASY');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     assignmentsRef.current = assignments;
@@ -70,7 +75,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   // Random reassignment loop - changes ONE key at a time
   useEffect(() => {
-    if (!hasStarted) return;
+    if (!hasStarted || isSettingsOpen) return;
     const reassignmentInterval = setInterval(() => {
       if (gameOver) return;
       
@@ -103,11 +108,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
       clearInterval(reassignmentInterval);
     };
-  }, [gameOver, triggerHint, hasStarted]);
+  }, [gameOver, triggerHint, hasStarted, isSettingsOpen]);
 
   // Timer
   useEffect(() => {
-    if (!hasStarted || gameOver) return;
+    if (!hasStarted || gameOver || isSettingsOpen) return;
     const interval = setInterval(() => {
       setTimer(prev => {
         if (prev <= 0) {
@@ -119,23 +124,27 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [gameOver, hasStarted]);
+  }, [gameOver, hasStarted, isSettingsOpen]);
 
   // Exit on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onExit();
+        if (isSettingsOpen) {
+             setIsSettingsOpen(false);
+        } else {
+             onExit();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onExit]);
+  }, [onExit, isSettingsOpen]);
 
   // Key Down Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!hasStarted || gameOver) return;
+      if (!hasStarted || gameOver || isSettingsOpen) return;
       const key = e.key.toUpperCase();
       
       let matched = false;
@@ -217,6 +226,15 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const getSpeedMultiplier = (diff: Difficulty) => {
+    switch (diff) {
+      case 'MEDIUM': return 1.2;
+      case 'HARD': return 1.5;
+      default: return 1;
+    }
+  };
+  const speedMultiplier = getSpeedMultiplier(difficulty);
+
   return (
     <div className="w-full h-screen bg-[#4a4a4a] flex flex-col items-center justify-center relative p-8">
       {/* Start Screen */}
@@ -249,6 +267,71 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         </button>
       </div>
 
+      {/* Top Right Settings */}
+      <div className="absolute top-8 right-8 z-40">
+        <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:bg-white/20 transition-all hover:scale-110 group relative border border-white/20"
+            title="Settings"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+      </div>
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60]">
+            <div className="bg-[#2a2a2a] p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-600 relative">
+                <button 
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                >
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                
+                <h2 className="text-3xl font-bold text-white mb-8 text-center">Settings</h2>
+                
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-gray-300 text-lg mb-4 font-semibold">Difficulty</label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {(['EASY', 'MEDIUM', 'HARD'] as Difficulty[]).map((level) => (
+                                <button
+                                    key={level}
+                                    onClick={() => setDifficulty(level)}
+                                    className={`py-3 px-4 rounded-xl font-bold transition-all ${
+                                        difficulty === level 
+                                        ? 'bg-blue-600 text-white shadow-lg scale-105' 
+                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    }`}
+                                >
+                                    {level}
+                                </button>
+                            ))}
+                        </div>
+                        <p className="text-gray-400 text-sm mt-4 text-center">
+                            {difficulty === 'EASY' && 'Normal Speed'}
+                            {difficulty === 'MEDIUM' && '+20% Speed'}
+                            {difficulty === 'HARD' && '+50% Speed'}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => setIsSettingsOpen(false)}
+                        className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 transition-colors mt-4 text-xl"
+                    >
+                        RESUME
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Main Content Grid */}
       <div className="flex flex-col items-center gap-16 scale-75 md:scale-100 relative">
         
@@ -265,6 +348,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 isLockedInRed={gaugeLocks.top}
                 onRedZoneEnter={() => handleRedZoneEnter('top')}
                 onHitMax={() => handleHitMax('top')}
+                speedMultiplier={speedMultiplier}
+                isPaused={isSettingsOpen}
             />
         </div>
 
@@ -283,6 +368,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     isLockedInRed={gaugeLocks.left}
                     onRedZoneEnter={() => handleRedZoneEnter('left')}
                     onHitMax={() => handleHitMax('left')}
+                    speedMultiplier={speedMultiplier}
+                    isPaused={isSettingsOpen}
                 />
             </div>
 
@@ -312,6 +399,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     isLockedInRed={gaugeLocks.right}
                     onRedZoneEnter={() => handleRedZoneEnter('right')}
                     onHitMax={() => handleHitMax('right')}
+                    speedMultiplier={speedMultiplier}
+                    isPaused={isSettingsOpen}
                 />
             </div>
         </div>

@@ -6,6 +6,8 @@ interface GaugeProps {
   isLockedInRed?: boolean;
   onRedZoneEnter?: () => void;
   onHitMax?: () => void;
+  speedMultiplier?: number;
+  isPaused?: boolean;
 }
 
 export const Gauge: React.FC<GaugeProps> = ({ 
@@ -13,12 +15,14 @@ export const Gauge: React.FC<GaugeProps> = ({
   initialValue = 50,
   isLockedInRed = false,
   onRedZoneEnter,
-  onHitMax
+  onHitMax,
+  speedMultiplier = 1,
+  isPaused = false
 }) => {
   // Value is 0-100. 0 is min (left), 100 is max (right)
   const [value, setValue] = useState(initialValue);
   const targetValueRef = useRef(initialValue);
-  const animationSpeedRef = useRef(0.5); // steps per frame
+  const animationSpeedRef = useRef(0.5 * speedMultiplier); // steps per frame
   const isLockedInRedRef = useRef(isLockedInRed);
   const wasInRedRef = useRef(initialValue >= 75);
   const hasHitMaxRef = useRef(false);
@@ -36,6 +40,8 @@ export const Gauge: React.FC<GaugeProps> = ({
   }, [isLockedInRed, value]);
 
   useEffect(() => {
+    if (isPaused) return;
+
     let animationFrameId: number;
 
     const update = () => {
@@ -65,7 +71,7 @@ export const Gauge: React.FC<GaugeProps> = ({
         targetValueRef.current = newTarget;
         
         // Pick a new random speed (lower speed as requested)
-        animationSpeedRef.current = 0.1 + Math.random() * 0.4;
+        animationSpeedRef.current = (0.1 + Math.random() * 0.4) * speedMultiplier;
       }
       
       // Enforce lock if we are in red: Don't let target be outside red
@@ -87,7 +93,7 @@ export const Gauge: React.FC<GaugeProps> = ({
 
     animationFrameId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [value, onRedZoneEnter]); // Depend on value to trigger re-renders, but ref logic handles continuity
+  }, [value, onRedZoneEnter, isPaused, speedMultiplier]); // Depend on value to trigger re-renders, but ref logic handles continuity
 
   // Gauge Drawing Math
   // Start angle: 135 degrees (bottom left)
