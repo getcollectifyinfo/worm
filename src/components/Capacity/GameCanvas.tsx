@@ -348,7 +348,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
       window.removeEventListener('keyup', handleKeyUp);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, []); // Empty dependency array as we use refs for changing props
+  }, [onObstaclePassed, triggerFail]); // Empty dependency array as we use refs for changing props
   
   return (
     <canvas 

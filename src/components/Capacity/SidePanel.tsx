@@ -114,7 +114,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
   const referenceDiceRef = useRef(1);
   const hitRegisteredRef = useRef(false);
 
-  const spawnDice = () => {
+  const spawnDice = React.useCallback(() => {
     hitRegisteredRef.current = false;
     let val;
     do {
@@ -128,7 +128,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
     if (val === referenceDiceRef.current) {
         onUpdateStats({ targets: 1 }); // Increment targets
     }
-  };
+  }, [onUpdateStats]);
 
   useEffect(() => {
     if (gameState === 'reference') {
@@ -143,7 +143,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
     } else if (gameState === 'running') {
         setTimeout(() => setIsDiceVisible(false), 0);
     }
-  }, [gameState]);
+  }, [gameState, onUpdateStats]);
 
   useEffect(() => {
     if (gameState !== 'running' || isPaused) return;
@@ -153,7 +153,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
     
     const interval = setInterval(spawnDice, settings.taskChangeSpeed);
     return () => clearInterval(interval);
-  }, [gameState, isPaused, settings.taskChangeSpeed]);
+  }, [gameState, isPaused, settings.taskChangeSpeed, spawnDice]);
 
   useEffect(() => {
     if (gameState !== 'running' || isPaused) return;
@@ -169,7 +169,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
             hitRegisteredRef.current = true; // Prevent multiple fails for same dice
         }
     }
-  }, [lastSpacePressTime, isPaused]);
+  }, [lastSpacePressTime, isPaused, gameState, isDiceVisible, onUpdateStats]);
 
   return (
     <Dice 
@@ -191,7 +191,7 @@ const RodGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings,
         return Array.from({length: 12}, () => Math.random() > 0.5);
     };
 
-    const spawnPattern = () => {
+    const spawnPattern = React.useCallback(() => {
         hitRegisteredRef.current = false;
         
         const newTop = generateConfig();
@@ -213,12 +213,12 @@ const RodGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings,
         setTopConfig(newTop);
         setBotConfig(newBot);
         configsRef.current = { top: newTop, bot: newBot };
-    };
+    }, [onUpdateStats]);
 
     // Reset stats on mount
     useEffect(() => {
         onUpdateStats({ hits: 0, targets: 0 }, true);
-    }, []);
+    }, [onUpdateStats]);
 
     useEffect(() => {
         if (gameState !== 'running' || isPaused) return;
@@ -226,7 +226,7 @@ const RodGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings,
         setTimeout(() => spawnPattern(), 0);
         const interval = setInterval(spawnPattern, settings.taskChangeSpeed); 
         return () => clearInterval(interval);
-    }, [gameState, isPaused, settings.taskChangeSpeed]);
+    }, [gameState, isPaused, settings.taskChangeSpeed, spawnPattern]);
 
     useEffect(() => {
         if (gameState !== 'running' || isPaused) return;
@@ -242,7 +242,7 @@ const RodGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings,
                 hitRegisteredRef.current = true;
             }
         }
-    }, [lastSpacePressTime, isPaused]);
+    }, [lastSpacePressTime, isPaused, gameState, onUpdateStats]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', alignItems: 'center' }}>

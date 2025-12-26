@@ -31,7 +31,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8 relative">
       {user ? (
-        <div className="absolute top-8 right-8 relative z-50">
+        <div className="absolute top-8 right-8 z-50">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="flex items-center gap-3 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"

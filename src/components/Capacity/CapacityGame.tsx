@@ -131,7 +131,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
   };
 
   // Handle Game Finish
-  const finishGame = async () => {
+  const finishGame = React.useCallback(async () => {
       setGameState('finished');
       
       const endTime = Date.now();
@@ -151,7 +151,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
               rod_stats: rodStats
           }
       });
-  };
+  }, [startTime, diceStats, rodStats, flightFails, totalObstacles]);
 
   // Timer
   useEffect(() => {
@@ -173,7 +173,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState, isPaused, gameMode, settings.gameDuration, startTime, diceStats, rodStats, flightFails, totalObstacles]);
+  }, [gameState, isPaused, gameMode, settings.gameDuration, finishGame]);
 
   const handleRestart = () => {
       // Instead of reload, we reset to menu

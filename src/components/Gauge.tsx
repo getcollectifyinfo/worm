@@ -93,7 +93,7 @@ export const Gauge: React.FC<GaugeProps> = ({
 
     animationFrameId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [value, onRedZoneEnter, isPaused, speedMultiplier]); // Depend on value to trigger re-renders, but ref logic handles continuity
+  }, [value, onRedZoneEnter, isPaused, speedMultiplier, onHitMax]); // Depend on value to trigger re-renders, but ref logic handles continuity
 
   // Gauge Drawing Math
   // Start angle: 135 degrees (bottom left)
