@@ -8,7 +8,7 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame }) => {
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8">
-      <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">GAME MENU</h1>
+      <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKYTEST SIMULATION</h1>
       
       <div className="flex gap-16">
         {/* WORM Button */}
