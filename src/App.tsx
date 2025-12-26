@@ -25,6 +25,7 @@ const MOTIVATIONAL_MESSAGES = [
 import { LandingPage } from './components/LandingPage';
 import { MarketingPage } from './components/MarketingPage';
 import { StatisticsPage } from './components/StatisticsPage';
+import { SkytestPage } from './components/SkytestPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -35,7 +36,7 @@ function App() {
   const { user, loading, signOut } = useAuth();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'STATISTICS'>('MARKETING');
+  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'STATISTICS' | 'SKYTEST_PRODUCT'>('MARKETING');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
@@ -645,7 +646,22 @@ function App() {
   // ----------------------------------------------------------------------
 
   if (currentPage === 'MARKETING') {
-    return <MarketingPage onStartDemo={() => setCurrentPage('LANDING')} />;
+    return (
+      <MarketingPage 
+        onStartDemo={() => setCurrentPage('LANDING')} 
+        onViewProduct={() => setCurrentPage('SKYTEST_PRODUCT')}
+      />
+    );
+  }
+
+  if (currentPage === 'SKYTEST_PRODUCT') {
+    return (
+      <SkytestPage 
+        onBack={() => setCurrentPage('MARKETING')}
+        onStartFree={() => setCurrentPage('LANDING')}
+        onBuy={() => alert('Ödeme sistemi yakında aktif olacak!')}
+      />
+    );
   }
 
   if (currentPage === 'STATISTICS') {

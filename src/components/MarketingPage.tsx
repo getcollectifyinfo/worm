@@ -3,9 +3,10 @@ import { Check, ArrowRight, Brain, Clock, Target, Award, Play, Zap } from 'lucid
 
 interface MarketingPageProps {
   onStartDemo: () => void;
+  onViewProduct: () => void;
 }
 
-export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo }) => {
+export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct }) => {
   return (
     <div className="min-h-screen bg-[#0F172A] text-white overflow-x-hidden">
       {/* Hero Section */}
@@ -43,10 +44,10 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo }) => 
                 <ArrowRight size={20} />
               </button>
               <button 
-                onClick={onStartDemo}
+                onClick={onViewProduct}
                 className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-lg transition-all border border-white/10 backdrop-blur-sm"
               >
-                Start Your Preparation
+                View SKYTEST Package
               </button>
             </div>
 
