@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, ArrowRight, Brain, Clock, Target, Award, Play, Zap } from 'lucide-react';
+import { NewsletterModal } from './NewsletterModal';
 
 interface MarketingPageProps {
   onStartDemo: () => void;
@@ -7,8 +8,21 @@ interface MarketingPageProps {
 }
 
 export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct }) => {
+  const [newsletterOpen, setNewsletterOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState('');
+
+  const openNewsletter = (pkg: string) => {
+    setSelectedPackage(pkg);
+    setNewsletterOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#0F172A] text-white overflow-x-hidden">
+      <NewsletterModal 
+        isOpen={newsletterOpen} 
+        onClose={() => setNewsletterOpen(false)} 
+        packageName={selectedPackage} 
+      />
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background Gradients */}
@@ -184,49 +198,80 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
               </button>
             </div>
             
-            {/* DLR Plan (Coming Soon) */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 grayscale">
-              <div className="mb-6">
-                <div className="flex justify-between items-start">
-                   <div className="text-purple-400 font-bold mb-2">DLR Paketi</div>
-                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
-                </div>
-                <div className="text-3xl font-bold">---</div>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-2 text-sm text-gray-500">
-                  <Check size={16} className="text-gray-600" /> DLR Modülleri
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-500">
-                  <Check size={16} className="text-gray-600" /> Fizik & Matematik
-                </li>
-              </ul>
-              <button disabled className="w-full py-3 bg-white/5 text-gray-500 rounded-lg font-bold cursor-not-allowed">
-                Çok Yakında
-              </button>
-            </div>
-
-            {/* All-in-One (Coming Soon) */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 grayscale">
+             {/* DLR Plan (Coming Soon) */}
+             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
                <div className="mb-6">
-                <div className="flex justify-between items-start">
-                   <div className="text-orange-400 font-bold mb-2">Full Paket</div>
-                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
-                </div>
-                <div className="text-3xl font-bold">---</div>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-2 text-sm text-gray-500">
-                  <Check size={16} className="text-gray-600" /> Tüm Sınav Sistemleri
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-500">
-                  <Check size={16} className="text-gray-600" /> Sınırsız Erişim
-                </li>
-              </ul>
-              <button disabled className="w-full py-3 bg-white/5 text-gray-500 rounded-lg font-bold cursor-not-allowed">
-                Çok Yakında
-              </button>
-            </div>
+                 <div className="flex justify-between items-start">
+                    <div className="text-purple-400 font-bold mb-2">DLR Paketi</div>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
+                 </div>
+                 <div className="text-3xl font-bold">---</div>
+               </div>
+               <ul className="space-y-4 mb-8 flex-1">
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> DLR Modülleri
+                 </li>
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Fizik & Matematik
+                 </li>
+               </ul>
+               <button 
+                 onClick={() => openNewsletter('DLR')}
+                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
+               >
+                 Haber Ver
+               </button>
+             </div>
+
+             {/* Mollymawk (Coming Soon) */}
+             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
+               <div className="mb-6">
+                 <div className="flex justify-between items-start">
+                    <div className="text-teal-400 font-bold mb-2">Mollymawk</div>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
+                 </div>
+                 <div className="text-3xl font-bold">---</div>
+               </div>
+               <ul className="space-y-4 mb-8 flex-1">
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> SunExpress Süreci
+                 </li>
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Bilişsel Testler
+                 </li>
+               </ul>
+               <button 
+                 onClick={() => openNewsletter('Mollymawk')}
+                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
+               >
+                 Haber Ver
+               </button>
+             </div>
+
+             {/* All-in-One (Coming Soon) */}
+             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
+                <div className="mb-6">
+                 <div className="flex justify-between items-start">
+                    <div className="text-orange-400 font-bold mb-2">Full Paket</div>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
+                 </div>
+                 <div className="text-3xl font-bold">---</div>
+               </div>
+               <ul className="space-y-4 mb-8 flex-1">
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Tüm Sınav Sistemleri
+                 </li>
+                 <li className="flex items-center gap-2 text-sm text-gray-500">
+                   <Check size={16} className="text-gray-600" /> Sınırsız Erişim
+                 </li>
+               </ul>
+               <button 
+                 onClick={() => openNewsletter('All-in-One')}
+                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
+               >
+                 Haber Ver
+               </button>
+             </div>
 
           </div>
         </div>
