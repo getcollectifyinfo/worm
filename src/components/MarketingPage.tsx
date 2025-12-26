@@ -23,16 +23,16 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
               <img src="/logo.png" alt="CadetPrep Academy" className="h-48 md:h-64 drop-shadow-2xl" />
             </div>
             <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-400 font-medium text-sm tracking-wide">
-              Train Your Mind. Earn Your Wings.
+              Zihnini Eğit. Kanatlarını Kazan.
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              The Ultimate Psychometric Prep Platform for Pilot Cadets
+              Pilot Adayları İçin Gelişmiş Psikometrik Hazırlık Platformu
             </h1>
             
             <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Practice real-world aptitude tests used in airline cadet selection processes.
-              Improve speed, accuracy, and decision-making — before the real assessment.
+              Havayolu cadet seçim süreçlerinde kullanılan gerçek yetenek testleriyle pratik yapın.
+              Hız, doğruluk ve karar verme becerilerinizi sınavdan önce mükemmelleştirin.
             </p>
 
             <div className="flex flex-wrap justify-center gap-6 mb-16">
@@ -40,23 +40,23 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
                 onClick={onStartDemo}
                 className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-blue-500/25"
               >
-                Try Free Demo
+                Ücretsiz Dene
                 <ArrowRight size={20} />
               </button>
               <button 
                 onClick={onViewProduct}
                 className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-lg transition-all border border-white/10 backdrop-blur-sm"
               >
-                View SKYTEST Package
+                SKYTEST Paketini İncele
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
               {[
-                "Realistic PACE / DLR / Skytest-style simulations",
-                "Timed exercises & performance tracking",
-                "Cognitive, multitasking & spatial skills training",
-                "Designed for First Officer & Cadet candidates"
+                "Gerçekçi PACE / DLR / Skytest tarzı simülasyonlar",
+                "Zamanlı egzersizler ve performans takibi",
+                "Bilişsel, çoklu görev ve uzaysal beceri eğitimi",
+                "First Officer ve Cadet adayları için tasarlandı"
               ].map((feature, i) => (
                 <div key={i} className="flex items-start gap-3 p-4 rounded-lg bg-white/5 border border-white/5">
                   <div className="mt-1 text-green-400 shrink-0">
@@ -74,12 +74,12 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
       <section className="py-24 bg-[#0B1120] border-y border-white/5">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-8">What We Do</h2>
+            <h2 className="text-3xl font-bold mb-8">Ne Yapıyoruz?</h2>
             <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-              CadetPrep Academy is an independent online preparation platform designed to help pilot cadet candidates improve their psychometric and cognitive skills.
+              CadetPrep Academy, pilot adaylarının psikometrik ve bilişsel becerilerini geliştirmelerine yardımcı olmak için tasarlanmış bağımsız bir çevrimiçi hazırlık platformudur.
             </p>
             <p className="text-lg text-gray-400 leading-relaxed">
-              Our simulations are inspired by commonly used airline assessment methodologies but are not affiliated with or endorsed by any airline or testing authority.
+              Simülasyonlarımız, yaygın havayolu değerlendirme metodolojilerinden esinlenmiştir ancak herhangi bir havayolu veya test yetkilisiyle bağlantılı değildir.
             </p>
           </div>
         </div>
@@ -89,20 +89,20 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
       <section className="py-24 bg-[#0F172A]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Training Modules</h2>
-            <p className="text-gray-400">Train the cognitive skills airlines expect from future pilots.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Eğitim Modülleri</h2>
+            <p className="text-gray-400">Geleceğin pilotlarından beklenen bilişsel becerileri geliştirin.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {[
-              { icon: <Brain />, title: "Cognitive Core", desc: "Enhance mental processing speed and accuracy" },
-              { icon: <Target />, title: "Spatial Awareness", desc: "Master orientation and 3D visualization tasks" },
-              { icon: <Clock />, title: "Mental Arithmetic", desc: "Quick calculation under time pressure" },
-              { icon: <Award />, title: "Memory & Attention", desc: "Boost short-term memory capacity" },
-              { icon: <Play />, title: "Multitasking", desc: "Handle multiple information streams simultaneously" },
-              { icon: <Zap />, title: "Reaction Speed", desc: "Test and improve your response times" },
-              { icon: <Target />, title: "Pilot Aptitude", desc: "Comprehensive aptitude simulation" },
-              { icon: <Brain />, title: "Decision Making", desc: "Critical thinking under pressure" }
+              { icon: <Brain />, title: "Bilişsel Temel", desc: "Zihinsel işlem hızı ve doğruluğu" },
+              { icon: <Target />, title: "Uzaysal Farkındalık", desc: "Oryantasyon ve 3B görselleştirme" },
+              { icon: <Clock />, title: "Zihinsel Aritmetik", desc: "Zaman baskısı altında hızlı hesaplama" },
+              { icon: <Award />, title: "Hafıza ve Dikkat", desc: "Kısa süreli bellek kapasitesini artırma" },
+              { icon: <Play />, title: "Multitasking", desc: "Birden fazla bilgi akışını aynı anda yönetme" },
+              { icon: <Zap />, title: "Tepki Hızı", desc: "Tepki sürelerinizi test edin ve iyileştirin" },
+              { icon: <Target />, title: "Pilot Yeteneği", desc: "Kapsamlı yetenek simülasyonu" },
+              { icon: <Brain />, title: "Karar Verme", desc: "Baskı altında kritik düşünme" }
             ].map((module, i) => (
               <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all group">
                 <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
@@ -122,133 +122,112 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Membership Plans</h2>
-            <p className="text-gray-400">Choose the right plan for your preparation journey.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Üyelik Planları</h2>
+            <p className="text-gray-400">Hazırlık süreciniz için doğru planı seçin.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {/* Starter */}
             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col">
               <div className="mb-6">
-                <div className="text-green-400 font-bold mb-2">Starter</div>
-                <div className="text-3xl font-bold">Free</div>
+                <div className="text-green-400 font-bold mb-2">Başlangıç</div>
+                <div className="text-3xl font-bold">Ücretsiz</div>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-green-400" /> Limited practice modules
+                  <Check size={16} className="text-green-400" /> Sınırlı pratik modülleri
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-green-400" /> Sample simulations
+                  <Check size={16} className="text-green-400" /> Örnek simülasyonlar
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-green-400" /> Performance overview
+                  <Check size={16} className="text-green-400" /> Performans özeti
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                  <span className="text-red-500 text-xs">⛔</span> No advanced analytics
+                  <span className="text-red-500 text-xs">⛔</span> Gelişmiş analiz yok
                 </li>
               </ul>
               <button 
                 onClick={onStartDemo}
-                className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all"
+                className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold transition-all"
               >
-                Try Now
+                Hemen Başla
               </button>
             </div>
 
-            {/* Cadet Prep */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-blue-500/30 flex flex-col relative overflow-hidden">
+            {/* Pro - Highlighted */}
+            <div className="p-8 rounded-2xl bg-blue-600/20 border border-blue-500/50 flex flex-col relative transform md:-translate-y-4">
+              <div className="absolute top-0 right-0 bg-blue-500 text-xs font-bold px-3 py-1 rounded-bl-lg">ÖNERİLEN</div>
               <div className="mb-6">
-                <div className="text-blue-400 font-bold mb-2">Cadet Prep</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">€29</span>
-                  <span className="text-sm text-gray-400">/ month</span>
-                </div>
+                <div className="text-blue-400 font-bold mb-2">SKYTEST Paketi</div>
+                <div className="text-3xl font-bold">500 TL <span className="text-lg text-gray-400 font-normal">/ Ay</span></div>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-blue-400" /> Full psychometric simulations
+                  <Check size={16} className="text-blue-400" /> Tüm modüllere erişim
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-blue-400" /> Timed test environment
+                  <Check size={16} className="text-blue-400" /> Detaylı performans analizi
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-blue-400" /> Cognitive & multitasking modules
+                  <Check size={16} className="text-blue-400" /> SKYTEST Simülasyonu
                 </li>
                 <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-blue-400" /> Personal performance tracking
+                  <Check size={16} className="text-blue-400" /> 7/24 Destek
                 </li>
               </ul>
               <button 
-                onClick={onStartDemo}
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all"
+                onClick={onViewProduct}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-blue-600/20"
               >
-                Get Started
+                Paketi İncele
+              </button>
+            </div>
+            
+            {/* DLR Plan (Coming Soon) */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 grayscale">
+              <div className="mb-6">
+                <div className="flex justify-between items-start">
+                   <div className="text-purple-400 font-bold mb-2">DLR Paketi</div>
+                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
+                </div>
+                <div className="text-3xl font-bold">---</div>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-2 text-sm text-gray-500">
+                  <Check size={16} className="text-gray-600" /> DLR Modülleri
+                </li>
+                <li className="flex items-center gap-2 text-sm text-gray-500">
+                  <Check size={16} className="text-gray-600" /> Fizik & Matematik
+                </li>
+              </ul>
+              <button disabled className="w-full py-3 bg-white/5 text-gray-500 rounded-lg font-bold cursor-not-allowed">
+                Çok Yakında
               </button>
             </div>
 
-            {/* Cadet Pro */}
-            <div className="p-8 rounded-2xl bg-gradient-to-b from-purple-900/40 to-white/5 border border-purple-500/50 flex flex-col relative transform lg:-translate-y-4 shadow-xl">
-              <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
-              <div className="mb-6">
-                <div className="text-purple-400 font-bold mb-2">Cadet Pro</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">€59</span>
-                  <span className="text-sm text-gray-400">/ month</span>
+            {/* All-in-One (Coming Soon) */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 grayscale">
+               <div className="mb-6">
+                <div className="flex justify-between items-start">
+                   <div className="text-orange-400 font-bold mb-2">Full Paket</div>
+                   <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
                 </div>
+                <div className="text-3xl font-bold">---</div>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-purple-400" /> Everything in Cadet Prep
+                <li className="flex items-center gap-2 text-sm text-gray-500">
+                  <Check size={16} className="text-gray-600" /> Tüm Sınav Sistemleri
                 </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-purple-400" /> Advanced analytics & weak-area detection
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-purple-400" /> Unlimited simulations
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-purple-400" /> Real assessment-like difficulty
+                <li className="flex items-center gap-2 text-sm text-gray-500">
+                  <Check size={16} className="text-gray-600" /> Sınırsız Erişim
                 </li>
               </ul>
-              <button 
-                onClick={onStartDemo}
-                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all shadow-lg shadow-purple-500/25"
-              >
-                Go Pro
+              <button disabled className="w-full py-3 bg-white/5 text-gray-500 rounded-lg font-bold cursor-not-allowed">
+                Çok Yakında
               </button>
             </div>
 
-            {/* Cadet Elite */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-red-500/30 flex flex-col">
-              <div className="mb-6">
-                <div className="text-red-400 font-bold mb-2">Cadet Elite</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">€149</span>
-                  <span className="text-sm text-gray-400">/ one-time</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">30 days intensive access</div>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-red-400" /> Full Pro access
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-red-400" /> Intensive assessment mode
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-red-400" /> High-pressure simulations
-                </li>
-                <li className="flex items-center gap-2 text-sm text-gray-300">
-                  <Check size={16} className="text-red-400" /> Ideal for last-month preparation
-                </li>
-              </ul>
-              <button 
-                onClick={onStartDemo}
-                className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-lg shadow-red-500/25"
-              >
-                Get Elite
-              </button>
-            </div>
           </div>
         </div>
       </section>
