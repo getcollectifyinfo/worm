@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useCubeGameLogic } from './useCubeGameLogic';
 import type { CubePosition } from './useCubeGameLogic';
 import { ArrowLeft, Play, Settings, HelpCircle } from 'lucide-react';
