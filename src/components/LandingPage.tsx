@@ -80,86 +80,94 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
       )}
 
       <div className="flex flex-col items-center">
-        <img src="/logo.png" alt="CadetPrep Academy" className="h-64 mb-6 drop-shadow-2xl" />
-        <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKY TEST SIMULATION</h1>
+        <div className="bg-white/90 p-4 rounded-2xl mb-6 shadow-lg shadow-purple-500/20">
+          <img src="/logo.png" alt="CadetPrep Academy" className="h-24 md:h-32 drop-shadow-lg" />
+        </div>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 tracking-wider text-center">SKY TEST SIMULATION</h1>
       </div>
       
-      <div className="flex flex-wrap justify-center gap-8 max-w-[90rem]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full px-4">
         {/* WORM Button */}
         <button 
           onClick={() => onSelectGame('WORM')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-green-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-green-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-green-500/20"
         >
-          <div className="p-6 bg-green-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Gamepad2 size={64} className="text-white" />
+          <div className="p-4 bg-green-500/10 rounded-xl group-hover:bg-green-500 transition-colors duration-300">
+            <Gamepad2 size={40} className="text-green-500 group-hover:text-white transition-colors" />
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-green-400">WORM</span>
-            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-green-300">Grid Orientation Test</span>
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-green-400">WORM</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-green-300">Grid Orientation Test</span>
           </div>
         </button>
 
         {/* IPP Button */}
         <button 
           onClick={() => onSelectGame('IPP')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-blue-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-blue-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-blue-500/20"
         >
-          <div className="p-6 bg-blue-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Gauge size={64} className="text-white" />
+          <div className="p-4 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 transition-colors duration-300">
+            <Gauge size={40} className="text-blue-500 group-hover:text-white transition-colors" />
           </div>
-          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-blue-400">IPP</span>
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-blue-400">IPP</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-blue-300">Instrument Flight Rules</span>
+          </div>
         </button>
 
         {/* VIGI 1 Button */}
         <button 
           onClick={() => onSelectGame('VIGI1')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-orange-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-orange-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-orange-500/20"
         >
-          <div className="p-6 bg-orange-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Eye size={64} className="text-white" />
+          <div className="p-4 bg-orange-500/10 rounded-xl group-hover:bg-orange-500 transition-colors duration-300">
+            <Eye size={40} className="text-orange-500 group-hover:text-white transition-colors" />
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-orange-400">VIGI 1</span>
-            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-orange-300">Audio-Visual Vigilance</span>
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-orange-400">VIGI 1</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-orange-300">Audio-Visual Vigilance</span>
           </div>
         </button>
 
         {/* VIGI Button */}
         <button 
           onClick={() => onSelectGame('VIGI')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-purple-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-purple-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20"
         >
-          <div className="p-6 bg-purple-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Zap size={64} className="text-white" />
+          <div className="p-4 bg-purple-500/10 rounded-xl group-hover:bg-purple-500 transition-colors duration-300">
+            <Zap size={40} className="text-purple-500 group-hover:text-white transition-colors" />
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-purple-400">VIGI 2</span>
-            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-purple-300">Dot Vigilance Test</span>
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-purple-400">VIGI 2</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-purple-300">Dot Vigilance Test</span>
           </div>
         </button>
 
         {/* CAPACITY Button */}
         <button 
           onClick={() => onSelectGame('CAPACITY')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-yellow-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-yellow-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-yellow-500/20"
         >
-          <div className="p-6 bg-yellow-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Brain size={64} className="text-white" />
+          <div className="p-4 bg-yellow-500/10 rounded-xl group-hover:bg-yellow-500 transition-colors duration-300">
+            <Brain size={40} className="text-yellow-500 group-hover:text-white transition-colors" />
           </div>
-          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-yellow-400">CAPACITY</span>
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-yellow-400">CAPACITY</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-yellow-300">Attention Capacity</span>
+          </div>
         </button>
 
         {/* CUBE Button */}
         <button 
           onClick={() => onSelectGame('CUBE')}
-          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-pink-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
         >
-          <div className="p-6 bg-pink-500 rounded-full group-hover:scale-110 transition-transform duration-300">
-            <Box size={64} className="text-white" />
+          <div className="p-4 bg-pink-500/10 rounded-xl group-hover:bg-pink-500 transition-colors duration-300">
+            <Box size={40} className="text-pink-500 group-hover:text-white transition-colors" />
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-pink-400">CUBE</span>
-            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-pink-300">Spatial Orientation</span>
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-pink-400">CUBE</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-pink-300">Spatial Orientation</span>
           </div>
         </button>
       </div>
