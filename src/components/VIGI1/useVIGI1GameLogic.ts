@@ -268,7 +268,7 @@ export const useVIGI1GameLogic = () => {
 
     // Game Loop
     startIntervals();
-  }, [gameDuration, startIntervals]);
+  }, [startIntervals]);
 
   const handleEyeClick = () => {
     if (!isPlaying || isPaused) return;
