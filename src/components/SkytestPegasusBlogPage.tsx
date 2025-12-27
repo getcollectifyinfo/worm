@@ -173,7 +173,7 @@ export const SkytestPegasusBlogPage: React.FC<SkytestPegasusBlogPageProps> = ({ 
             <div className="relative z-10">
               <h3 className="text-3xl font-extrabold mb-4 tracking-tight">Pegasus Sürecine Hazır Mısınız?</h3>
               <p className="mb-8 text-yellow-50 max-w-2xl mx-auto text-lg leading-relaxed">
-                Skytest benzeri modüllerle pratik yaparak yeteneklerinizi geliştirin ve rakiplerinizden bir adım öne geçin.
+                <a href="/skytest" onClick={(e) => { e.preventDefault(); onNavigate('SKYTEST_PRODUCT'); }} className="text-white underline hover:text-yellow-100 font-semibold">Skytest çalışma paketi</a> ile pratik yaparak yeteneklerinizi geliştirin ve rakiplerinizden bir adım öne geçin.
               </p>
               <button 
                 onClick={() => onNavigate('SKYTEST_PRODUCT')}

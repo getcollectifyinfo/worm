@@ -9,6 +9,8 @@ export const useVIGI1GameLogic = () => {
   const [gameTime, setGameTime] = useState(0);
   const [gameDuration, setGameDuration] = useState(60); // Default 60 seconds
   
+  const [isPaused, setIsPaused] = useState(false);
+
   // Stats
   const [totalEvents, setTotalEvents] = useState(0); // Total mismatches presented
   const [caughtEvents, setCaughtEvents] = useState(0); // Correct clicks on mismatch
@@ -24,6 +26,12 @@ export const useVIGI1GameLogic = () => {
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
+  const isPausedRef = useRef(isPaused);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+  
   const directionRef = useRef<1 | -1>(1); // 1: Clockwise, -1: Counter-clockwise
   const stepsUntilTurnRef = useRef<number>(0);
 
@@ -31,6 +39,24 @@ export const useVIGI1GameLogic = () => {
   const toneHistoryRef = useRef<string[]>([]);
   const isAudioTargetRef = useRef<boolean>(false); // True if currently in the window after 3rd same tone
   const canClickAudioRef = useRef<boolean>(true); // Prevent double clicking for same event
+
+  // Sync refs for cleanup/save
+  const statsRef = useRef({
+    score, gameTime, totalEvents, caughtEvents, wrongMoves,
+    audioEvents, caughtAudio, wrongAudio, audioDifficulty
+  });
+  const isPlayingRef = useRef(isPlaying);
+
+  useEffect(() => {
+    statsRef.current = {
+      score, gameTime, totalEvents, caughtEvents, wrongMoves,
+      audioEvents, caughtAudio, wrongAudio, audioDifficulty
+    };
+  }, [score, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio, audioDifficulty]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   // Difficulty settings (could be passed in)
   const UPDATE_SPEED = 1000; // ms per update
@@ -143,25 +169,80 @@ export const useVIGI1GameLogic = () => {
     });
   }, []);
 
-  const handleNoteClick = () => {
-    if (!isPlaying) return;
-    
-    if (!canClickAudioRef.current) return; // Prevent spamming in same window
-    canClickAudioRef.current = false;
-
-    if (isAudioTargetRef.current) {
-        // Success!
-        setScore(prev => prev + 10);
-        setCaughtAudio(prev => prev + 1);
-        isAudioTargetRef.current = false; // Consumed
-    } else {
-        // Fail
-        setScore(prev => Math.max(0, prev - 5));
-        setWrongAudio(prev => prev + 1);
+  const stopGame = useCallback(() => {
+    // Check ref to see if we were playing (avoids saving if already stopped)
+    if (isPlayingRef.current) {
+        const s = statsRef.current;
+        statsService.saveSession({
+            game_type: 'VIGI1',
+            score: s.score,
+            duration_seconds: s.gameTime,
+            metadata: {
+                totalEvents: s.totalEvents,
+                caughtEvents: s.caughtEvents,
+                wrongMoves: s.wrongMoves,
+                audioEvents: s.audioEvents,
+                caughtAudio: s.caughtAudio,
+                wrongAudio: s.wrongAudio,
+                audioDifficulty: s.audioDifficulty,
+                accuracy: s.totalEvents > 0 ? Math.round((s.caughtEvents / s.totalEvents) * 100) : 0
+            }
+        }).catch(err => console.error("Failed to save VIGI1 stats:", err));
     }
-  };
 
-  const startGame = () => {
+    setIsPlaying(false);
+    isPlayingRef.current = false;
+    setIsPaused(false); // Reset pause state
+    
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+  }, []); // Empty dependency array = stable function
+
+  const startIntervals = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+
+    updateIntervalRef.current = setInterval(updateGameLoop, UPDATE_SPEED);
+    audioIntervalRef.current = setInterval(playRandomTone, AUDIO_INTERVAL);
+
+    // Timer
+    timerRef.current = setInterval(() => {
+      setGameTime(prev => {
+        const nextTime = prev + 1;
+        if (nextTime >= gameDuration) {
+          stopGame();
+        }
+        return nextTime;
+      });
+    }, 1000);
+  }, [updateGameLoop, playRandomTone, gameDuration, stopGame]);
+
+  const clearIntervals = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+  }, []);
+
+  const pauseGame = useCallback(() => {
+    if (!isPlaying || isPaused) return;
+    setIsPaused(true);
+    clearIntervals();
+  }, [isPlaying, isPaused, clearIntervals]);
+
+  const resumeGame = useCallback(() => {
+    if (!isPlaying || !isPaused) return;
+    setIsPaused(false);
+    startIntervals();
+  }, [isPlaying, isPaused, startIntervals]);
+
+  const togglePause = useCallback(() => {
+      if (isPaused) resumeGame();
+      else pauseGame();
+  }, [isPaused, resumeGame, pauseGame]);
+
+  const startGame = useCallback(() => {
     setIsPlaying(true);
     setScore(0);
     setGameTime(0);
@@ -186,70 +267,11 @@ export const useVIGI1GameLogic = () => {
     stepsUntilTurnRef.current = Math.floor(Math.random() * 5) + 3;
 
     // Game Loop
-    updateIntervalRef.current = setInterval(updateGameLoop, UPDATE_SPEED);
-    audioIntervalRef.current = setInterval(playRandomTone, AUDIO_INTERVAL);
-
-    // Timer
-    timerRef.current = setInterval(() => {
-      setGameTime(prev => {
-        const nextTime = prev + 1;
-        if (nextTime >= gameDuration) {
-          stopGame();
-        }
-        return nextTime;
-      });
-    }, 1000);
-  };
-
-  // Sync refs for cleanup/save
-  const statsRef = useRef({
-    score, gameTime, totalEvents, caughtEvents, wrongMoves,
-    audioEvents, caughtAudio, wrongAudio, audioDifficulty
-  });
-  const isPlayingRef = useRef(isPlaying);
-
-  useEffect(() => {
-    statsRef.current = {
-      score, gameTime, totalEvents, caughtEvents, wrongMoves,
-      audioEvents, caughtAudio, wrongAudio, audioDifficulty
-    };
-  }, [score, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio, audioDifficulty]);
-
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
-
-  const stopGame = useCallback(() => {
-    // Check ref to see if we were playing (avoids saving if already stopped)
-    if (isPlayingRef.current) {
-        const s = statsRef.current;
-        statsService.saveSession({
-            game_type: 'VIGI1',
-            score: s.score,
-            duration_seconds: s.gameTime,
-            metadata: {
-                totalEvents: s.totalEvents,
-                caughtEvents: s.caughtEvents,
-                wrongMoves: s.wrongMoves,
-                audioEvents: s.audioEvents,
-                caughtAudio: s.caughtAudio,
-                wrongAudio: s.wrongAudio,
-                audioDifficulty: s.audioDifficulty,
-                accuracy: s.totalEvents > 0 ? Math.round((s.caughtEvents / s.totalEvents) * 100) : 0
-            }
-        }).catch(err => console.error("Failed to save VIGI1 stats:", err));
-    }
-
-    setIsPlaying(false);
-    isPlayingRef.current = false;
-    
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-    if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
-  }, []); // Empty dependency array = stable function
+    startIntervals();
+  }, [gameDuration, startIntervals]);
 
   const handleEyeClick = () => {
-    if (!isPlaying) return;
+    if (!isPlaying || isPaused) return;
 
     const expectedDigital = analogValue * 10;
     const isMismatch = digitalValue !== expectedDigital;
@@ -264,12 +286,25 @@ export const useVIGI1GameLogic = () => {
       setScore(prev => Math.max(0, prev - 5));
       setWrongMoves(prev => prev + 1);
     }
-    
-    // Optional: Immediately trigger next state or wait? 
-    // Usually vigilance tests just continue.
   };
 
+  const handleNoteClick = () => {
+    if (!isPlaying || isPaused) return;
+    
+    if (!canClickAudioRef.current) return; // Prevent spamming in same window
+    canClickAudioRef.current = false;
 
+    if (isAudioTargetRef.current) {
+        // Success!
+        setScore(prev => prev + 10);
+        setCaughtAudio(prev => prev + 1);
+        isAudioTargetRef.current = false; // Consumed
+    } else {
+        // Fail
+        setScore(prev => Math.max(0, prev - 5));
+        setWrongAudio(prev => prev + 1);
+    }
+  };
 
   // Cleanup
   useEffect(() => {
@@ -281,6 +316,7 @@ export const useVIGI1GameLogic = () => {
   return {
     gameState: {
       isPlaying,
+      isPaused,
       score,
       gameTime,
       gameDuration,
@@ -297,6 +333,9 @@ export const useVIGI1GameLogic = () => {
     actions: {
       startGame,
       stopGame,
+      pauseGame,
+      resumeGame,
+      togglePause,
       handleEyeClick,
       handleNoteClick,
       setGameDuration,

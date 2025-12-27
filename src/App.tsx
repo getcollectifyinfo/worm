@@ -26,11 +26,9 @@ import { LandingPage } from './components/LandingPage';
 import { MarketingPage } from './components/MarketingPage';
 import { StatisticsPage } from './components/StatisticsPage';
 import { SkytestPage } from './components/SkytestPage';
-import { MollymawkPage } from './components/MollymawkPage';
 import { SkytestBlogPage } from './components/SkytestBlogPage';
 import { SkytestPegasusBlogPage } from './components/SkytestPegasusBlogPage';
 import { SkytestPreparationBlogPage } from './components/SkytestPreparationBlogPage';
-import { MollymawkBlogPage } from './components/MollymawkBlogPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -46,17 +44,14 @@ function App() {
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-nedir') {
       return 'SKYTEST_BLOG_1';
     }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest') {
+      return 'SKYTEST_PRODUCT';
+    }
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-pegasus') {
       return 'SKYTEST_PEGASUS_BLOG';
     }
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-hazirlik') {
       return 'SKYTEST_PREPARATION_BLOG';
-    }
-    if (typeof window !== 'undefined' && window.location.pathname === '/mollymawk-nedir') {
-      return 'MOLLYMAWK_BLOG_1';
-    }
-    if (typeof window !== 'undefined' && window.location.pathname === '/mollymawk') {
-      return 'MOLLYMAWK_PRODUCT';
     }
     return 'MARKETING';
   });
@@ -72,8 +67,6 @@ function App() {
         setCurrentPage('SKYTEST_PEGASUS_BLOG');
       } else if (window.location.pathname === '/skytest-hazirlik') {
         setCurrentPage('SKYTEST_PREPARATION_BLOG');
-      } else if (window.location.pathname === '/mollymawk-nedir') {
-        setCurrentPage('MOLLYMAWK_BLOG_1');
       } else if (window.location.pathname === '/') {
         setCurrentPage('MARKETING');
       }
@@ -87,14 +80,12 @@ function App() {
   useEffect(() => {
     if (currentPage === 'SKYTEST_BLOG_1' && window.location.pathname !== '/skytest-nedir') {
       window.history.pushState(null, '', '/skytest-nedir');
+    } else if (currentPage === 'SKYTEST_PRODUCT' && window.location.pathname !== '/skytest') {
+      window.history.pushState(null, '', '/skytest');
     } else if (currentPage === 'SKYTEST_PEGASUS_BLOG' && window.location.pathname !== '/skytest-pegasus') {
       window.history.pushState(null, '', '/skytest-pegasus');
     } else if (currentPage === 'SKYTEST_PREPARATION_BLOG' && window.location.pathname !== '/skytest-hazirlik') {
       window.history.pushState(null, '', '/skytest-hazirlik');
-    } else if (currentPage === 'MOLLYMAWK_BLOG_1' && window.location.pathname !== '/mollymawk-nedir') {
-      window.history.pushState(null, '', '/mollymawk-nedir');
-    } else if (currentPage === 'MOLLYMAWK_PRODUCT' && window.location.pathname !== '/mollymawk') {
-      window.history.pushState(null, '', '/mollymawk');
     } else if (currentPage === 'MARKETING' && window.location.pathname !== '/') {
       window.history.pushState(null, '', '/');
     }
@@ -726,20 +717,6 @@ function App() {
 
   if (currentPage === 'SKYTEST_PREPARATION_BLOG') {
     return <SkytestPreparationBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
-  }
-
-  if (currentPage === 'MOLLYMAWK_BLOG_1') {
-    return <MollymawkBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
-  }
-
-  if (currentPage === 'MOLLYMAWK_PRODUCT') {
-    return (
-      <MollymawkPage 
-        onBack={() => setCurrentPage('MARKETING')}
-        onStartFree={() => setCurrentPage('LANDING')}
-        onBuy={() => alert('Ödeme sistemi yakında aktif olacak!')}
-      />
-    );
   }
 
   if (currentPage === 'SKYTEST_PRODUCT') {

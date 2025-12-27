@@ -7,6 +7,7 @@ import type { CapacitySettings, CapacityStats } from './types';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { statsService } from '../../services/statsService';
+import { HelpCircle, Settings, Pause, Play, LogOut, Home, Target } from 'lucide-react';
 
 interface CapacityGameProps {
   onExit: () => void;
@@ -94,7 +95,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
       setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
-  const handleUpdateTaskStats = (newStats: Partial<CapacityStats>) => {
+  const handleUpdateTaskStats = React.useCallback((newStats: Partial<CapacityStats>) => {
       if (gameMode === 'DICE') {
           setDiceStats(prev => ({
               hits: prev.hits + (newStats.hits || 0),
@@ -108,7 +109,15 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
               fails: prev.fails + (newStats.fails || 0)
           }));
       }
-  };
+  }, [gameMode]);
+
+  const handleFail = React.useCallback(() => {
+      setFlightFails(prev => prev + 1);
+  }, []);
+
+  const handleObstaclePassed = React.useCallback(() => {
+      setTotalObstacles(prev => prev + 1);
+  }, []);
 
   const startNewGame = () => {
     setGameMode('DICE'); // Always start with DICE
@@ -204,27 +213,53 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
         ]}
       />
 
-      {/* Back Button for Navigation - Only show when not in menu (GameStartMenu has its own back) */}
+      {/* In-Game Controls (Top Right) */}
       {gameState !== 'menu' && (
-        <>
+        <div className="fixed top-4 right-4 z-[2000] flex flex-col gap-3">
+            {/* Tutorial */}
             <button 
-              onClick={onExit}
-              className="fixed top-4 left-4 z-[2000] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
-              title="Back to Main Menu"
-            >
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            
-            <button 
-              onClick={() => setIsTutorialOpen(true)}
-              className="fixed top-4 right-4 z-[2000] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 font-bold text-xl w-10 h-10 flex items-center justify-center text-gray-700"
+              onClick={() => {
+                  if (gameState === 'running') setIsPaused(true);
+                  setIsTutorialOpen(true);
+              }}
+              className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
               title="How to Play"
             >
-               ?
+               <HelpCircle size={24} />
             </button>
-        </>
+
+            {/* Settings */}
+            <button 
+              onClick={() => {
+                  if (gameState === 'running') setIsPaused(true);
+                  setShowSettings(true);
+              }}
+              className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+              title="Settings"
+            >
+               <Settings size={24} />
+            </button>
+
+            {/* Pause/Resume */}
+            {(gameState === 'running' || isPaused) && (
+                <button 
+                  onClick={togglePause}
+                  className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative border text-white ${isPaused ? 'bg-amber-600/90 border-amber-500 hover:bg-amber-600' : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'}`}
+                  title={isPaused ? "Resume" : "Pause"}
+                >
+                   {isPaused ? <Play size={24} /> : <Pause size={24} />}
+                </button>
+            )}
+
+            {/* Exit */}
+            <button 
+              onClick={onExit}
+              className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white"
+              title="Exit to Main Menu"
+            >
+               <LogOut size={24} />
+            </button>
+        </div>
       )}
 
       {gameState === 'menu' && !showSettings && (
@@ -251,26 +286,11 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             settings={settings}
             flightFails={flightFails}
             totalObstacles={totalObstacles}
-            onFail={() => setFlightFails(prev => prev + 1)} 
-            onObstaclePassed={() => setTotalObstacles(prev => prev + 1)}
+            onFail={handleFail} 
+            onObstaclePassed={handleObstaclePassed}
             onFireStart={handleFireStart}
             onFireEnd={handleFireEnd}
         />
-        <div className="capacity-fire-button-container">
-          <button 
-            className={`capacity-fire-button ${isFirePressed ? 'active' : ''}`}
-            onMouseDown={() => {
-                if (!isPaused && gameState === 'running') {
-                    setIsFirePressed(true);
-                    setSpacePressTimestamp(Date.now());
-                }
-            }}
-            onMouseUp={() => setIsFirePressed(false)}
-            onMouseLeave={() => setIsFirePressed(false)}
-          >
-            FIRE (SPACE)
-          </button>
-        </div>
       </div>
       <div className="capacity-right-panel">
         <SidePanel 
@@ -285,6 +305,9 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             currentStats={gameMode === 'DICE' ? diceStats : rodStats}
             isPaused={isPaused}
             settings={settings}
+            isFirePressed={isFirePressed}
+            onFireStart={handleFireStart}
+            onFireEnd={handleFireEnd}
             onRestart={handleRestart}
             onStartGame={startNewGame}
             onTogglePause={togglePause}

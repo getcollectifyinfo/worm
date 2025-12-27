@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Home, Target } from 'lucide-react';
 import type { CapacitySettings, CapacityStats } from './types';
 
 // --- VISUAL COMPONENTS ---
@@ -140,8 +141,6 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
             setCurrentDice(ref);
             setIsDiceVisible(true);
         }, 0);
-    } else if (gameState === 'running') {
-        setTimeout(() => setIsDiceVisible(false), 0);
     }
   }, [gameState, onUpdateStats]);
 
@@ -149,7 +148,7 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
     if (gameState !== 'running' || isPaused) return;
     
     // Initial spawn
-    setTimeout(() => spawnDice(), 0);
+    spawnDice();
     
     const interval = setInterval(spawnDice, settings.taskChangeSpeed);
     return () => clearInterval(interval);
@@ -269,6 +268,9 @@ interface SidePanelProps {
     currentStats: CapacityStats;
     isPaused: boolean;
     settings: CapacitySettings;
+    isFirePressed: boolean;
+    onFireStart: () => void;
+    onFireEnd: () => void;
     onRestart: () => void;
     onStartGame: () => void;
     onTogglePause: () => void;
@@ -280,7 +282,8 @@ interface SidePanelProps {
 const SidePanel: React.FC<SidePanelProps> = ({ 
     lastSpacePressTime, gameState, gameMode, timeLeft, flightFails, totalObstacles,
     diceStats, rodStats, currentStats,
-    isPaused, settings, onRestart, onTogglePause, onExitGame, onOpenSettings,
+    isPaused, settings, isFirePressed, onFireStart, onFireEnd,
+    onExitGame,
     onUpdateTaskStats 
 }) => {
   
@@ -293,9 +296,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
               backgroundColor: 'rgba(255,255,255,0.95)', zIndex: 10
           }}>
               <h2 style={{ fontSize: '28px', fontWeight: 'bold' }}>PAUSED</h2>
-              <button onClick={onTogglePause} style={btnStyle}>RESUME</button>
-              <button onClick={onOpenSettings} style={btnStyle}>SETTINGS</button>
-              <button onClick={onExitGame} style={{...btnStyle, backgroundColor: '#c0392b'}}>EXIT GAME</button>
           </div>
       );
   }
@@ -329,34 +329,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
         marginBottom: '50px'
       }}>
         <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')} MIN</div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-            onClick={onTogglePause}
-            style={{
-                backgroundColor: '#333',
-                color: 'white',
-                border: 'none',
-                padding: '5px 15px',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                cursor: 'pointer'
-            }}>
-            PAUSE
-            </button>
-            <button 
-            onClick={onRestart}
-            style={{
-                backgroundColor: '#330000',
-                color: 'white',
-                border: 'none',
-                padding: '5px 15px',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                cursor: 'pointer'
-            }}>
-            RESTART
-            </button>
-        </div>
       </div>
       
       <div style={{
@@ -398,8 +370,8 @@ const SidePanel: React.FC<SidePanelProps> = ({
                     </div>
                  </div>
 
-                 <button onClick={onExitGame} style={{...btnStyle, marginTop: '40px', backgroundColor: '#27ae60'}}>
-                    MAIN MENU
+                 <button onClick={onExitGame} style={{...btnStyle, marginTop: '40px', backgroundColor: '#27ae60', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', width: '60px', height: '60px', padding: 0, margin: '40px auto'}}>
+                    <Home size={32} />
                  </button>
              </div>
         ) : (
@@ -429,6 +401,36 @@ const SidePanel: React.FC<SidePanelProps> = ({
                         <div style={{ color: '#d63031', fontSize: '20px' }}>Fail: {currentStats.fails}</div>
                     </div>
                 )}
+
+                {/* Fire Button at Bottom of Dice/Rod Section */}
+                <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                    <button 
+                        className={`capacity-fire-button ${isFirePressed ? 'active' : ''}`}
+                        style={{
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            backgroundColor: isFirePressed ? '#c0392b' : '#e74c3c',
+                            border: '4px solid #c0392b',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.1s ease',
+                            transform: isFirePressed ? 'scale(0.95)' : 'scale(1)',
+                            boxShadow: isFirePressed ? 'inset 0 0 10px rgba(0,0,0,0.5)' : '0 4px 8px rgba(0,0,0,0.2)'
+                        }}
+                        onMouseDown={onFireStart}
+                        onMouseUp={onFireEnd}
+                        onMouseLeave={onFireEnd}
+                        onTouchStart={(e) => { e.preventDefault(); onFireStart(); }}
+                        onTouchEnd={(e) => { e.preventDefault(); onFireEnd(); }}
+                        title="Fire (Space)"
+                    >
+                        <Target size={40} color="white" />
+                    </button>
+                    <div style={{ textAlign: 'center', marginTop: '5px', fontSize: '14px', fontWeight: 'bold', color: '#666' }}>SPACE</div>
+                </div>
             </>
         )}
       </div>

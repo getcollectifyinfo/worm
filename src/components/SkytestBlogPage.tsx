@@ -132,7 +132,7 @@ export const SkytestBlogPage: React.FC<SkytestBlogPageProps> = ({ onNavigate }) 
             Skytest Sınavına Nasıl Hazırlanılır?
           </h2>
           <p className="mb-6">
-            Skytest bir zeka testi değildir; geliştirilebilir bir yetenek testidir. Doğru çalışma metodolojisi ile puanlarınızı %40-60 oranında artırabilirsiniz. İşte altın değerinde tavsiyeler:
+            <a href="/skytest" onClick={(e) => { e.preventDefault(); onNavigate('SKYTEST_PRODUCT'); }} className="text-blue-600 hover:underline font-semibold">Skytest sınavı</a> bir zeka testi değildir; geliştirilebilir bir yetenek testidir. Doğru çalışma metodolojisi ile puanlarınızı %40-60 oranında artırabilirsiniz. İşte altın değerinde tavsiyeler:
           </p>
           
           <div className="space-y-6 not-prose">

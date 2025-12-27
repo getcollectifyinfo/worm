@@ -14,6 +14,8 @@ import {
 
 import type { Page } from '../types';
 
+import { GameScreenshotSlider } from './GameScreenshotSlider';
+
 interface SkytestPageProps {
   onBack: () => void;
   onStartFree: () => void;
@@ -172,21 +174,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
             {/* Visuals (Placeholder for screenshots) */}
             <div className="w-full md:w-1/2">
-              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-800 aspect-video group">
-                {/* Mock UI */}
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
-                   <div className="text-center space-y-4">
-                      <Activity size={64} className="text-blue-500 mx-auto opacity-50" />
-                      <div className="text-slate-500 font-mono text-sm">SIMULATION INTERFACE PREVIEW</div>
-                   </div>
-                </div>
-                
-                {/* Overlay Badge */}
-                <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
-                   <div className="text-xs text-slate-400">Performans Analizi</div>
-                   <div className="text-white font-mono">Detaylı İstatistikler</div>
-                </div>
-              </div>
+              <GameScreenshotSlider />
             </div>
           </div>
         </div>

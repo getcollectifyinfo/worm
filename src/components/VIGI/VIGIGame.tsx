@@ -126,40 +126,58 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         </div>
       </div>
 
-      {/* Settings & Tutorial Buttons (Only when not playing) */}
-      {!isPlaying && (
-        <div className="absolute top-4 right-4 flex gap-2 z-20">
-            <button 
-              onClick={() => setIsTutorialOpen(true)}
-              className="p-2 text-gray-400 hover:text-white"
-              title="How to Play"
-            >
-              <span className="text-2xl font-bold">?</span>
-            </button>
-            <button 
-              onClick={() => setShowSettings(!showSettings)}
-              className="p-2 text-gray-400 hover:text-white"
-            >
-              ⚙️
-            </button>
-        </div>
-      )}
+      {/* Top Right Standard Menu */}
+      <div className="absolute top-4 right-4 z-[2000] flex flex-col gap-3">
+          {/* Tutorial */}
+          <button 
+            onClick={() => {
+                if (isPlaying && !isPaused) handlePause();
+                setIsTutorialOpen(true);
+            }}
+            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+            title="How to Play"
+          >
+             <HelpCircle size={24} />
+          </button>
+          {/* Settings */}
+          <button 
+            onClick={() => {
+                if (isPlaying && !isPaused) handlePause();
+                setShowSettings(true);
+            }}
+            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+            title="Settings"
+          >
+             <Settings size={24} />
+          </button>
+          {/* Pause/Resume - Only when playing */}
+          {isPlaying && (
+              <button 
+                onClick={() => {
+                    if (isPaused) togglePause();
+                    else handlePause();
+                }}
+                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative border text-white ${isPaused ? 'bg-amber-600/90 border-amber-500 hover:bg-amber-600' : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'}`}
+                title={isPaused ? "Resume" : "Pause"}
+              >
+                 {isPaused ? <Play size={24} /> : <Pause size={24} />}
+              </button>
+          )}
+          {/* Exit */}
+          <button 
+            onClick={onExit}
+            className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white"
+            title="Exit to Main Menu"
+          >
+             <LogOut size={24} />
+          </button>
+      </div>
 
-      {/* Pause/Resume Button (Only when playing) */}
-      {isPlaying && (
-        <button 
-          onClick={() => {
-            if (isPaused) {
-              togglePause();
-            } else {
-              handlePause();
-            }
-          }}
-          className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded text-white z-20 font-bold tracking-widest border border-gray-600 ${isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-800 hover:bg-gray-700'}`}
-        >
-          {isPaused ? "RESUME" : "PAUSE"}
+      {/* Pause/Resume Button (Only when playing) REMOVED */}
+      {/* {isPlaying && (
+        <button ...
         </button>
-      )}
+      )} */}
 
       {/* Start Button Overlay */}
       {!isPlaying && !showSettings && (

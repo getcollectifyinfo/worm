@@ -226,34 +226,6 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
                </button>
              </div>
 
-             {/* Mollymawk (Coming Soon) */}
-             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
-               <div className="mb-6">
-                 <div className="flex justify-between items-start">
-                    <div className="text-orange-400 font-bold mb-2">Mollymawk Paketi</div>
-                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
-                 </div>
-                 <div className="text-3xl font-bold">---</div>
-               </div>
-               <ul className="space-y-4 mb-8 flex-1">
-                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                   <Check size={16} className="text-gray-600" /> SunExpress Süreci
-                 </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                   <Check size={16} className="text-gray-600" /> Bilişsel Testler
-                 </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                   <Check size={16} className="text-gray-600" /> Gerçekçi Simülasyon
-                 </li>
-               </ul>
-               <button 
-                 onClick={() => openNewsletter('Mollymawk')}
-                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
-               >
-                 Haber Ver
-               </button>
-             </div>
-
              {/* All-in-One (Coming Soon) */}
              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
                 <div className="mb-6">

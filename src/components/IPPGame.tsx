@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { HelpCircle, Settings, LogOut, Home } from 'lucide-react';
 import { Gauge } from './Gauge';
 import { GameStartMenu } from './GameStartMenu';
 import { GameTutorial } from './GameTutorial';
@@ -571,7 +572,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:bg-white/20 transition-all hover:scale-110 group relative border border-white/20"
             title="How to Play"
         >
-            <span className="text-xl font-bold text-white">?</span>
+            <HelpCircle size={32} className="text-white" />
         </button>
 
         <button 
@@ -579,10 +580,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:bg-white/20 transition-all hover:scale-110 group relative border border-white/20"
             title="Settings"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <Settings size={32} className="text-white" />
         </button>
 
         <button 
@@ -590,9 +588,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             className="p-3 bg-red-500/20 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-500/40 transition-all hover:scale-110 group relative border border-red-500/30"
             title="Exit Game"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <LogOut size={32} className="text-white" />
         </button>
       </div>
 
@@ -818,9 +814,9 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
           </div>
           <button 
             onClick={onExit}
-            className="bg-white text-black text-2xl font-bold px-8 py-4 rounded hover:bg-gray-200 transition-colors"
+            className="bg-white text-black text-2xl font-bold p-4 rounded-full hover:bg-gray-200 transition-colors flex items-center justify-center w-20 h-20"
           >
-            BACK TO MENU
+            <Home size={40} />
           </button>
         </div>
       )}

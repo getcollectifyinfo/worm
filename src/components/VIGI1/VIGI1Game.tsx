@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Music } from 'lucide-react';
+import { Eye, Music, HelpCircle, Settings, LogOut, Play, Pause } from 'lucide-react';
 import { AnalogGauge } from './AnalogGauge';
 import { DigitalDisplay } from './DigitalDisplay';
 import { useVIGI1GameLogic } from './useVIGI1GameLogic';
@@ -15,6 +15,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const { gameState, actions } = useVIGI1GameLogic();
   const { 
       isPlaying, 
+      isPaused,
       score, 
       gameTime, 
       gameDuration, 
@@ -28,7 +29,15 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       wrongAudio,
       audioDifficulty
   } = gameState;
-  const { startGame, handleEyeClick, handleNoteClick, setGameDuration, setAudioDifficulty } = actions;
+  const { 
+      startGame, 
+      handleEyeClick, 
+      handleNoteClick, 
+      setGameDuration, 
+      setAudioDifficulty,
+      pauseGame,
+      togglePause
+  } = actions;
   
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -42,21 +51,61 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   return (
     <div className="relative w-full h-screen bg-gray-200 flex flex-col items-center justify-center font-sans select-none">
       
-      {/* Top Bar / HUD */}
-      <div className="absolute top-4 w-full flex justify-between px-8 text-gray-800">
-         <div className="flex gap-4">
-             <div className="bg-white px-4 py-2 rounded shadow">
-                 <span className="font-bold">SCORE:</span> {score}
-             </div>
-             <div className="bg-white px-4 py-2 rounded shadow">
-                 <span className="font-bold">TIME:</span> {formatTime(gameTime)}
-             </div>
+      {/* Top Left Stats */}
+      <div className="absolute top-4 left-4 flex gap-4 text-gray-800 z-[1000]">
+         <div className="bg-white px-4 py-2 rounded shadow">
+             <span className="font-bold">SCORE:</span> {score}
          </div>
-         <div>
-             <button onClick={onExit} className="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600">
-                 EXIT
-             </button>
+         <div className="bg-white px-4 py-2 rounded shadow">
+             <span className="font-bold">TIME:</span> {formatTime(gameTime)}
          </div>
+      </div>
+
+      {/* Top Right Standard Menu */}
+      <div className="absolute top-4 right-4 z-[2000] flex flex-col gap-3">
+            {/* Tutorial */}
+            <button 
+              onClick={() => {
+                  if (isPlaying && !isPaused) pauseGame();
+                  setIsTutorialOpen(true);
+              }}
+              className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+              title="How to Play"
+            >
+               <HelpCircle size={24} />
+            </button>
+
+            {/* Settings */}
+            <button 
+              onClick={() => {
+                  if (isPlaying && !isPaused) pauseGame();
+                  setIsSettingsOpen(true);
+              }}
+              className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+              title="Settings"
+            >
+               <Settings size={24} />
+            </button>
+
+            {/* Pause/Resume - Only when playing */}
+            {isPlaying && (
+                <button 
+                  onClick={togglePause}
+                  className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative border text-white ${isPaused ? 'bg-amber-600/90 border-amber-500 hover:bg-amber-600' : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'}`}
+                  title={isPaused ? "Resume" : "Pause"}
+                >
+                   {isPaused ? <Play size={24} /> : <Pause size={24} />}
+                </button>
+            )}
+
+            {/* Exit */}
+            <button 
+              onClick={onExit}
+              className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white"
+              title="Exit to Main Menu"
+            >
+               <LogOut size={24} />
+            </button>
       </div>
 
       {/* Main Game Area */}

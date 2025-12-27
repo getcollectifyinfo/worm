@@ -84,7 +84,7 @@ export const SkytestPreparationBlogPage: React.FC<SkytestPreparationBlogPageProp
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <h3 className="text-xl font-bold text-slate-800 mb-3">1. Ezberlemeye Çalışmak</h3>
                 <p className="text-slate-600">
-                  Skytest modülleri dinamiktir. Soruların sırasını veya cevapları ezberlemeye çalışmak, sınavda karşılaşacağınız küçük bir değişkenlikte (örneğin küpün dönüş hızı veya sayı dizisinin mantığı değiştiğinde) donup kalmanıza neden olur. Sistem ezber değil, adaptasyon yeteneğinizi ölçer.
+                  <a href="/skytest" onClick={(e) => { e.preventDefault(); onNavigate('SKYTEST_PRODUCT'); }} className="text-blue-600 hover:underline font-medium">Skytest hazırlık modülleri</a> dinamiktir. Soruların sırasını veya cevapları ezberlemeye çalışmak, sınavda karşılaşacağınız küçük bir değişkenlikte (örneğin küpün dönüş hızı veya sayı dizisinin mantığı değiştiğinde) donup kalmanıza neden olur. Sistem ezber değil, adaptasyon yeteneğinizi ölçer.
                 </p>
               </div>
 
@@ -191,7 +191,7 @@ export const SkytestPreparationBlogPage: React.FC<SkytestPreparationBlogPageProp
             </div>
 
             <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-8">
-              <h3 className="text-xl font-bold text-indigo-900 mb-6">CadetPrep Skytest Modülünün Avantajları</h3>
+              <h3 className="text-xl font-bold text-indigo-900 mb-6">CadetPrep <a href="/skytest" onClick={(e) => { e.preventDefault(); onNavigate('SKYTEST_PRODUCT'); }} className="text-indigo-700 hover:underline">Skytest Modülünün</a> Avantajları</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm">
                   <CheckCircle className="text-green-500 shrink-0" size={20} />
