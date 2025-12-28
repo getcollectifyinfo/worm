@@ -108,6 +108,34 @@ const MODULES = [
 export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onBuy, onNavigate }) => {
   const [selectedModule, setSelectedModule] = useState<typeof MODULES[0] | null>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleBuy = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No payment URL returned', data);
+        alert('Ödeme sistemi şu an yanıt vermiyor. Lütfen daha sonra tekrar deneyiniz.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Bir hata oluştu. Lütfen bağlantınızı kontrol ediniz.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Helmet>
@@ -307,10 +335,18 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
             <div className="space-y-3">
               <button 
-                onClick={onBuy}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-colors shadow-lg shadow-blue-900/20"
+                onClick={handleBuy}
+                disabled={isLoading}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
-                Hemen Satın Al
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    İşleniyor...
+                  </>
+                ) : (
+                  'Hemen Satın Al'
+                )}
               </button>
               <button 
                 onClick={onStartFree}
