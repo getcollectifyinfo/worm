@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Lock } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
@@ -153,7 +153,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             subtext: 'Sınırsız Kullanım',
             bgColor: 'bg-purple-600',
             textColor: 'text-white',
-            icon: Lock
+            icon: null
         };
     }
 
@@ -282,7 +282,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             >
               {/* Standardized Badge */}
               <div className={`absolute top-4 right-4 ${badge.bgColor} ${badge.textColor} text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 flex items-center gap-1.5`}>
-                {badge.icon && <badge.icon size={12} />}
+                {badge.icon && React.createElement(badge.icon, { size: 12 })}
                 {badge.label}
               </div>
 
