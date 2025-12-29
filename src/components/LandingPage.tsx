@@ -145,6 +145,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     }
   };
 
+  // Badge Logic
   const getBadgeConfig = (gameId: string) => {
     // PRO User
     if (tier === 'PRO') {
@@ -221,7 +222,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold">
               {user.email?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
+            <div className="flex flex-col items-start">
+                <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
+                {tier === 'PRO' && (
+                    <span className="text-[10px] font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-full leading-none">PRO</span>
+                )}
+            </div>
             <span className={`text-xs transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
