@@ -91,6 +91,10 @@ export const useGameAccess = (): GameAccess => {
 
     if (tier === 'GUEST' && remainingGuestAttempts <= 0) {
       // Guest used all attempts
+      // EXCEPTION: Cube and Worm are always allowed for demo (2 mins)
+      if (['cube', 'worm'].includes(moduleId)) {
+        return true;
+      }
       setShowProModal(true);
       return false;
     }

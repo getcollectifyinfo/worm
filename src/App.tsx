@@ -50,8 +50,7 @@ function App() {
     openProModal, 
     closeProModal,
     showProModal,
-    checkAccess,
-    decrementGuestAttempts
+    checkAccess
   } = useGameAccess();
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
   const [startTime, setStartTime] = useState<number>(0);
@@ -876,7 +875,6 @@ function App() {
                    if (!checkAccess('worm')) return;
                    if (tier === 'GUEST') {
                        setDifficulty('EASY');
-                       decrementGuestAttempts();
                    }
                    setGameMode('EXAM');
                    startExamSession();
@@ -893,7 +891,6 @@ function App() {
                       if (!checkAccess('worm')) return;
                       if (tier === 'GUEST') {
                           setDifficulty('EASY');
-                          decrementGuestAttempts();
                       }
                       setGameMode('PRACTISE');
                       setIsGameStarted(true);
