@@ -15,7 +15,7 @@ app.use(cors());
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
 );
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

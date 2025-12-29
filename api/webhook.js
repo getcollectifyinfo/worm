@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   try {
     // Check for required environment variables
     const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
