@@ -63,6 +63,9 @@ function App() {
     if (typeof window !== 'undefined' && window.location.pathname === '/terms') {
       return 'TERMS_OF_SERVICE';
     }
+    if (typeof window !== 'undefined' && window.location.pathname === '/simulation') {
+      return 'LANDING';
+    }
     return 'MARKETING';
   });
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -81,6 +84,8 @@ function App() {
         setCurrentPage('PRIVACY_POLICY');
       } else if (window.location.pathname === '/terms') {
         setCurrentPage('TERMS_OF_SERVICE');
+      } else if (window.location.pathname === '/simulation') {
+        setCurrentPage('LANDING');
       } else if (window.location.pathname === '/yasal-uyari') {
         setCurrentPage('LEGAL_DISCLAIMER');
       } else if (window.location.pathname === '/') {
@@ -106,6 +111,8 @@ function App() {
       window.history.pushState(null, '', '/privacy');
     } else if (currentPage === 'TERMS_OF_SERVICE' && window.location.pathname !== '/terms') {
       window.history.pushState(null, '', '/terms');
+    } else if (currentPage === 'LANDING' && window.location.pathname !== '/simulation') {
+      window.history.pushState(null, '', '/simulation');
     } else if (currentPage === 'MARKETING' && window.location.pathname !== '/') {
       window.history.pushState(null, '', '/');
     }
