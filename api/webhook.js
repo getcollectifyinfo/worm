@@ -33,6 +33,13 @@ export default async function handler(req, res) {
           SUPABASE_URL: !SUPABASE_URL,
           SUPABASE_SERVICE_ROLE_KEY: !SUPABASE_SERVICE_ROLE_KEY,
           STRIPE_WEBHOOK_SECRET: !STRIPE_WEBHOOK_SECRET
+        },
+        env_debug: {
+            HAS_STRIPE_KEY: !!process.env.STRIPE_SECRET_KEY,
+            HAS_SUPABASE_URL: !!process.env.SUPABASE_URL,
+            HAS_VITE_SUPABASE_URL: !!process.env.VITE_SUPABASE_URL,
+            HAS_SERVICE_ROLE: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+            HAS_WEBHOOK_SECRET: !!process.env.STRIPE_WEBHOOK_SECRET
         }
       });
     }
