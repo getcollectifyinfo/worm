@@ -105,6 +105,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full px-4">
+        {/* CUBE Button */}
+        <button 
+          onClick={() => handleGameSelect('CUBE')}
+          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
+        >
+          <div className="p-4 bg-pink-500/10 rounded-xl group-hover:bg-pink-500 transition-colors duration-300">
+            <Box size={40} className="text-pink-500 group-hover:text-white transition-colors" />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-bold text-white tracking-wider group-hover:text-pink-400">CUBE</span>
+            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-pink-300">Spatial Orientation</span>
+          </div>
+        </button>
+
         {/* WORM Button */}
         <button 
           onClick={() => handleGameSelect('WORM')}
@@ -172,20 +186,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           <div className="flex flex-col items-center">
             <span className="text-xl font-bold text-white tracking-wider group-hover:text-yellow-400">CAPACITY</span>
             <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-yellow-300">Attention Capacity</span>
-          </div>
-        </button>
-
-        {/* CUBE Button */}
-        <button 
-          onClick={() => handleGameSelect('CUBE')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
-        >
-          <div className="p-4 bg-pink-500/10 rounded-xl group-hover:bg-pink-500 transition-colors duration-300">
-            <Box size={40} className="text-pink-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-pink-400">CUBE</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-pink-300">Spatial Orientation</span>
           </div>
         </button>
       </div>
