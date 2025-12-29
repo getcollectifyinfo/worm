@@ -102,6 +102,33 @@ export const useGameAccess = (): GameAccess => {
     return true;
   };
 
+  const handleUpgrade = async () => {
+    if (!user) {
+      window.location.href = '/simulation?login=true';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No checkout URL returned');
+        alert('Payment initialization failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Payment initialization failed. Please try again.');
+    }
+  };
+
   return {
     tier,
     canAccessModule,
@@ -115,6 +142,7 @@ export const useGameAccess = (): GameAccess => {
     closeProModal: () => setShowProModal(false),
     checkAccess,
     remainingGuestAttempts,
-    decrementGuestAttempts
+    decrementGuestAttempts,
+    handleUpgrade
   };
 };

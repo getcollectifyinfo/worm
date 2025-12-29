@@ -1283,7 +1283,7 @@ function App() {
             <ProAccessModal 
                 isOpen={showProModal} 
                 onClose={() => { closeProModal(); setProModalVariant('default'); }}
-                onUpgrade={() => { closeProModal(); setProModalVariant('default'); }}
+                onUpgrade={handleUpgrade}
                 variant={proModalVariant}
                 title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
                 description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}

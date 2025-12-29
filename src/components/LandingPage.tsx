@@ -115,6 +115,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tier } = useGameAccess();
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('login') === 'true') {
+            setTimeout(() => {
+                setShowAuth(true);
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }, 0);
+        }
+    }
+  }, []);
+
   const handleGameSelect = (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => {
     if (tier === 'GUEST' && !['CUBE', 'WORM'].includes(game)) {
         // Guest can only access CUBE and WORM.

@@ -591,7 +591,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
           </div>
         </div>
       )}
-      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={() => closeProModal()} />
+      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
     </div>
   );
 };

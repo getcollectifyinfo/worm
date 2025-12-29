@@ -19,7 +19,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     showProModal,
     closeProModal,
     openProModal,
-    maxDuration
+    maxDuration,
+    handleUpgrade
   } = useGameAccess();
 
   const {
@@ -129,7 +130,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         <ProAccessModal 
           isOpen={showProModal} 
           onClose={handleCloseProModal}
-          onUpgrade={handleCloseProModal}
+          onUpgrade={handleUpgrade}
           variant={proModalVariant}
           title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
           description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}

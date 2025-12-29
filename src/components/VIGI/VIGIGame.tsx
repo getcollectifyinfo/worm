@@ -17,18 +17,18 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const { gameState, actions, settings: gameSettings } = useGameLogic();
   const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves } = gameState;
   const { startGame, stopGame, togglePause, handleInteraction, setSettings } = actions;
-  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal } = useGameAccess();
+  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade } = useGameAccess();
 
   // Duration Timer
   useEffect(() => {
     if (isPlaying && maxDuration > 0) {
       const timer = setTimeout(() => {
         stopGame();
-        alert("Demo time finished! Please upgrade for unlimited practice.");
+        openProModal();
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, maxDuration, stopGame]);
+  }, [isPlaying, maxDuration, stopGame, openProModal]);
 
   // Calculate position
   const getPositionStyle = (pos: number) => {
@@ -111,7 +111,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
 
   return (
     <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden select-none font-mono">
-      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={() => closeProModal()} />
+      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
