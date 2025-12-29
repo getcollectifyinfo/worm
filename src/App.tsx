@@ -43,7 +43,7 @@ import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from
 import { statsService } from './services/statsService';
 
 function App() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, refreshSession } = useAuth();
   const { 
     tier, 
     maxDuration, 
@@ -59,6 +59,16 @@ function App() {
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>(() => {
+    // Check for success/canceled params from Stripe
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('success') === 'true') {
+        // Clear the query param to keep URL clean
+        window.history.replaceState({}, '', window.location.pathname);
+        return 'LANDING';
+      }
+    }
+
     // Simple URL check for initial state
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-nedir') {
       return 'SKYTEST_BLOG_1';
@@ -85,6 +95,22 @@ function App() {
   });
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Handle Stripe Success Return
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true' && refreshSession) {
+      // Force refresh session to get new subscription status
+      refreshSession().then(() => {
+        // Show success toast
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
+        toast.innerHTML = '<span>🎉 Tebrikler! Pro üyelik aktif edildi.</span>';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+      });
+    }
+  }, [refreshSession]);
 
   // Handle pending pro upgrade after login
   useEffect(() => {

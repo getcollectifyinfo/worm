@@ -59,8 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshSession = async () => {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+    }
+    return { data, error };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );
