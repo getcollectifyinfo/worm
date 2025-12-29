@@ -20,7 +20,7 @@ export interface GameAccess {
   decrementGuestAttempts: () => void;
 }
 
-const GUEST_ALLOWED_MODULES = ['cube'];
+const GUEST_ALLOWED_MODULES = ['cube', 'worm'];
 const GUEST_MAX_ATTEMPTS = 2;
 const DEMO_DURATION = 120; // 2 minutes in seconds
 
@@ -91,7 +91,7 @@ export const useGameAccess = (): GameAccess => {
 
     if (tier === 'GUEST' && remainingGuestAttempts <= 0) {
       // Guest used all attempts
-      // UI should handle this prompt
+      setShowProModal(true);
       return false;
     }
 

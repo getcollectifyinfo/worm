@@ -17,16 +17,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   const { tier } = useGameAccess();
 
   const handleGameSelect = (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => {
-    if (tier === 'GUEST' && game !== 'CUBE') {
-        // Guest can only access CUBE.
+    if (tier === 'GUEST' && !['CUBE', 'WORM'].includes(game)) {
+        // Guest can only access CUBE and WORM.
         // Prompt login for others.
+        localStorage.setItem('pending_game', game);
         setShowAuth(true);
         return;
     }
 
-    if (game === 'CUBE' || tier !== 'GUEST') {
+    if (['CUBE', 'WORM'].includes(game) || tier !== 'GUEST') {
          onSelectGame(game);
     } else {
+         localStorage.setItem('pending_game', game);
          setShowAuth(true);
     }
   };
@@ -41,7 +43,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         >
           ← Back
         </button>
-        <AuthPage onSuccess={() => setShowAuth(false)} />
+        <AuthPage onSuccess={() => {
+            setShowAuth(false);
+            const pending = localStorage.getItem('pending_game');
+            if (pending) {
+                localStorage.removeItem('pending_game');
+                onSelectGame(pending as 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE');
+            }
+        }} />
       </div>
     );
   }
@@ -108,8 +117,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* CUBE Button */}
         <button 
           onClick={() => handleGameSelect('CUBE')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              Demo
+            </div>
+          )}
           <div className="p-4 bg-pink-500/10 rounded-xl group-hover:bg-pink-500 transition-colors duration-300">
             <Box size={40} className="text-pink-500 group-hover:text-white transition-colors" />
           </div>
@@ -122,8 +136,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* WORM Button */}
         <button 
           onClick={() => handleGameSelect('WORM')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-green-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-green-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-green-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-green-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              Demo
+            </div>
+          )}
           <div className="p-4 bg-green-500/10 rounded-xl group-hover:bg-green-500 transition-colors duration-300">
             <Gamepad2 size={40} className="text-green-500 group-hover:text-white transition-colors" />
           </div>
@@ -136,8 +155,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* IPP Button */}
         <button 
           onClick={() => handleGameSelect('IPP')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-blue-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-blue-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-blue-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-blue-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              FREE Signup
+            </div>
+          )}
           <div className="p-4 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 transition-colors duration-300">
             <Gauge size={40} className="text-blue-500 group-hover:text-white transition-colors" />
           </div>
@@ -150,8 +174,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* VIGI 1 Button */}
         <button 
           onClick={() => handleGameSelect('VIGI1')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-orange-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-orange-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-orange-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-orange-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              FREE Signup
+            </div>
+          )}
           <div className="p-4 bg-orange-500/10 rounded-xl group-hover:bg-orange-500 transition-colors duration-300">
             <Eye size={40} className="text-orange-500 group-hover:text-white transition-colors" />
           </div>
@@ -164,8 +193,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* VIGI Button */}
         <button 
           onClick={() => handleGameSelect('VIGI')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-purple-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-purple-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              FREE Signup
+            </div>
+          )}
           <div className="p-4 bg-purple-500/10 rounded-xl group-hover:bg-purple-500 transition-colors duration-300">
             <Zap size={40} className="text-purple-500 group-hover:text-white transition-colors" />
           </div>
@@ -178,8 +212,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         {/* CAPACITY Button */}
         <button 
           onClick={() => handleGameSelect('CAPACITY')}
-          className="group flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-yellow-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-yellow-500/20"
+          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-yellow-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-yellow-500/20"
         >
+          {tier === 'GUEST' && (
+            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+              FREE Signup
+            </div>
+          )}
           <div className="p-4 bg-yellow-500/10 rounded-xl group-hover:bg-yellow-500 transition-colors duration-300">
             <Brain size={40} className="text-yellow-500 group-hover:text-white transition-colors" />
           </div>

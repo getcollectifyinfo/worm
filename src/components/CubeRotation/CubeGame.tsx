@@ -49,6 +49,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     if (!checkAccess('cube')) return;
     if (tier === 'GUEST') {
       decrementGuestAttempts();
+      setCommandCount(3);
     }
     setHasStarted(true);
     startGame();

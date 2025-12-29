@@ -35,12 +35,21 @@ import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
+import { useGameAccess } from './hooks/useGameAccess';
 import { Loader2, Gamepad2 } from 'lucide-react';
 
 import { statsService } from './services/statsService';
 
 function App() {
   const { user, loading, signOut } = useAuth();
+  const { 
+    tier, 
+    maxDuration, 
+    isSettingsEnabled, 
+    openProModal, 
+    checkAccess,
+    decrementGuestAttempts
+  } = useGameAccess();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>(() => {
@@ -124,6 +133,24 @@ function App() {
     setIsGameStarted(false);
     setIsTutorialOpen(false);
   }, [currentPage]);
+
+  // Demo Timer for GUEST
+  useEffect(() => {
+    if (isGameStarted && maxDuration > 0 && currentPage === 'WORM') {
+      const timer = setTimeout(() => {
+        setIsGameStarted(false);
+        alert('Demo süresi doldu! Sınırsız pratik için Proya geçiniz.');
+      }, maxDuration * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isGameStarted, maxDuration, currentPage]);
+
+  // Enforce EASY difficulty for Guests
+  useEffect(() => {
+    if (tier === 'GUEST') {
+        setDifficulty('EASY');
+    }
+  }, [tier]);
 
   // Global State
   const [gameMode, setGameMode] = useState<GameMode>('PRACTISE');
@@ -831,16 +858,32 @@ function App() {
              <GameStartMenu 
                title="WORM"
                onStart={() => {
+                   if (!checkAccess('worm')) return;
+                   if (tier === 'GUEST') {
+                       setDifficulty('EASY');
+                       decrementGuestAttempts();
+                   }
                    setGameMode('EXAM');
                    startExamSession();
                    setIsGameStarted(true);
                }}
-               onSettings={() => setIsSettingsOpen(true)}
+               onSettings={() => {
+                   if (isSettingsEnabled) {
+                       setIsSettingsOpen(true);
+                   } else {
+                       openProModal();
+                   }
+               }}
                onBack={() => setCurrentPage('LANDING')}
                onTutorial={() => setIsTutorialOpen(true)}
              >
                 <button 
                   onClick={() => {
+                      if (!checkAccess('worm')) return;
+                      if (tier === 'GUEST') {
+                          setDifficulty('EASY');
+                          decrementGuestAttempts();
+                      }
                       setGameMode('PRACTISE');
                       setIsGameStarted(true);
                   }}
@@ -871,7 +914,13 @@ function App() {
 
                   {/* Settings Button */}
                   <button 
-                      onClick={() => setIsSettingsOpen(true)}
+                      onClick={() => {
+                          if (isSettingsEnabled) {
+                              setIsSettingsOpen(true);
+                          } else {
+                              openProModal();
+                          }
+                      }}
                       className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
                       title="Settings"
                   >
@@ -886,7 +935,12 @@ function App() {
 
                   {/* Practise Mode Button */}
                   <button 
-                      onClick={switchToPractise}
+                      onClick={() => {
+                          if (tier === 'GUEST') {
+                              setDifficulty('EASY');
+                          }
+                          switchToPractise();
+                      }}
                       className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'PRACTISE' ? 'bg-blue-600 text-white ring-4 ring-blue-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
                       title="Practise Mode"
                   >
@@ -901,7 +955,12 @@ function App() {
 
                   {/* Exam Mode Button */}
                   <button 
-                      onClick={startExamSession}
+                      onClick={() => {
+                          if (tier === 'GUEST') {
+                              setDifficulty('EASY');
+                          }
+                          startExamSession();
+                      }}
                       className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative ${gameMode === 'EXAM' ? 'bg-purple-600 text-white ring-4 ring-purple-200' : 'bg-white/80 text-gray-700 hover:bg-white'}`}
                       title="Exam Mode"
                   >
