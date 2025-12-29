@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Lock } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';

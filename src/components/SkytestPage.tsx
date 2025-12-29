@@ -111,7 +111,14 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLegalAccepted, setIsLegalAccepted] = useState(false);
-  const { tier, canAccessModule, showProModal, openProModal, closeProModal } = useGameAccess();
+  const { 
+    tier, 
+    canAccessModule, 
+    showProModal, 
+    openProModal, 
+    closeProModal,
+    handleUpgrade 
+  } = useGameAccess();
 
   const handleBuy = async () => {
     if (!isLegalAccepted) {

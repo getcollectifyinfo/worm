@@ -21,7 +21,9 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     closeProModal,
     openProModal,
     maxDuration,
-    handleUpgrade
+    handleUpgrade,
+    showLoginGate,
+    closeLoginGate
   } = useGameAccess();
 
   const {
