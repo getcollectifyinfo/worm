@@ -33,7 +33,7 @@ import { SkytestPreparationBlogPage } from './components/SkytestPreparationBlogP
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
-// import { AuthPage } from './components/Auth/AuthPage';
+import { SmartLoginGate } from './components/Auth/SmartLoginGate';
 import { useAuth } from './hooks/useAuth';
 import { useGameAccess } from './hooks/useGameAccess';
 import { Loader2, Gamepad2, Lock } from 'lucide-react';
@@ -50,7 +50,10 @@ function App() {
     openProModal, 
     closeProModal,
     showProModal,
-    checkAccess
+    checkAccess,
+    handleUpgrade,
+    showLoginGate,
+    closeLoginGate
   } = useGameAccess();
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
   const [startTime, setStartTime] = useState<number>(0);
@@ -82,6 +85,25 @@ function App() {
   });
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Handle pending pro upgrade after login
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+        const pending = localStorage.getItem('pending_pro_upgrade');
+        if (pending) {
+            localStorage.removeItem('pending_pro_upgrade');
+            // Show toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
+            toast.innerHTML = '<span>Hesap oluşturuldu. Pro üyeliğini tamamlayalım.</span>';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+            
+            // Trigger upgrade logic (which will now proceed to Stripe since user is logged in)
+            handleUpgrade();
+        }
+    }
+  }, [user, handleUpgrade]);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -1291,6 +1313,9 @@ function App() {
                 trustText={proModalVariant === 'exam-settings' ? "İstediğin zaman iptal edebilirsin." : undefined}
             />
         )}
+
+        {/* Smart Login Gate */}
+        <SmartLoginGate isOpen={showLoginGate} onClose={closeLoginGate} />
     </div>
   );
 }

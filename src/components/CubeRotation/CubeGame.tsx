@@ -7,6 +7,7 @@ import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from
 import { GameStartMenu } from '../GameStartMenu';
 import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
+import { SmartLoginGate } from '../Auth/SmartLoginGate';
 
 interface CubeGameProps {
   onExit: () => void;
@@ -138,6 +139,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
           trustText={proModalVariant === 'exam-settings' ? "İstediğin zaman iptal edebilirsin." : undefined}
         />
       )}
+      
+      <SmartLoginGate isOpen={showLoginGate} onClose={closeLoginGate} />
 
       <GameTutorial
         isOpen={isTutorialOpen}

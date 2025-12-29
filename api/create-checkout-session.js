@@ -5,6 +5,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
+      const { returnUrl } = req.body;
+      const successUrl = returnUrl ? `${returnUrl}?success=true` : `${req.headers.origin}/?success=true`;
+      const cancelUrl = returnUrl ? `${returnUrl}?canceled=true` : `${req.headers.origin}/?canceled=true`;
+
       // Create Checkout Sessions from body params.
       const session = await stripe.checkout.sessions.create({
         line_items: [
@@ -26,8 +30,8 @@ export default async function handler(req, res) {
           },
         ],
         mode: 'subscription',
-        success_url: `${req.headers.origin}/?success=true`,
-        cancel_url: `${req.headers.origin}/?canceled=true`,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
       });
       
       res.status(200).json({ url: session.url });

@@ -14,19 +14,22 @@ export interface GameAccess {
   canRecordStats: boolean;
   showProModal: boolean;
   openProModal: () => void;
-  closeProModal: () => void;
-  checkAccess: (moduleId: string, difficulty?: DifficultyLevel) => boolean;
+  closeProModal: () => void;checkAccess: (moduleId: string, difficulty?: DifficultyLevel) => boolean;
   remainingGuestAttempts: number;
   decrementGuestAttempts: () => void;
+  handleUpgrade: () => Promise<void>;
+  showLoginGate: boolean;
+  openLoginGate: () => void;
+  closeLoginGate: () => void;
 }
 
-const GUEST_ALLOWED_MODULES = ['cube', 'worm'];
-const GUEST_MAX_ATTEMPTS = 2;
+const GUEST_ALLOWED_MODULES = ['cube', 'worm'];const GUEST_MAX_ATTEMPTS = 2;
 const DEMO_DURATION = 120; // 2 minutes in seconds
 
 export const useGameAccess = (): GameAccess => {
   const { user } = useAuth();
   const [showProModal, setShowProModal] = useState(false);
+  const [showLoginGate, setShowLoginGate] = useState(false);
   
   // TODO: Connect to real subscription data
   // For now, we assume FREE if logged in, unless we find a specific flag
@@ -104,7 +107,10 @@ export const useGameAccess = (): GameAccess => {
 
   const handleUpgrade = async () => {
     if (!user) {
-      window.location.href = '/simulation?login=true';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pending_pro_upgrade', 'true');
+      }
+      setShowLoginGate(true);
       return;
     }
 
@@ -114,6 +120,9 @@ export const useGameAccess = (): GameAccess => {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          returnUrl: window.location.href
+        })
       });
       
       const data = await response.json();
@@ -143,6 +152,9 @@ export const useGameAccess = (): GameAccess => {
     checkAccess,
     remainingGuestAttempts,
     decrementGuestAttempts,
-    handleUpgrade
+    handleUpgrade,
+    showLoginGate,
+    openLoginGate: () => setShowLoginGate(true),
+    closeLoginGate: () => setShowLoginGate(false)
   };
 };

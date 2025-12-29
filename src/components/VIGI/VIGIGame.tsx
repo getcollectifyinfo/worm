@@ -8,6 +8,7 @@ import { statsService } from '../../services/statsService';
 import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
 import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
+import { SmartLoginGate } from '../Auth/SmartLoginGate';
 
 interface VIGIGameProps {
   onExit: () => void;
@@ -17,7 +18,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const { gameState, actions, settings: gameSettings } = useGameLogic();
   const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves } = gameState;
   const { startGame, stopGame, togglePause, handleInteraction, setSettings } = actions;
-  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade } = useGameAccess();
+  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade, showLoginGate, closeLoginGate } = useGameAccess();
 
   // Duration Timer
   useEffect(() => {
@@ -112,6 +113,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   return (
     <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden select-none font-mono">
       <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
+      <SmartLoginGate isOpen={showLoginGate} onClose={closeLoginGate} />
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}

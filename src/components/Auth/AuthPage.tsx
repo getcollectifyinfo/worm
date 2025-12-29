@@ -5,9 +5,10 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 
 interface AuthPageProps {
   onSuccess: () => void;
+  isEmbedded?: boolean;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = false }) => {
   const { signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -56,8 +57,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a] p-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
+    <div className={`${isEmbedded ? 'w-full' : 'min-h-screen flex items-center justify-center bg-[#1a1a1a] p-4'}`}>
+      <div className={`w-full ${isEmbedded ? '' : 'max-w-md bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700'}`}>
         <div className="flex justify-center mb-6">
           <img src="/logo.png" alt="CadetPrep Academy" className="h-32" />
         </div>
