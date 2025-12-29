@@ -153,11 +153,12 @@ function App() {
     if (isGameStarted && maxDuration > 0 && currentPage === 'WORM') {
       const timer = setTimeout(() => {
         setIsGameStarted(false);
-        alert('Demo süresi doldu! Sınırsız pratik için Proya geçiniz.');
+        setProModalVariant('default');
+        openProModal();
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [isGameStarted, maxDuration, currentPage]);
+  }, [isGameStarted, maxDuration, currentPage, openProModal]);
 
   // Enforce EASY difficulty for Guests
   useEffect(() => {

@@ -71,11 +71,12 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     if (hasStarted && maxDuration > 0) {
       const timer = setTimeout(() => {
         setHasStarted(false);
-        alert('Demo süresi doldu! Sınırsız pratik için Proya geçiniz.');
+        setProModalVariant('default');
+        openProModal();
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [hasStarted, maxDuration]);
+  }, [hasStarted, maxDuration, openProModal]);
 
   const renderCommand = () => {
     if (!currentCommand) return null;
