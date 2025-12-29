@@ -10,7 +10,7 @@ export const newsletterService = {
   /**
    * Adds a new email to the waitlist/newsletter table.
    */
-  async subscribe(email: string, source: string = 'GENERAL'): Promise<{ success: boolean; error?: any }> {
+  async subscribe(email: string, source: string = 'GENERAL'): Promise<{ success: boolean; error?: unknown }> {
     try {
       const { error } = await supabase
         .from('newsletter_subscribers')

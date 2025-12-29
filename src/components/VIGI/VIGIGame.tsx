@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Shape from './VIGIShape';
 import { useGameLogic } from './useVIGIGameLogic';
 import { GameStartMenu } from '../GameStartMenu';
@@ -6,6 +6,8 @@ import { GameTutorial } from '../GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
 import { statsService } from '../../services/statsService';
 import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
+import { useGameAccess } from '../../hooks/useGameAccess';
+import { ProAccessModal } from '../ProAccessModal';
 
 interface VIGIGameProps {
   onExit: () => void;
@@ -15,6 +17,18 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const { gameState, actions, settings: gameSettings } = useGameLogic();
   const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves } = gameState;
   const { startGame, stopGame, togglePause, handleInteraction, setSettings } = actions;
+  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal } = useGameAccess();
+
+  // Duration Timer
+  useEffect(() => {
+    if (isPlaying && maxDuration > 0) {
+      const timer = setTimeout(() => {
+        stopGame();
+        alert("Demo time finished! Please upgrade for unlimited practice.");
+      }, maxDuration * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlaying, maxDuration, stopGame]);
 
   // Calculate position
   const getPositionStyle = (pos: number) => {
@@ -71,8 +85,9 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const handleQuitFromPause = async () => {
     stopGame();
     
-    // Save Stats
-    await statsService.saveSession({
+    // Save Stats if allowed
+    if (canRecordStats) {
+      await statsService.saveSession({
         game_type: 'VIGI',
         score: score,
         duration_seconds: gameTime,
@@ -82,14 +97,21 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
             caught_events: caughtEvents,
             wrong_moves: wrongMoves
         }
-    });
+      });
+    }
 
     setShowPauseMenu(false);
     onExit();
   };
 
+  const handleStartGame = () => {
+    if (!checkAccess('vigi')) return;
+    startGame();
+  };
+
   return (
     <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden select-none font-mono">
+      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={() => closeProModal()} />
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
@@ -167,8 +189,14 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         <GameStartMenu 
             title="VIGI"
             startLabel={totalEvents > 0 ? "PLAY AGAIN" : "START GAME"}
-            onStart={startGame}
-            onSettings={() => setShowSettings(true)}
+            onStart={handleStartGame}
+            onSettings={() => {
+                if (tier === 'GUEST' || tier === 'FREE') {
+                    openProModal();
+                } else {
+                    setShowSettings(true);
+                }
+            }}
             onBack={onExit}
             highScore={highScore}
             onTutorial={() => setIsTutorialOpen(true)}

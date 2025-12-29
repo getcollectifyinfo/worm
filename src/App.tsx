@@ -30,6 +30,9 @@ import { SkytestPage } from './components/SkytestPage';
 import { SkytestBlogPage } from './components/SkytestBlogPage';
 import { SkytestPegasusBlogPage } from './components/SkytestPegasusBlogPage';
 import { SkytestPreparationBlogPage } from './components/SkytestPreparationBlogPage';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
+import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
 import { Loader2, Gamepad2 } from 'lucide-react';
@@ -54,6 +57,12 @@ function App() {
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-hazirlik') {
       return 'SKYTEST_PREPARATION_BLOG';
     }
+    if (typeof window !== 'undefined' && window.location.pathname === '/gizlilik-politikasi') {
+      return 'PRIVACY_POLICY';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/kullanim-sartlari') {
+      return 'TERMS_OF_SERVICE';
+    }
     return 'MARKETING';
   });
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -68,6 +77,12 @@ function App() {
         setCurrentPage('SKYTEST_PEGASUS_BLOG');
       } else if (window.location.pathname === '/skytest-hazirlik') {
         setCurrentPage('SKYTEST_PREPARATION_BLOG');
+      } else if (window.location.pathname === '/gizlilik-politikasi') {
+        setCurrentPage('PRIVACY_POLICY');
+      } else if (window.location.pathname === '/kullanim-sartlari') {
+        setCurrentPage('TERMS_OF_SERVICE');
+      } else if (window.location.pathname === '/yasal-uyari') {
+        setCurrentPage('LEGAL_DISCLAIMER');
       } else if (window.location.pathname === '/') {
         setCurrentPage('MARKETING');
       }
@@ -87,6 +102,10 @@ function App() {
       window.history.pushState(null, '', '/skytest-pegasus');
     } else if (currentPage === 'SKYTEST_PREPARATION_BLOG' && window.location.pathname !== '/skytest-hazirlik') {
       window.history.pushState(null, '', '/skytest-hazirlik');
+    } else if (currentPage === 'PRIVACY_POLICY' && window.location.pathname !== '/gizlilik-politikasi') {
+      window.history.pushState(null, '', '/gizlilik-politikasi');
+    } else if (currentPage === 'TERMS_OF_SERVICE' && window.location.pathname !== '/kullanim-sartlari') {
+      window.history.pushState(null, '', '/kullanim-sartlari');
     } else if (currentPage === 'MARKETING' && window.location.pathname !== '/') {
       window.history.pushState(null, '', '/');
     }
@@ -720,12 +739,23 @@ function App() {
     return <SkytestPreparationBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
   }
 
+  if (currentPage === 'PRIVACY_POLICY') {
+    return <PrivacyPolicyPage onBack={() => setCurrentPage('MARKETING')} />;
+  }
+
+  if (currentPage === 'TERMS_OF_SERVICE') {
+    return <TermsOfServicePage onBack={() => setCurrentPage('MARKETING')} />;
+  }
+
+  if (currentPage === 'LEGAL_DISCLAIMER') {
+    return <LegalDisclaimerPage onBack={() => setCurrentPage('MARKETING')} />;
+  }
+
   if (currentPage === 'SKYTEST_PRODUCT') {
     return (
       <SkytestPage 
         onBack={() => setCurrentPage('MARKETING')}
         onStartFree={() => setCurrentPage('LANDING')}
-        onBuy={() => alert('Ödeme sistemi yakında aktif olacak!')}
         onNavigate={(page) => setCurrentPage(page as Page)}
       />
     );

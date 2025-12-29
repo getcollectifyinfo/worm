@@ -15,11 +15,12 @@ import {
 import type { Page } from '../types';
 
 import { GameScreenshotSlider } from './GameScreenshotSlider';
+import { useGameAccess } from '../hooks/useGameAccess';
+import { ProAccessModal } from './ProAccessModal';
 
 interface SkytestPageProps {
   onBack: () => void;
   onStartFree: () => void;
-  onBuy: () => void;
   onNavigate: (page: Page) => void;
 }
 
@@ -105,12 +106,23 @@ const MODULES = [
   }
 ];
 
-export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onBuy, onNavigate }) => {
+export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onNavigate }) => {
   const [selectedModule, setSelectedModule] = useState<typeof MODULES[0] | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLegalAccepted, setIsLegalAccepted] = useState(false);
+  const { tier, canAccessModule, showProModal, openProModal, closeProModal } = useGameAccess();
 
   const handleBuy = async () => {
+    if (!isLegalAccepted) {
+      alert('Lütfen satın alma işlemine devam etmek için Yasal Uyarıyı okuyup kabul ediniz.');
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/create-checkout-session', {
@@ -192,10 +204,18 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   <ChevronRight size={20} />
                 </button>
                 <button 
-                  onClick={onBuy}
-                  className="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center"
+                  onClick={handleBuy}
+                  disabled={isLoading}
+                  className="px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  500 TL / Ay – Satın Al
+                  {isLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      İşleniyor...
+                    </>
+                  ) : (
+                    '500 TL / Ay – Satın Al'
+                  )}
                 </button>
               </div>
             </div>
@@ -251,7 +271,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {MODULES.map((module) => (
-              <div key={module.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-slate-100 flex flex-col h-full group">
+              <div key={module.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-slate-100 flex flex-col h-full group relative">
                 {/* Card Thumbnail */}
                 <div className="h-40 bg-slate-200 relative overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400 group-hover:scale-105 transition-transform duration-500">
@@ -264,6 +284,11 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                        Simülasyon
                      </span>
                   </div>
+                  {tier === 'GUEST' && !canAccessModule(module.id) && (
+                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center text-slate-800 font-bold text-sm">
+                      Pro ile açılır
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Content */}
@@ -273,8 +298,14 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                     {module.shortDesc}
                   </p>
                   <button 
-                    onClick={() => setSelectedModule(module)}
-                    className="w-full py-3 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 group-hover:bg-blue-50"
+                    onClick={() => {
+                      if (tier === 'GUEST' && !canAccessModule(module.id)) {
+                        openProModal();
+                      } else {
+                        setSelectedModule(module);
+                      }
+                    }}
+                    className="w-full py-3 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 group-hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Detayları Gör
                     <ChevronRight size={16} />
@@ -312,7 +343,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       </section>
 
       {/* 5. PRICING */}
-      <section className="py-20 bg-slate-900 text-white text-center">
+      <section id="pricing" className="py-20 bg-slate-900 text-white text-center">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-12">Hemen Hazırlanmaya Başla</h2>
           
@@ -331,12 +362,35 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             <div className="space-y-4 mb-8">
               <p className="text-sm text-slate-400">Tüm modüllere sınırsız erişim</p>
               <p className="text-xs text-slate-500 italic">Şu anda yalnızca SKYTEST paketi aktiftir.</p>
+              
+              <div className="flex items-start justify-center gap-2 text-left pt-2">
+                <input 
+                  type="checkbox" 
+                  id="legal-check" 
+                  checked={isLegalAccepted}
+                  onChange={(e) => setIsLegalAccepted(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="legal-check" className="text-xs text-slate-400 select-none cursor-pointer">
+                  <span className="text-slate-300 font-medium">Yasal Uyarıyı</span> okudum, anladım ve kabul ediyorum.
+                  <br />
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onNavigate('LEGAL_DISCLAIMER');
+                    }}
+                    className="text-blue-400 hover:text-blue-300 underline mt-1"
+                  >
+                    Yasal Uyarıyı Oku
+                  </button>
+                </label>
+              </div>
             </div>
 
             <div className="space-y-3">
               <button 
                 onClick={handleBuy}
-                disabled={isLoading}
+                disabled={isLoading || !isLegalAccepted}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
                 {isLoading ? (
@@ -444,9 +498,24 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             </div>
         </div>
       </section>
+      
+      {/* Disclaimer Footer */}
+      <section className="py-8 bg-slate-100 border-t border-slate-200">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+            <p className="text-xs text-slate-500 leading-relaxed">
+                CadetPrep Academy, bağımsız bir hazırlık platformudur. SkyTest, Pegasus ve diğer tüm ticari markalar ilgili hak sahiplerine aittir. 
+                Platform, herhangi bir havayolu veya resmi test sağlayıcısı ile bağlantılı değildir. 
+                <button 
+                    onClick={() => onNavigate('LEGAL_DISCLAIMER')}
+                    className="text-slate-600 hover:text-slate-800 underline ml-1 font-medium"
+                >
+                    Detaylı Yasal Uyarı
+                </button>
+            </p>
+        </div>
+      </section>
 
-      {/* 7. LEGAL & FOOTER */}
-      <footer className="py-8 bg-slate-100 border-t border-slate-200">
+      <footer className="py-12 bg-[#050914] text-white">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-slate-500 max-w-2xl mx-auto">
             CadetPrep Academy, bağımsız bir hazırlık platformudur. Herhangi bir havayolu şirketi veya resmi test organizasyonu ile bağlantılı değildir.
@@ -507,8 +576,12 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button 
                 onClick={() => {
-                  setSelectedModule(null);
-                  onStartFree(); // Or navigate to specific module
+                  if (tier === 'GUEST' && !canAccessModule(selectedModule.id)) {
+                    openProModal();
+                  } else {
+                    setSelectedModule(null);
+                    onStartFree();
+                  }
                 }}
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
               >
@@ -518,6 +591,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
           </div>
         </div>
       )}
+      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={() => closeProModal()} />
     </div>
   );
 };

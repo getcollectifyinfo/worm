@@ -151,6 +151,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
               isLogin ? 'Sign In' : 'Sign Up'
             )}
           </button>
+          
+          {!isLogin && (
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Hesap oluşturarak, <a href="/kullanim-sartlari" className="text-purple-400 hover:underline">Kullanım Şartları</a>, <a href="/gizlilik-politikasi" className="text-purple-400 hover:underline">Gizlilik Politikası</a> ve <a href="/yasal-uyari" className="text-purple-400 hover:underline">Yasal Uyarı</a> metinlerini okuduğunuzu ve kabul ettiğinizi beyan edersiniz.
+            </p>
+          )}
         </form>
 
         {/* 
@@ -187,9 +193,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
         
         <div className="mt-8 pt-6 border-t border-gray-700 text-center">
           <p className="text-xs text-gray-500 leading-relaxed">
-            CadetPrep Academy is an independent training platform. 
-            All trademarks and test names mentioned are the property of their respective owners. 
-            This platform is not affiliated with, approved, or endorsed by any airline or official testing organization.
+            CadetPrep Academy, bağımsız bir hazırlık platformudur. SkyTest, Pegasus ve diğer tüm ticari markalar ilgili hak sahiplerine aittir. 
+            Platform, herhangi bir havayolu veya resmi test sağlayıcısı ile bağlantılı değildir.
+            <br />
+            <a href="/yasal-uyari" className="text-purple-400 hover:text-purple-300 underline mt-1 inline-block">
+              Yasal Uyarı (Legal Disclaimer)
+            </a>
           </p>
         </div>
       </div>

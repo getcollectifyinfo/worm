@@ -287,9 +287,9 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
               <div>
                 <h4 className="font-bold text-white mb-4">Yasal</h4>
                 <ul className="space-y-2 text-gray-500">
-                  <li><a href="#" className="hover:text-blue-400">Gizlilik Politikası</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Kullanım Şartları</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Yasal Uyarı</a></li>
+                  <li><button onClick={() => onNavigate('PRIVACY_POLICY')} className="hover:text-blue-400 text-left">Gizlilik Politikası</button></li>
+                  <li><button onClick={() => onNavigate('TERMS_OF_SERVICE')} className="hover:text-blue-400 text-left">Kullanım Şartları</button></li>
+                  <li><button onClick={() => onNavigate('LEGAL_DISCLAIMER')} className="hover:text-blue-400 text-left">Yasal Uyarı</button></li>
                 </ul>
               </div>
             </div>

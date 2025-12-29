@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCubeGameLogic } from './useCubeGameLogic';
 import type { CubePosition } from './useCubeGameLogic';
 import { ArrowLeft, Play, Settings, HelpCircle } from 'lucide-react';
 import { GameTutorial } from '../GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
 import { GameStartMenu } from '../GameStartMenu';
+import { useGameAccess } from '../../hooks/useGameAccess';
+import { ProAccessModal } from '../ProAccessModal';
 
 interface CubeGameProps {
   onExit: () => void;
 }
 
 export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
+  const {
+    tier,
+    checkAccess,
+    decrementGuestAttempts,
+    showProModal,
+    closeProModal,
+    openProModal,
+    isSettingsEnabled,
+    maxDuration
+  } = useGameAccess();
+
   const {
     phase,
     targetLabel,
@@ -33,9 +46,31 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   const handleStartGame = () => {
+    if (!checkAccess('cube')) return;
+    if (tier === 'GUEST') {
+      decrementGuestAttempts();
+    }
     setHasStarted(true);
     startGame();
   };
+
+  const handleOpenSettings = () => {
+    if (isSettingsEnabled) {
+      setIsSettingsOpen(true);
+    } else {
+      openProModal();
+    }
+  };
+
+  useEffect(() => {
+    if (hasStarted && maxDuration > 0) {
+      const timer = setTimeout(() => {
+        setHasStarted(false);
+        alert('Demo süresi doldu! Sınırsız pratik için Proya geçiniz.');
+      }, maxDuration * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasStarted, maxDuration]);
 
   const renderCommand = () => {
     if (!currentCommand) return null;
@@ -84,6 +119,14 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center p-8 relative">
+      {showProModal && (
+        <ProAccessModal 
+          isOpen={showProModal} 
+          onClose={closeProModal}
+          onUpgrade={() => closeProModal()}
+        />
+      )}
+
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
@@ -135,7 +178,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         <GameStartMenu
           title="CUBE ROTATION"
           onStart={handleStartGame}
-          onSettings={() => setIsSettingsOpen(true)}
+          onSettings={handleOpenSettings}
           onBack={onExit}
           onTutorial={() => setIsTutorialOpen(true)}
         />
