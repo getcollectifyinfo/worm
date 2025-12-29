@@ -3,6 +3,7 @@ import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box } from 'lu
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
+import { UserBadge } from './UserBadge';
 
 interface LandingPageProps {
   onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => void;
@@ -219,14 +220,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="flex items-center gap-3 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold">
-              {user.email?.charAt(0).toUpperCase()}
-            </div>
+            <UserBadge className="h-8 w-auto" />
             <div className="flex flex-col items-start">
                 <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
-                {tier === 'PRO' && (
-                    <span className="text-[10px] font-bold bg-purple-600 text-white px-1.5 py-0.5 rounded-full leading-none">PRO</span>
-                )}
             </div>
             <span className={`text-xs transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
@@ -287,9 +283,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
               className={`group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg ${colors.border} ${colors.shadow}`}
             >
               {/* Standardized Badge */}
-              <div className={`absolute top-4 right-4 ${badge.bgColor} ${badge.textColor} text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 flex items-center gap-1.5`}>
-                {badge.icon && React.createElement(badge.icon, { size: 12 })}
-                {badge.label}
+              <div className="absolute top-4 right-4 z-10">
+                <UserBadge className="h-8" />
               </div>
 
               <div className={`p-4 rounded-xl transition-colors duration-300 ${colors.bg} ${colors.bgHover}`}>

@@ -1,5 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Lock, Info } from 'lucide-react';
+import { UserBadge } from './UserBadge';
 
 interface GameSettingsModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+            <UserBadge className="h-6" />
             {onInfoClick && (
               <button
                 onClick={onInfoClick}

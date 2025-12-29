@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, Settings, ArrowLeft, HelpCircle } from 'lucide-react';
+import { UserBadge } from './UserBadge';
 
 interface GameStartMenuProps {
   title: string;
@@ -40,7 +41,10 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
           <img src="/logo.png" alt="Logo" className="h-40 drop-shadow-lg" />
         </div>
 
-        <h1 className="text-4xl font-bold text-center text-white mb-2 tracking-wider">{title}</h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+           <h1 className="text-4xl font-bold text-center text-white tracking-wider">{title}</h1>
+           <UserBadge className="h-8" />
+        </div>
         
         {highScore !== undefined && (
            <div className="text-center text-gray-400 -mt-4 mb-2">

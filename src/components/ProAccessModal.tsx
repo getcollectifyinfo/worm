@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Crown, Check, ArrowRight } from 'lucide-react';
+import { UserBadge } from './UserBadge';
 
 interface ProAccessModalProps {
   isOpen: boolean;
@@ -59,7 +60,10 @@ export const ProAccessModal: React.FC<ProAccessModalProps> = ({
             <Crown size={32} className="text-white" />
           </div>
           
-          <h2 className="text-3xl font-bold text-white mb-2">{title || defaultTitle}</h2>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <h2 className="text-3xl font-bold text-white">{title || defaultTitle}</h2>
+            <UserBadge className="h-8" />
+          </div>
           <div className="text-slate-400">
             {description || defaultDesc}
           </div>
