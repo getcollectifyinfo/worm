@@ -5,10 +5,39 @@ interface ProAccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpgrade: () => void;
+  title?: string;
+  description?: React.ReactNode;
+  ctaText?: string;
+  trustText?: string;
+  benefits?: string[];
+  variant?: 'default' | 'exam-settings';
 }
 
-export const ProAccessModal: React.FC<ProAccessModalProps> = ({ isOpen, onClose, onUpgrade }) => {
+export const ProAccessModal: React.FC<ProAccessModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onUpgrade,
+  title,
+  description,
+  ctaText,
+  trustText,
+  benefits,
+  variant = 'default'
+}) => {
   if (!isOpen) return null;
+
+  const isSettingsVariant = variant === 'exam-settings';
+  
+  const defaultTitle = "Pro Üyelik Gerekli";
+  const defaultDesc = "Seçtiğiniz özellik sadece Pro üyeler içindir.";
+  const defaultCta = "Hemen Yükselt";
+  const defaultTrust = "İstediğiniz zaman iptal edebilirsiniz.";
+  const defaultBenefits = [
+    "Tüm zorluk seviyeleri (Medium, Hard, Expert)",
+    "Gerçek sınav süreleri ve sınırsız tekrar",
+    "Detaylı performans analizi ve gelişim takibi",
+    "Tüm eğitim modüllerine tam erişim"
+  ];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -30,42 +59,39 @@ export const ProAccessModal: React.FC<ProAccessModalProps> = ({ isOpen, onClose,
             <Crown size={32} className="text-white" />
           </div>
           
-          <h2 className="text-3xl font-bold text-white mb-2">Pro Üyelik Gerekli</h2>
-          <p className="text-slate-400">
-            Seçtiğiniz özellik sadece Pro üyeler içindir.
-          </p>
+          <h2 className="text-3xl font-bold text-white mb-2">{title || defaultTitle}</h2>
+          <div className="text-slate-400">
+            {description || defaultDesc}
+          </div>
         </div>
 
-        {/* Benefits List */}
+        {/* Benefits List - Only show if not settings variant or if explicitly passed */}
         <div className="px-8 pb-8 space-y-4">
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-            <ul className="space-y-3">
-              {[
-                "Tüm zorluk seviyeleri (Medium, Hard, Expert)",
-                "Gerçek sınav süreleri ve sınırsız tekrar",
-                "Detaylı performans analizi ve gelişim takibi",
-                "Tüm eğitim modüllerine tam erişim"
-              ].map((benefit, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-300 text-sm">
-                  <div className="mt-0.5 p-0.5 bg-green-500/20 rounded-full">
-                    <Check size={12} className="text-green-400" />
-                  </div>
-                  {benefit}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {(!isSettingsVariant || benefits) && (
+            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <ul className="space-y-3">
+                {(benefits || defaultBenefits).map((benefit, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-300 text-sm">
+                    <div className="mt-0.5 p-0.5 bg-green-500/20 rounded-full">
+                      <Check size={12} className="text-green-400" />
+                    </div>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <button 
             onClick={onUpgrade}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Hemen Yükselt
+            {ctaText || defaultCta}
             <ArrowRight size={20} />
           </button>
           
           <p className="text-center text-xs text-slate-500">
-            İstediğiniz zaman iptal edebilirsiniz.
+            {trustText || defaultTrust}
           </p>
         </div>
       </div>

@@ -36,7 +36,9 @@ import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
 import { useGameAccess } from './hooks/useGameAccess';
-import { Loader2, Gamepad2 } from 'lucide-react';
+import { Loader2, Gamepad2, Lock } from 'lucide-react';
+import { ProAccessModal } from './components/ProAccessModal';
+import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from './components/GameSettingsModal';
 
 import { statsService } from './services/statsService';
 
@@ -45,11 +47,13 @@ function App() {
   const { 
     tier, 
     maxDuration, 
-    isSettingsEnabled, 
     openProModal, 
+    closeProModal,
+    showProModal,
     checkAccess,
     decrementGuestAttempts
   } = useGameAccess();
+  const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>(() => {
@@ -133,6 +137,17 @@ function App() {
     setIsGameStarted(false);
     setIsTutorialOpen(false);
   }, [currentPage]);
+
+  // Handle pending game redirect after login
+  useEffect(() => {
+    if (user && !loading) {
+      const pendingGame = localStorage.getItem('pending_game');
+      if (pendingGame) {
+        localStorage.removeItem('pending_game');
+        setCurrentPage(pendingGame as Page);
+      }
+    }
+  }, [user, loading]);
 
   // Demo Timer for GUEST
   useEffect(() => {
@@ -868,11 +883,7 @@ function App() {
                    setIsGameStarted(true);
                }}
                onSettings={() => {
-                   if (isSettingsEnabled) {
-                       setIsSettingsOpen(true);
-                   } else {
-                       openProModal();
-                   }
+                   setIsSettingsOpen(true);
                }}
                onBack={() => setCurrentPage('LANDING')}
                onTutorial={() => setIsTutorialOpen(true)}
@@ -915,11 +926,7 @@ function App() {
                   {/* Settings Button */}
                   <button 
                       onClick={() => {
-                          if (isSettingsEnabled) {
-                              setIsSettingsOpen(true);
-                          } else {
-                              openProModal();
-                          }
+                          setIsSettingsOpen(true);
                       }}
                       className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
                       title="Settings"
@@ -1186,90 +1193,105 @@ function App() {
         )}
 
         {/* Settings Modal - Always available if state is open */}
-        {isSettingsOpen && (
-            <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
-                    <button 
-                        onClick={handleSettingsClose}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                    >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                    
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Game Settings</h2>
-                    
-                    {/* Instruction Speed */}
-                    <div className="mb-8">
-                        <label className="block text-gray-700 font-semibold mb-2">
-                            Instruction Speed: <span className="text-purple-600">{instructionSpeed}ms</span>
-                        </label>
-                        <input 
-                            type="range" 
-                            min="200" 
-                            max="2000" 
-                            step="100"
-                            value={instructionSpeed}
-                            onChange={(e) => setInstructionSpeed(Number(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Fast (200ms)</span>
-                            <span>Slow (2000ms)</span>
-                        </div>
-                    </div>
+        <GameSettingsModal
+            isOpen={isSettingsOpen}
+            onClose={handleSettingsClose}
+            title="Game Settings"
+            onInfoClick={() => alert("Ayarlar, gerçek sınav koşullarına göre test zorluğunu ve süreyi değiştirir.")}
+        >
+            {/* Instruction Speed */}
+            <SettingsSection title="Instruction Speed">
+                <SettingsLabel>Speed: {instructionSpeed}ms</SettingsLabel>
+                <SettingsRange 
+                    value={instructionSpeed} 
+                    min={200} 
+                    max={2000} 
+                    step={100}
+                    onChange={(val) => setInstructionSpeed(val)}
+                    leftLabel="Fast (200ms)"
+                    rightLabel="Slow (2000ms)"
+                    isLocked={tier !== 'PRO'}
+                    onLockedClick={() => {
+                        setProModalVariant('exam-settings');
+                        openProModal();
+                    }}
+                />
+            </SettingsSection>
 
-                    {/* Difficulty */}
-                    <div className="mb-6">
-                        <h3 className="text-gray-700 font-semibold mb-4">Difficulty</h3>
-                        
-                        {/* Question Count */}
-                        <div className="mb-4">
-                            <label className="block text-sm text-gray-500 mb-1">Number of Questions</label>
-                            <input 
-                                type="number" 
-                                min="1" 
-                                max="20"
-                                value={totalQuestions}
-                                onChange={(e) => {
-                                    const val = Math.max(1, Math.min(Number(e.target.value), 20));
-                                    setTotalQuestions(val);
-                                }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                            {(Object.keys(DIFFICULTY_SETTINGS) as DifficultyLevel[]).map((level) => (
-                                <button
-                                    key={level}
-                                    onClick={() => setDifficulty(level)}
-                                    className={`p-3 rounded-lg border-2 text-sm font-bold transition-all
-                                        ${difficulty === level 
-                                            ? 'border-purple-600 bg-purple-50 text-purple-700' 
-                                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <div className="uppercase mb-1">{level}</div>
-                                    <div className="text-xs opacity-75">
-                                        {DIFFICULTY_SETTINGS[level].min}-{DIFFICULTY_SETTINGS[level].max} Steps
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mt-8">
-                        <button 
-                            onClick={handleSettingsClose}
-                            className="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg"
-                        >
-                            Save & Close
-                        </button>
-                    </div>
+            {/* Difficulty */}
+            <SettingsSection title="Difficulty">
+                {/* Question Count */}
+                <div className="mb-4">
+                     <SettingsLabel>Number of Questions: {totalQuestions}</SettingsLabel>
+                     <SettingsRange
+                        value={totalQuestions}
+                        min={1}
+                        max={20}
+                        onChange={(val) => setTotalQuestions(val)}
+                        leftLabel="1 Question"
+                        rightLabel="20 Questions"
+                        isLocked={tier !== 'PRO'}
+                        onLockedClick={() => {
+                            setProModalVariant('exam-settings');
+                            openProModal();
+                        }}
+                     />
                 </div>
-            </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                    {(Object.keys(DIFFICULTY_SETTINGS) as DifficultyLevel[]).map((level) => {
+                        const isLocked = tier !== 'PRO' && level !== 'EASY';
+                        const isSelected = difficulty === level;
+                        
+                        return (
+                            <button
+                                key={level}
+                                onClick={() => {
+                                    if (isLocked) {
+                                        setProModalVariant('exam-settings');
+                                        openProModal();
+                                    } else {
+                                        setDifficulty(level);
+                                    }
+                                }}
+                                className={`relative group p-3 rounded-lg border-2 text-sm font-bold transition-all
+                                    ${isSelected 
+                                        ? 'border-purple-600 bg-purple-50 text-purple-700' 
+                                        : (isLocked ? 'border-gray-200 text-gray-400 bg-gray-50' : 'border-gray-200 text-gray-500 hover:border-gray-300')}
+                                `}
+                                title={level !== 'EASY' ? "Gerçek sınav temposu" : ""}
+                            >
+                                {isLocked && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[1px] rounded-lg">
+                                        <Lock size={16} className="text-gray-400" />
+                                    </div>
+                                )}
+                                <div className="uppercase mb-1">{level}</div>
+                                <div className="text-xs opacity-75">
+                                    {level === 'EASY' ? '(Mini deneme – 2 dk)' : `${DIFFICULTY_SETTINGS[level].min}-${DIFFICULTY_SETTINGS[level].max} Steps`}
+                                </div>
+                                {isLocked && (
+                                    <div className="text-[10px] text-gray-400 mt-1 font-medium">Pro ile açılır</div>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            </SettingsSection>
+        </GameSettingsModal>
+
+        {/* Pro Access Modal */}
+        {showProModal && (
+            <ProAccessModal 
+                isOpen={showProModal} 
+                onClose={() => { closeProModal(); setProModalVariant('default'); }}
+                onUpgrade={() => { closeProModal(); setProModalVariant('default'); }}
+                variant={proModalVariant}
+                title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
+                description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}
+                ctaText={proModalVariant === 'exam-settings' ? "Pro’ya Geç – Gerçek Sınav Modu" : undefined}
+                trustText={proModalVariant === 'exam-settings' ? "İstediğin zaman iptal edebilirsin." : undefined}
+            />
         )}
     </div>
   );

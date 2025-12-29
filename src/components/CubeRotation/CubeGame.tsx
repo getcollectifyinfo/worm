@@ -20,7 +20,6 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     showProModal,
     closeProModal,
     openProModal,
-    isSettingsEnabled,
     maxDuration
   } = useGameAccess();
 
@@ -44,6 +43,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
 
   const handleStartGame = () => {
     if (!checkAccess('cube')) return;
@@ -56,11 +56,17 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   };
 
   const handleOpenSettings = () => {
-    if (isSettingsEnabled) {
-      setIsSettingsOpen(true);
-    } else {
-      openProModal();
-    }
+    setIsSettingsOpen(true);
+  };
+
+  const handleLockedClick = () => {
+    setProModalVariant('exam-settings');
+    openProModal();
+  };
+
+  const handleCloseProModal = () => {
+    closeProModal();
+    setProModalVariant('default');
   };
 
   useEffect(() => {
@@ -123,8 +129,13 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
       {showProModal && (
         <ProAccessModal 
           isOpen={showProModal} 
-          onClose={closeProModal}
-          onUpgrade={() => closeProModal()}
+          onClose={handleCloseProModal}
+          onUpgrade={handleCloseProModal}
+          variant={proModalVariant}
+          title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
+          description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}
+          ctaText={proModalVariant === 'exam-settings' ? "Pro’ya Geç – Gerçek Sınav Modu" : undefined}
+          trustText={proModalVariant === 'exam-settings' ? "İstediğin zaman iptal edebilirsin." : undefined}
         />
       )}
 
@@ -147,6 +158,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         title="Game Settings"
+        onInfoClick={() => alert("Ayarlar, gerçek sınav koşullarına göre test zorluğunu ve süreyi değiştirir.")}
       >
         <SettingsSection title="Difficulty">
             <SettingsLabel>Number of Commands: {commandCount}</SettingsLabel>
@@ -156,8 +168,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                 max={15} 
                 step={1} 
                 onChange={setCommandCount}
-                leftLabel="Easy (3)"
+                leftLabel="Easy (Mini deneme – 2 dk)"
                 rightLabel="Hard (15)"
+                isLocked={tier !== 'PRO'}
+                onLockedClick={handleLockedClick}
             />
         </SettingsSection>
         
@@ -171,6 +185,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                 onChange={setCommandSpeed}
                 leftLabel="Fast (500ms)"
                 rightLabel="Slow (3000ms)"
+                isLocked={tier !== 'PRO'}
+                onLockedClick={handleLockedClick}
             />
         </SettingsSection>
       </GameSettingsModal>
