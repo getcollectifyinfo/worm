@@ -35,8 +35,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.origin || 'http://localhost:5173'}/?success=true`,
-      cancel_url: `${req.headers.origin || 'http://localhost:5173'}/?canceled=true`,
+      success_url: req.body.returnUrl ? `${req.body.returnUrl}?success=true` : `${req.headers.origin || 'http://localhost:5173'}/?success=true`,
+      cancel_url: req.body.returnUrl ? `${req.body.returnUrl}?canceled=true` : `${req.headers.origin || 'http://localhost:5173'}/?canceled=true`,
     });
     
     res.json({ url: session.url });

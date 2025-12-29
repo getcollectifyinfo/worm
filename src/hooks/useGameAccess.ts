@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import type { DifficultyLevel } from '../types';
 
@@ -105,7 +105,7 @@ export const useGameAccess = (): GameAccess => {
     return true;
   };
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = useCallback(async () => {
     if (!user) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('pending_pro_upgrade', 'true');
@@ -136,7 +136,7 @@ export const useGameAccess = (): GameAccess => {
       console.error('Error creating checkout session:', error);
       alert('Payment initialization failed. Please try again.');
     }
-  };
+  }, [user]);
 
   return {
     tier,

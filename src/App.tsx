@@ -99,8 +99,10 @@ function App() {
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
             
-            // Trigger upgrade logic (which will now proceed to Stripe since user is logged in)
-            handleUpgrade();
+            // Trigger upgrade logic with a small delay to ensure state is stable
+            setTimeout(() => {
+                handleUpgrade();
+            }, 500);
         }
     }
   }, [user, handleUpgrade]);
