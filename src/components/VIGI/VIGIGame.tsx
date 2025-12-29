@@ -416,6 +416,18 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
             </div>
         </SettingsSection>
       </GameSettingsModal>
+
+      <ProAccessModal
+        isOpen={showProModal}
+        onClose={closeProModal}
+        onUpgrade={handleUpgrade}
+        variant="default"
+      />
+
+      <SmartLoginGate 
+        isOpen={showLoginGate}
+        onClose={closeLoginGate}
+      />
     </div>
   );
 };
