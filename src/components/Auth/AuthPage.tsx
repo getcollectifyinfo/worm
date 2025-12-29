@@ -154,7 +154,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
           
           {!isLogin && (
             <p className="text-xs text-gray-500 text-center mt-2">
-              Hesap oluşturarak, <a href="/kullanim-sartlari" className="text-purple-400 hover:underline">Kullanım Şartları</a>, <a href="/gizlilik-politikasi" className="text-purple-400 hover:underline">Gizlilik Politikası</a> ve <a href="/yasal-uyari" className="text-purple-400 hover:underline">Yasal Uyarı</a> metinlerini okuduğunuzu ve kabul ettiğinizi beyan edersiniz.
+              Hesap oluşturarak, <a href="/terms" className="text-purple-400 hover:underline">Kullanım Şartları</a>, <a href="/privacy" className="text-purple-400 hover:underline">Gizlilik Politikası</a> ve <a href="/yasal-uyari" className="text-purple-400 hover:underline">Yasal Uyarı</a> metinlerini okuduğunuzu ve kabul ettiğinizi beyan edersiniz.
             </p>
           )}
         </form>

@@ -57,10 +57,10 @@ function App() {
     if (typeof window !== 'undefined' && window.location.pathname === '/skytest-hazirlik') {
       return 'SKYTEST_PREPARATION_BLOG';
     }
-    if (typeof window !== 'undefined' && window.location.pathname === '/gizlilik-politikasi') {
+    if (typeof window !== 'undefined' && window.location.pathname === '/privacy') {
       return 'PRIVACY_POLICY';
     }
-    if (typeof window !== 'undefined' && window.location.pathname === '/kullanim-sartlari') {
+    if (typeof window !== 'undefined' && window.location.pathname === '/terms') {
       return 'TERMS_OF_SERVICE';
     }
     return 'MARKETING';
@@ -77,9 +77,9 @@ function App() {
         setCurrentPage('SKYTEST_PEGASUS_BLOG');
       } else if (window.location.pathname === '/skytest-hazirlik') {
         setCurrentPage('SKYTEST_PREPARATION_BLOG');
-      } else if (window.location.pathname === '/gizlilik-politikasi') {
+      } else if (window.location.pathname === '/privacy') {
         setCurrentPage('PRIVACY_POLICY');
-      } else if (window.location.pathname === '/kullanim-sartlari') {
+      } else if (window.location.pathname === '/terms') {
         setCurrentPage('TERMS_OF_SERVICE');
       } else if (window.location.pathname === '/yasal-uyari') {
         setCurrentPage('LEGAL_DISCLAIMER');
@@ -102,10 +102,10 @@ function App() {
       window.history.pushState(null, '', '/skytest-pegasus');
     } else if (currentPage === 'SKYTEST_PREPARATION_BLOG' && window.location.pathname !== '/skytest-hazirlik') {
       window.history.pushState(null, '', '/skytest-hazirlik');
-    } else if (currentPage === 'PRIVACY_POLICY' && window.location.pathname !== '/gizlilik-politikasi') {
-      window.history.pushState(null, '', '/gizlilik-politikasi');
-    } else if (currentPage === 'TERMS_OF_SERVICE' && window.location.pathname !== '/kullanim-sartlari') {
-      window.history.pushState(null, '', '/kullanim-sartlari');
+    } else if (currentPage === 'PRIVACY_POLICY' && window.location.pathname !== '/privacy') {
+      window.history.pushState(null, '', '/privacy');
+    } else if (currentPage === 'TERMS_OF_SERVICE' && window.location.pathname !== '/terms') {
+      window.history.pushState(null, '', '/terms');
     } else if (currentPage === 'MARKETING' && window.location.pathname !== '/') {
       window.history.pushState(null, '', '/');
     }
