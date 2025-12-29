@@ -121,7 +121,9 @@ export const useGameAccess = (): GameAccess => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          returnUrl: window.location.href
+          returnUrl: window.location.href,
+          userId: user.id,
+          userEmail: user.email
         })
       });
       
