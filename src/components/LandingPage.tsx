@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Lock } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
@@ -10,6 +10,105 @@ interface LandingPageProps {
   onShowStats: () => void;
   user: User | null;
 }
+
+const GAMES = [
+  { 
+    id: 'CUBE', 
+    title: 'CUBE', 
+    description: 'Spatial Orientation', 
+    icon: Box, 
+    color: 'pink',
+    colorClasses: {
+      border: 'hover:border-pink-500',
+      shadow: 'hover:shadow-pink-500/20',
+      bg: 'bg-pink-500/10',
+      bgHover: 'group-hover:bg-pink-500',
+      text: 'text-pink-500',
+      textHover: 'group-hover:text-pink-400',
+      descHover: 'group-hover:text-pink-300'
+    }
+  },
+  { 
+    id: 'WORM', 
+    title: 'WORM', 
+    description: 'Grid Orientation Test', 
+    icon: Gamepad2, 
+    color: 'green',
+    colorClasses: {
+      border: 'hover:border-green-500',
+      shadow: 'hover:shadow-green-500/20',
+      bg: 'bg-green-500/10',
+      bgHover: 'group-hover:bg-green-500',
+      text: 'text-green-500',
+      textHover: 'group-hover:text-green-400',
+      descHover: 'group-hover:text-green-300'
+    }
+  },
+  { 
+    id: 'IPP', 
+    title: 'IPP', 
+    description: 'Instrument Flight Rules', 
+    icon: Gauge, 
+    color: 'blue',
+    colorClasses: {
+      border: 'hover:border-blue-500',
+      shadow: 'hover:shadow-blue-500/20',
+      bg: 'bg-blue-500/10',
+      bgHover: 'group-hover:bg-blue-500',
+      text: 'text-blue-500',
+      textHover: 'group-hover:text-blue-400',
+      descHover: 'group-hover:text-blue-300'
+    }
+  },
+  { 
+    id: 'VIGI1', 
+    title: 'VIGI 1', 
+    description: 'Audio-Visual Vigilance', 
+    icon: Eye, 
+    color: 'orange',
+    colorClasses: {
+      border: 'hover:border-orange-500',
+      shadow: 'hover:shadow-orange-500/20',
+      bg: 'bg-orange-500/10',
+      bgHover: 'group-hover:bg-orange-500',
+      text: 'text-orange-500',
+      textHover: 'group-hover:text-orange-400',
+      descHover: 'group-hover:text-orange-300'
+    }
+  },
+  { 
+    id: 'VIGI', 
+    title: 'VIGI 2', 
+    description: 'Dot Vigilance Test', 
+    icon: Zap, 
+    color: 'purple',
+    colorClasses: {
+      border: 'hover:border-purple-500',
+      shadow: 'hover:shadow-purple-500/20',
+      bg: 'bg-purple-500/10',
+      bgHover: 'group-hover:bg-purple-500',
+      text: 'text-purple-500',
+      textHover: 'group-hover:text-purple-400',
+      descHover: 'group-hover:text-purple-300'
+    }
+  },
+  { 
+    id: 'CAPACITY', 
+    title: 'CAPACITY', 
+    description: 'Attention Capacity', 
+    icon: Brain, 
+    color: 'yellow',
+    colorClasses: {
+      border: 'hover:border-yellow-500',
+      shadow: 'hover:shadow-yellow-500/20',
+      bg: 'bg-yellow-500/10',
+      bgHover: 'group-hover:bg-yellow-500',
+      text: 'text-yellow-500',
+      textHover: 'group-hover:text-yellow-400',
+      descHover: 'group-hover:text-yellow-300'
+    }
+  },
+] as const;
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user }) => {
   const [showAuth, setShowAuth] = useState(false);
@@ -33,6 +132,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     }
   };
 
+  const getBadgeConfig = (gameId: string) => {
+    // PRO User
+    if (tier === 'PRO') {
+        return {
+            label: 'PRO',
+            subtext: 'Sınırsız Kullanım',
+            bgColor: 'bg-purple-600',
+            textColor: 'text-white',
+            icon: Lock
+        };
+    }
+
+    // FREE User (Logged In)
+    if (tier === 'FREE') {
+        return {
+            label: 'FREE',
+            subtext: 'Mini deneme',
+            bgColor: 'bg-yellow-500',
+            textColor: 'text-black', // Yellow bg usually needs dark text
+            icon: null
+        };
+    }
+
+    // GUEST User
+    if (['CUBE', 'WORM'].includes(gameId)) {
+        return {
+            label: 'DEMO',
+            subtext: '2 dk • Kayıt gerekmez',
+            bgColor: 'bg-green-600',
+            textColor: 'text-white',
+            icon: null
+        };
+    } else {
+        // Guest looking at restricted games
+        return {
+            label: 'FREE',
+            subtext: 'Mini deneme',
+            bgColor: 'bg-yellow-500',
+            textColor: 'text-black',
+            icon: null
+        };
+    }
+  };
 
   if (showAuth) {
     return (
@@ -64,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             className="flex items-center gap-3 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold">
-                {user.email?.charAt(0).toUpperCase()}
+              {user.email?.charAt(0).toUpperCase()}
             </div>
             <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
             <span className={`text-xs transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>▼</span>
@@ -114,119 +256,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full px-4">
-        {/* CUBE Button */}
-        <button 
-          onClick={() => handleGameSelect('CUBE')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-pink-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-pink-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              Demo
-            </div>
-          )}
-          <div className="p-4 bg-pink-500/10 rounded-xl group-hover:bg-pink-500 transition-colors duration-300">
-            <Box size={40} className="text-pink-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-pink-400">CUBE</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-pink-300">Spatial Orientation</span>
-          </div>
-        </button>
+        {GAMES.map((game) => {
+          const badge = getBadgeConfig(game.id);
+          const Icon = game.icon;
+          const colors = game.colorClasses;
 
-        {/* WORM Button */}
-        <button 
-          onClick={() => handleGameSelect('WORM')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-green-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-green-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              Demo
-            </div>
-          )}
-          <div className="p-4 bg-green-500/10 rounded-xl group-hover:bg-green-500 transition-colors duration-300">
-            <Gamepad2 size={40} className="text-green-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-green-400">WORM</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-green-300">Grid Orientation Test</span>
-          </div>
-        </button>
+          return (
+            <button 
+              key={game.id}
+              onClick={() => handleGameSelect(game.id)}
+              className={`group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg ${colors.border} ${colors.shadow}`}
+            >
+              {/* Standardized Badge */}
+              <div className={`absolute top-4 right-4 ${badge.bgColor} ${badge.textColor} text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 flex items-center gap-1.5`}>
+                {badge.icon && <badge.icon size={12} />}
+                {badge.label}
+              </div>
 
-        {/* IPP Button */}
-        <button 
-          onClick={() => handleGameSelect('IPP')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-blue-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-blue-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              FREE Signup
-            </div>
-          )}
-          <div className="p-4 bg-blue-500/10 rounded-xl group-hover:bg-blue-500 transition-colors duration-300">
-            <Gauge size={40} className="text-blue-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-blue-400">IPP</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-blue-300">Instrument Flight Rules</span>
-          </div>
-        </button>
-
-        {/* VIGI 1 Button */}
-        <button 
-          onClick={() => handleGameSelect('VIGI1')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-orange-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-orange-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              FREE Signup
-            </div>
-          )}
-          <div className="p-4 bg-orange-500/10 rounded-xl group-hover:bg-orange-500 transition-colors duration-300">
-            <Eye size={40} className="text-orange-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-orange-400">VIGI 1</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-orange-300">Audio-Visual Vigilance</span>
-          </div>
-        </button>
-
-        {/* VIGI Button */}
-        <button 
-          onClick={() => handleGameSelect('VIGI')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-purple-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              FREE Signup
-            </div>
-          )}
-          <div className="p-4 bg-purple-500/10 rounded-xl group-hover:bg-purple-500 transition-colors duration-300">
-            <Zap size={40} className="text-purple-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-purple-400">VIGI 2</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-purple-300">Dot Vigilance Test</span>
-          </div>
-        </button>
-
-        {/* CAPACITY Button */}
-        <button 
-          onClick={() => handleGameSelect('CAPACITY')}
-          className="group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 hover:border-yellow-500 hover:bg-gray-750 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-yellow-500/20"
-        >
-          {tier === 'GUEST' && (
-            <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
-              FREE Signup
-            </div>
-          )}
-          <div className="p-4 bg-yellow-500/10 rounded-xl group-hover:bg-yellow-500 transition-colors duration-300">
-            <Brain size={40} className="text-yellow-500 group-hover:text-white transition-colors" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-white tracking-wider group-hover:text-yellow-400">CAPACITY</span>
-            <span className="text-sm font-medium text-gray-400 mt-1 group-hover:text-yellow-300">Attention Capacity</span>
-          </div>
-        </button>
+              <div className={`p-4 rounded-xl transition-colors duration-300 ${colors.bg} ${colors.bgHover}`}>
+                <Icon size={40} className={`transition-colors ${colors.text} group-hover:text-white`} />
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <span className={`text-xl font-bold text-white tracking-wider ${colors.textHover}`}>{game.title}</span>
+                <span className={`text-sm font-medium text-gray-400 mt-1 ${colors.descHover}`}>{game.description}</span>
+                
+                {/* Badge Subtext */}
+                <div className="mt-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-900/80 px-2 py-1 rounded-md">
+                   {badge.subtext}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
