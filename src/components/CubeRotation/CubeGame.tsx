@@ -262,24 +262,6 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         />
       )}
       
-      <MiniExamEndModal
-        isOpen={showMiniExamModal}
-        onClose={() => setShowMiniExamModal(false)}
-        onUpgrade={() => {
-            setShowMiniExamModal(false);
-            if (tier === 'GUEST') {
-                localStorage.setItem('pending_pro_upgrade', 'true');
-                openLoginGate();
-            } else {
-                handleUpgrade('mini-exam-end');
-            }
-        }}
-        onPractice={() => {
-             setShowMiniExamModal(false);
-             handleOpenSettings();
-        }}
-      />
-
       <CubeSettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
@@ -807,6 +789,26 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
           {/* Instructions Footer */}
         </>
       )}
+
+      {/* Moved Mini Exam Modal here for z-index stacking */}
+      <MiniExamEndModal
+        isOpen={showMiniExamModal}
+        onClose={() => setShowMiniExamModal(false)}
+        onUpgrade={() => {
+            setShowMiniExamModal(false);
+            if (tier === 'GUEST') {
+                localStorage.setItem('pending_pro_upgrade', 'true');
+                openLoginGate();
+            } else {
+                handleUpgrade('mini-exam-end');
+            }
+        }}
+        onPractice={() => {
+             setShowMiniExamModal(false);
+             handleOpenSettings();
+        }}
+      />
+
     </div>
   );
 };
