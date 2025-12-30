@@ -50,6 +50,19 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+        setTimeout(() => {
+            setIsSettingsOpen(true);
+            setShowSuccessModal(true);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }, 0);
+    }
+  }, []);
 
   const handleOpenTutorial = () => {
     setTutorialStep(0);
@@ -515,6 +528,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             setIsSettingsOpen(false);
             openProModal();
           }}
+          showSuccessModal={showSuccessModal}
+          onCloseSuccessModal={() => setShowSuccessModal(false)}
         />
       )}
 
