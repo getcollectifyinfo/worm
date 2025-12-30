@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Crown, Check, ArrowRight } from 'lucide-react';
 import { UserBadge } from './UserBadge';
+import { useGameAccess } from '../hooks/useGameAccess';
 
 interface ProAccessModalProps {
   isOpen: boolean;
@@ -25,6 +26,11 @@ export const ProAccessModal: React.FC<ProAccessModalProps> = ({
   benefits,
   variant = 'default'
 }) => {
+  const { tier } = useGameAccess();
+
+  // If user is already PRO, never show this modal (safety guard)
+  if (tier === 'PRO') return null;
+  
   if (!isOpen) return null;
 
   const isSettingsVariant = variant === 'exam-settings';

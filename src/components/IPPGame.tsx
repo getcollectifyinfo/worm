@@ -89,6 +89,15 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     });
   };
 
+  const getSpeedMultiplier = (diff: Difficulty) => {
+    switch (diff) {
+      case 'MEDIUM': return 1.2;
+      case 'HARD': return 1.5;
+      default: return 1;
+    }
+  };
+  const speedMultiplier = getSpeedMultiplier(difficulty);
+
   const [showHint, setShowHint] = useState(false);
   const [hintText, setHintText] = useState('');
   const showHintRef = useRef(showHint);
@@ -166,7 +175,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             timeout = setTimeout(() => {
                 setDisplayedNumber(null);
                 setCalcState('SHOWING_NEXT_NUM');
-            }, 2000); // 2 seconds display for Rule + Start Number
+            }, 2000 / speedMultiplier); // 2 seconds display for Rule + Start Number
             break;
 
         case 'SHOWING_NEXT_NUM':
@@ -187,7 +196,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 setNumbersShownCount(prev => prev + 1);
                 
                 setCalcState('SHOWING_NEXT_NUM_WAIT');
-             }, 500);
+             }, 500 / speedMultiplier);
              break;
 
         case 'SHOWING_NEXT_NUM_WAIT':
@@ -201,7 +210,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 } else {
                     setCalcState('SHOWING_NEXT_NUM');
                 }
-            }, 1500); // 1.5s display per number
+            }, 1500 / speedMultiplier); // 1.5s display per number (Scaled)
             break;
 
         case 'INPUT':
@@ -215,7 +224,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 });
                 setCalcInput('');
                 setCalcState('FEEDBACK');
-            }, 3000); // 3 seconds timeout
+            }, 3000 / speedMultiplier); // 3 seconds timeout (Scaled)
             break;
 
         case 'FEEDBACK':
@@ -270,7 +279,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     }
 
     return () => clearTimeout(timeout);
-  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, numbersShownCount, targetNumbersCount, ruleChangeFreq, enabledRules, calcTotal]);
+  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, numbersShownCount, targetNumbersCount, ruleChangeFreq, enabledRules, calcTotal, speedMultiplier]);
 
   const handleCalcSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -541,15 +550,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const getSpeedMultiplier = (diff: Difficulty) => {
-    switch (diff) {
-      case 'MEDIUM': return 1.2;
-      case 'HARD': return 1.5;
-      default: return 1;
-    }
-  };
-  const speedMultiplier = getSpeedMultiplier(difficulty);
 
   return (
     <div className="w-full h-screen bg-gray-900 text-white p-4 font-mono relative overflow-hidden">

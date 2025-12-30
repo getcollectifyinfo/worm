@@ -6,11 +6,17 @@ import { AuthPage } from './AuthPage';
 interface SmartLoginGateProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose }) => {
+export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { signInWithGoogle } = useAuth();
   const [showEmailForm, setShowEmailForm] = useState(false);
+
+  const handleSuccess = () => {
+    onClose();
+    onLoginSuccess?.();
+  };
 
   if (!isOpen) return null;
 
@@ -24,7 +30,7 @@ export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose 
             >
                 ← Geri
             </button>
-            <AuthPage onSuccess={onClose} isEmbedded={true} />
+            <AuthPage onSuccess={handleSuccess} isEmbedded={true} />
         </div>
       </div>
     );
@@ -49,13 +55,12 @@ export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose 
             </div>
 
             <h2 className="text-2xl font-bold text-slate-900 mb-3">
-                Pro Üyelik için Son Adım
+                Practice’a Hazırsın ✅
             </h2>
             
             <p className="text-slate-600 mb-8 text-lg leading-relaxed">
-                Pro üyeliğini aktif edebilmek ve <br/>
-                ilerlemeni kaydedebilmek için <br/>
-                <span className="font-semibold text-slate-800">ücretsiz bir hesap oluşturman gerekiyor.</span>
+                Alıştırmalar ve ilerlemeni kaydetmek için ücretsiz hesap gerekli. <br/>
+                <span className="text-sm text-slate-500 block mt-2">Kredi Kartı gerekmez. • 30 saniyeden kısa sürer.</span>
             </p>
 
             <div className="space-y-3">
@@ -94,7 +99,7 @@ export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose 
             </div>
 
             <p className="mt-6 text-xs text-slate-400">
-                30 saniyeden kısa sürer.
+                İstersen sonra Pro’ya geçebilirsin. (İstediğin zaman iptal)
             </p>
         </div>
       </div>

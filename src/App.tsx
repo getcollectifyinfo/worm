@@ -42,6 +42,8 @@ import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from
 
 import { statsService } from './services/statsService';
 
+import { Toaster, toast } from 'react-hot-toast';
+
 function App() {
   const { user, loading, signOut, refreshSession } = useAuth();
   const { 
@@ -257,6 +259,22 @@ function App() {
   // UI State
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
+
+  const handleLoginClose = () => {
+    closeLoginGate();
+    toast('Practice için giriş yapmalısın.', {
+        icon: '🔒',
+        style: {
+            background: '#333',
+            color: '#fff',
+        },
+    });
+  };
+
+  const handleLoginSuccess = () => {
+    closeLoginGate();
+    setIsSettingsOpen(true); // Open settings after login for Practice Mode flow
+  };
 
   const handleSettingsClose = () => {
     setIsSettingsOpen(false);
@@ -822,6 +840,8 @@ function App() {
         onStartDemo={() => setCurrentPage('LANDING')} 
         onViewProduct={() => setCurrentPage('SKYTEST_PRODUCT')}
         onNavigate={(page) => setCurrentPage(page as Page)}
+        user={user}
+        onSignOut={signOut}
       />
     );
   }
@@ -897,6 +917,7 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
+        <Toaster position="top-center" />
         <GameTutorial
             isOpen={isTutorialOpen}
             onClose={() => setIsTutorialOpen(false)}
@@ -1343,7 +1364,11 @@ function App() {
         )}
 
         {/* Smart Login Gate */}
-        <SmartLoginGate isOpen={showLoginGate} onClose={closeLoginGate} />
+        <SmartLoginGate
+            isOpen={showLoginGate}
+            onClose={handleLoginClose}
+            onLoginSuccess={handleLoginSuccess}
+        />
     </div>
   );
 }

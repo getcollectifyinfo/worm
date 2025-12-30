@@ -28,7 +28,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
           password,
         });
         if (error) throw error;
-        onSuccess();
+        // onSuccess is called by the auth state change listener in App.tsx or parent
+        // But we can also call it here for immediate feedback if needed, 
+        // though usually the auth state change triggers the UI update.
+        // onSuccess(); 
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,

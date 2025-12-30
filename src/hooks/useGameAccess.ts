@@ -70,7 +70,8 @@ export const useGameAccess = (): GameAccess => {
       : ['EASY'];
 
   const maxDuration = tier === 'PRO' ? 0 : DEMO_DURATION;
-  const maxAttempts = tier === 'PRO' ? 0 : (tier === 'FREE' ? 0 : GUEST_MAX_ATTEMPTS); // Free users have unlimited attempts but short duration? "Her modül için 2 dakikalık mini deneme" implies unlimited starts but limited time per run.
+  // Free users have unlimited attempts but short duration? "Her modül için 2 dakikalık mini deneme" implies unlimited starts but limited time per run.
+  const maxAttempts = tier === 'PRO' ? 0 : (tier === 'FREE' ? 0 : GUEST_MAX_ATTEMPTS); 
   
   // Note: Guest has total 2 attempts. Free has unlimited "mini trials".
 
@@ -79,10 +80,12 @@ export const useGameAccess = (): GameAccess => {
 
   const checkAccess = (moduleId: string, difficulty?: DifficultyLevel) => {
     if (!canAccessModule(moduleId)) {
+      // Prompt Login or Pro Modal handled by caller or here
+      // But if tier is GUEST and module not allowed, canAccessModule returns false.
       if (tier === 'GUEST') {
-        // Prompt Login
-        // logic handled by UI usually
-        return false; 
+         // Maybe open login gate here?
+         // setShowLoginGate(true); 
+         // But let's keep it simple.
       }
       return false;
     }

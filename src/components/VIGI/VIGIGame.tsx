@@ -9,6 +9,7 @@ import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
 import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
+import { toast, Toaster } from 'react-hot-toast';
 
 interface VIGIGameProps {
   onExit: () => void;
@@ -110,10 +111,31 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
     startGame();
   };
 
+  const handleLoginClose = () => {
+    closeLoginGate();
+    toast('Giriş yapmalısın.', {
+        icon: '🔒',
+        style: {
+            background: '#333',
+            color: '#fff',
+        },
+    });
+  };
+
+  const handleLoginSuccess = () => {
+    closeLoginGate();
+    startGame();
+  };
+
   return (
     <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden select-none font-mono">
+      <Toaster position="top-center" />
       <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
-      <SmartLoginGate isOpen={showLoginGate} onClose={closeLoginGate} />
+      <SmartLoginGate
+        isOpen={showLoginGate}
+        onClose={handleLoginClose}
+        onLoginSuccess={handleLoginSuccess}
+      />
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}

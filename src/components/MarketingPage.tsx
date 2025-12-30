@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Check, ArrowRight, Brain, Clock, Target, Award, Play, Zap } from 'lucide-react';
+import { Check, ArrowRight, Play, LogOut } from 'lucide-react';
 import { NewsletterModal } from './NewsletterModal';
+import { UserBadge } from './UserBadge';
+import { useGameAccess } from '../hooks/useGameAccess';
+import type { User } from '@supabase/supabase-js';
 
 import type { Page } from '../types';
 
@@ -8,11 +11,15 @@ interface MarketingPageProps {
   onStartDemo: () => void;
   onViewProduct: () => void;
   onNavigate: (page: Page) => void;
+  user: User | null;
+  onSignOut: () => void;
 }
 
-export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct, onNavigate }) => {
+export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct, onNavigate, user, onSignOut }) => {
   const [newsletterOpen, setNewsletterOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { tier } = useGameAccess();
 
   const openNewsletter = (pkg: string) => {
     setSelectedPackage(pkg);
@@ -20,12 +27,59 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0F172A] text-white overflow-x-hidden relative">
       <NewsletterModal 
         isOpen={newsletterOpen} 
         onClose={() => setNewsletterOpen(false)} 
         packageName={selectedPackage} 
       />
+      
+      {/* User Profile / Auth Header */}
+      <div className="absolute top-8 right-8 z-50">
+        {user ? (
+          <div className="relative">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex items-center gap-3 px-4 py-2 bg-gray-800/80 backdrop-blur-sm text-white rounded-lg hover:bg-gray-700/80 transition-colors border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-lg"
+            >
+              <UserBadge className="h-8 w-auto" />
+              <div className="flex flex-col items-start">
+                  <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
+              </div>
+              <span className={`text-xs transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                      onClick={() => {
+                          setIsMenuOpen(false);
+                          onStartDemo(); 
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                  >
+                      <Play size={16} className="text-blue-500" />
+                      Uygulamaya Git
+                  </button>
+                  <div className="h-px bg-gray-700" />
+                  <button
+                      onClick={() => {
+                          setIsMenuOpen(false);
+                          onSignOut();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-400 hover:bg-red-900/20 transition-colors"
+                  >
+                      <LogOut size={16} />
+                      Çıkış Yap
+                  </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          null
+        )}
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background Gradients */}
@@ -102,38 +156,8 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
         </div>
       </section>
 
-      {/* Modules Section */}
-      <section className="py-24 bg-[#0F172A]">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Eğitim Modülleri</h2>
-            <p className="text-gray-400">Geleceğin pilotlarından beklenen bilişsel becerileri geliştirin.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {[
-              { icon: <Brain />, title: "Bilişsel Temel", desc: "Zihinsel işlem hızı ve doğruluğu" },
-              { icon: <Target />, title: "Uzaysal Farkındalık", desc: "Oryantasyon ve 3B görselleştirme" },
-              { icon: <Clock />, title: "Zihinsel Aritmetik", desc: "Zaman baskısı altında hızlı hesaplama" },
-              { icon: <Award />, title: "Hafıza ve Dikkat", desc: "Kısa süreli bellek kapasitesini artırma" },
-              { icon: <Play />, title: "Multitasking", desc: "Birden fazla bilgi akışını aynı anda yönetme" },
-              { icon: <Zap />, title: "Tepki Hızı", desc: "Tepki sürelerinizi test edin ve iyileştirin" },
-              { icon: <Target />, title: "Pilot Yeteneği", desc: "Kapsamlı yetenek simülasyonu" },
-              { icon: <Brain />, title: "Karar Verme", desc: "Baskı altında kritik düşünme" }
-            ].map((module, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/50 hover:bg-white/10 transition-all group">
-                <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
-                  {module.icon}
-                </div>
-                <h3 className="text-lg font-bold mb-2">{module.title}</h3>
-                <p className="text-sm text-gray-400">{module.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section */}
+      {tier !== 'PRO' && (
       <section className="py-24 bg-[#0B1120] relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-900/10 rounded-full blur-[100px]" />
         
@@ -254,54 +278,19 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
           </div>
         </div>
       </section>
+      )}
 
       {/* Footer */}
-      <footer className="py-12 bg-[#050914] border-t border-white/5">
+      <footer className="py-12 bg-[#0B1120] border-t border-white/5 text-center text-gray-500">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4 text-white">CadetPrep Academy</h3>
-              <p className="text-sm text-gray-500 max-w-sm">
-                CadetPrep Academy bağımsız bir eğitim platformudur.
-                Bahsi geçen tüm ticari markalar ve test isimleri ilgili sahiplerinin mülkiyetindedir.
-                Bu platform herhangi bir havayolu veya resmi test kuruluşu ile ilişkili değildir, onaylanmamıştır veya desteklenmemektedir.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-sm">
-              <div>
-                <h4 className="font-bold text-white mb-4">Platform</h4>
-                <ul className="space-y-2 text-gray-500">
-                  <li><a href="#" className="hover:text-blue-400">Modüller</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Fiyatlandırma</a></li>
-                  <li><a href="#" className="hover:text-blue-400">Hakkımızda</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-white mb-4">Bilgi Merkezi</h4>
-                <ul className="space-y-2 text-gray-500">
-                  <li><button onClick={() => onNavigate('SKYTEST_BLOG_1')} className="hover:text-blue-400 text-left">Skytest Nedir?</button></li>
-                  <li><button onClick={() => onNavigate('SKYTEST_PREPARATION_BLOG')} className="hover:text-blue-400 text-left">Skytest'e Nasıl Hazırlanılır?</button></li>
-                  <li><button onClick={() => onNavigate('SKYTEST_PEGASUS_BLOG')} className="hover:text-blue-400 text-left">Skytest ve Cadet Seçimleri</button></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-white mb-4">Yasal</h4>
-                <ul className="space-y-2 text-gray-500">
-                  <li><button onClick={() => onNavigate('PRIVACY_POLICY')} className="hover:text-blue-400 text-left">Gizlilik Politikası</button></li>
-                  <li><button onClick={() => onNavigate('TERMS_OF_SERVICE')} className="hover:text-blue-400 text-left">Kullanım Şartları</button></li>
-                  <li><button onClick={() => onNavigate('LEGAL_DISCLAIMER')} className="hover:text-blue-400 text-left">Yasal Uyarı</button></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t border-white/5 text-center text-sm text-gray-600">
-            © {new Date().getFullYear()} CadetPrep Academy. Tüm hakları saklıdır.
+          <p className="mb-4">© 2024 CadetPrep Academy. Tüm hakları saklıdır.</p>
+          <div className="flex justify-center gap-6 text-sm">
+             <button onClick={() => onNavigate('PRIVACY_POLICY')} className="hover:text-white transition-colors">Gizlilik Politikası</button>
+             <button onClick={() => onNavigate('TERMS_OF_SERVICE')} className="hover:text-white transition-colors">Kullanım Koşulları</button>
+             <button onClick={() => onNavigate('LEGAL_DISCLAIMER')} className="hover:text-white transition-colors">Yasal Uyarı</button>
           </div>
         </div>
       </footer>
     </div>
   );
 };
-
-// Add necessary import to App.tsx
-// import { Zap, Brain } from 'lucide-react'; 

@@ -11,9 +11,15 @@ interface GameTutorialProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  description: string;
-  rules: string[];
-  controls: ControlItem[];
+  description?: string;
+  rules?: string[];
+  controls?: ControlItem[];
+  children?: React.ReactNode;
+  ctaText?: string;
+  onCtaClick?: () => void;
+  secondaryCtaText?: string;
+  onSecondaryCtaClick?: () => void;
+  hideTitleSuffix?: boolean;
 }
 
 export const GameTutorial: React.FC<GameTutorialProps> = ({
@@ -23,8 +29,16 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
   description,
   rules,
   controls,
+  children,
+  ctaText = "GOT IT!",
+  onCtaClick,
+  secondaryCtaText,
+  onSecondaryCtaClick,
+  hideTitleSuffix = false,
 }) => {
   if (!isOpen) return null;
+
+  const handleCtaClick = onCtaClick || onClose;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
@@ -33,7 +47,9 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
         <div className="p-6 border-b border-gray-700 flex items-center justify-between sticky top-0 bg-gray-800 z-10 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <Gamepad2 className="text-blue-400" size={32} />
-            <h2 className="text-3xl font-bold text-white tracking-wide">{title} TUTORIAL</h2>
+            <h2 className="text-3xl font-bold text-white tracking-wide">
+              {title}{!hideTitleSuffix && " TUTORIAL"}
+            </h2>
           </div>
           <button 
             onClick={onClose}
@@ -45,58 +61,78 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
 
         {/* Content */}
         <div className="p-8 space-y-8">
-          {/* Description */}
-          <div className="text-gray-300 text-lg leading-relaxed border-l-4 border-blue-500 pl-4 bg-gray-800/50">
-            {description}
-          </div>
+          {children ? (
+            children
+          ) : (
+            <>
+              {/* Description */}
+              {description && (
+                <div className="text-gray-300 text-lg leading-relaxed border-l-4 border-blue-500 pl-4 bg-gray-800/50">
+                  {description}
+                </div>
+              )}
 
-          {/* Controls Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-blue-400">
-              <Keyboard size={24} />
-              <h3 className="text-xl font-bold uppercase tracking-wider">Controls</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {controls.map((control, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-700/50 p-4 rounded-xl border border-gray-700">
-                  <span className="text-gray-200 font-medium">{control.action}</span>
-                  <div className="flex items-center gap-2">
-                    {control.icon}
-                    <kbd className="px-3 py-1.5 bg-gray-800 rounded-lg text-white font-mono text-sm shadow-md border-b-2 border-gray-900 min-w-[40px] text-center">
-                      {control.key}
-                    </kbd>
+              {/* Controls Section */}
+              {controls && controls.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4 text-blue-400">
+                    <Keyboard size={24} />
+                    <h3 className="text-xl font-bold uppercase tracking-wider">Controls</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {controls.map((control, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-gray-700/50 p-4 rounded-xl border border-gray-700">
+                        <span className="text-gray-200 font-medium">{control.action}</span>
+                        <div className="flex items-center gap-2">
+                          {control.icon}
+                          <kbd className="px-3 py-1.5 bg-gray-800 rounded-lg text-white font-mono text-sm shadow-md border-b-2 border-gray-900 min-w-[40px] text-center">
+                            {control.key}
+                          </kbd>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
 
-          {/* Rules Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-green-400">
-              <ScrollText size={24} />
-              <h3 className="text-xl font-bold uppercase tracking-wider">Rules & Objectives</h3>
-            </div>
-            <ul className="space-y-3">
-              {rules.map((rule, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-gray-300 bg-gray-700/30 p-3 rounded-lg">
-                  <span className="flex-shrink-0 w-6 h-6 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center font-bold text-sm">
-                    {idx + 1}
-                  </span>
-                  <span className="pt-0.5">{rule}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+              {/* Rules Section */}
+              {rules && rules.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4 text-green-400">
+                    <ScrollText size={24} />
+                    <h3 className="text-xl font-bold uppercase tracking-wider">Rules & Objectives</h3>
+                  </div>
+                  <ul className="space-y-3">
+                    {rules.map((rule, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-gray-300 bg-gray-700/30 p-3 rounded-lg">
+                        <span className="flex-shrink-0 w-6 h-6 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center font-bold text-sm">
+                          {idx + 1}
+                        </span>
+                        <span className="pt-0.5">{rule}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 flex justify-end bg-gray-800 rounded-b-2xl">
+        <div className="p-6 border-t border-gray-700 flex justify-end bg-gray-800 rounded-b-2xl gap-3">
+          {secondaryCtaText && (
+            <button 
+                onClick={onSecondaryCtaClick}
+                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+            >
+                {secondaryCtaText}
+            </button>
+          )}
           <button 
-            onClick={onClose}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg"
+            onClick={handleCtaClick}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg flex items-center gap-2"
           >
-            GOT IT!
+            {ctaText}
           </button>
         </div>
       </div>

@@ -22,6 +22,18 @@ export const useVIGI1GameLogic = () => {
   const [wrongAudio, setWrongAudio] = useState(0); // False alarms
   const [audioDifficulty, setAudioDifficulty] = useState(5); // 1-10, controls repetition frequency
 
+  // Refs for Settings (to access latest values in intervals)
+  const gameDurationRef = useRef(gameDuration);
+  const audioDifficultyRef = useRef(audioDifficulty);
+
+  useEffect(() => {
+    gameDurationRef.current = gameDuration;
+  }, [gameDuration]);
+
+  useEffect(() => {
+    audioDifficultyRef.current = audioDifficulty;
+  }, [audioDifficulty]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -84,7 +96,7 @@ export const useVIGI1GameLogic = () => {
         const lastTone = history[history.length - 1];
         // Calculate forced repeat chance: 0.0 (Diff 1) to ~0.45 (Diff 10)
         // Base 1/3 chance + Boost
-        const forcedRepeatChance = (audioDifficulty - 1) * 0.05; 
+        const forcedRepeatChance = (audioDifficultyRef.current - 1) * 0.05; 
         
         if (Math.random() < forcedRepeatChance) {
             randomTone = lastTone;
@@ -117,7 +129,7 @@ export const useVIGI1GameLogic = () => {
             toneHistoryRef.current = []; 
         }
     }
-  }, [audioDifficulty, TONES]);
+  }, [TONES]);
 
 
   // Refactored State Update Logic to ensure synchronization
@@ -211,13 +223,13 @@ export const useVIGI1GameLogic = () => {
     timerRef.current = setInterval(() => {
       setGameTime(prev => {
         const nextTime = prev + 1;
-        if (nextTime >= gameDuration) {
+        if (nextTime >= gameDurationRef.current) {
           stopGame();
         }
         return nextTime;
       });
     }, 1000);
-  }, [updateGameLoop, playRandomTone, gameDuration, stopGame]);
+  }, [updateGameLoop, playRandomTone, stopGame]); // Removed gameDuration from dependency to prevent restart
 
   const clearIntervals = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -306,6 +318,17 @@ export const useVIGI1GameLogic = () => {
     }
   };
 
+  // Wrappers for immediate ref updates
+  const setGameDurationImmediate = useCallback((val: number) => {
+    setGameDuration(val);
+    gameDurationRef.current = val;
+  }, []);
+
+  const setAudioDifficultyImmediate = useCallback((val: number) => {
+    setAudioDifficulty(val);
+    audioDifficultyRef.current = val;
+  }, []);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -338,8 +361,8 @@ export const useVIGI1GameLogic = () => {
       togglePause,
       handleEyeClick,
       handleNoteClick,
-      setGameDuration,
-      setAudioDifficulty
+      setGameDuration: setGameDurationImmediate,
+      setAudioDifficulty: setAudioDifficultyImmediate
     }
   };
 };
