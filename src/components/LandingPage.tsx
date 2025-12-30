@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Plane } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
 import { UserBadge } from './UserBadge';
+import { FreeAccessModal } from './FreeAccessModal';
 
 interface LandingPageProps {
-  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => void;
+  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE' | 'CAP') => void;
   onSignOut: () => void;
   onShowStats: () => void;
   user: User | null;
@@ -109,10 +110,27 @@ const GAMES = [
       descHover: 'group-hover:text-yellow-300'
     }
   },
+  { 
+    id: 'CAP', 
+    title: 'Flight Capacity (CAP)', 
+    description: 'Capacity Test', 
+    icon: Plane, 
+    color: 'sky',
+    colorClasses: {
+      border: 'hover:border-sky-500',
+      shadow: 'hover:shadow-sky-500/20',
+      bg: 'bg-sky-500/10',
+      bgHover: 'group-hover:bg-sky-500',
+      text: 'text-sky-500',
+      textHover: 'group-hover:text-sky-400',
+      descHover: 'group-hover:text-sky-300'
+    }
+  },
 ] as const;
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user }) => {
   const [showAuth, setShowAuth] = useState(false);
+  const [showFreeAccessModal, setShowFreeAccessModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tier } = useGameAccess();
 
@@ -129,12 +147,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     }
   }, []);
 
-  const handleGameSelect = (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => {
+  const handleGameSelect = (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE' | 'CAP') => {
+    if (game === 'CAP') return;
+
     if (tier === 'GUEST' && !['CUBE', 'WORM'].includes(game)) {
         // Guest can only access CUBE and WORM.
-        // Prompt login for others.
+        // Prompt login for others via Free Access Modal
         localStorage.setItem('pending_game', game);
-        setShowAuth(true);
+        setShowFreeAccessModal(true);
         return;
     }
 
@@ -142,12 +162,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
          onSelectGame(game);
     } else {
          localStorage.setItem('pending_game', game);
-         setShowAuth(true);
+         setShowFreeAccessModal(true);
     }
   };
 
   // Badge Logic
-  const getBadgeConfig = (gameId: string) => {
+  interface BadgeConfig {
+    label: string;
+    subtext: string;
+    microText?: string;
+    bgColor: string;
+    textColor: string;
+    icon: null;
+  }
+
+  const getBadgeConfig = (gameId: string): BadgeConfig => {
+    if (gameId === 'CAP') {
+        return {
+            label: 'SOON',
+            subtext: 'YAKINDA',
+            bgColor: 'bg-slate-700',
+            textColor: 'text-slate-400',
+            icon: null
+        };
+    }
+
     // PRO User
     if (tier === 'PRO') {
         return {
@@ -183,12 +222,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         // Guest looking at restricted games
         return {
             label: 'FREE',
-            subtext: 'Mini deneme',
+            subtext: 'Ücretsiz Üyelikle Açık',
+            microText: 'Giriş yaparak erişebilirsin.',
             bgColor: 'bg-yellow-500',
             textColor: 'text-black',
             icon: null
         };
     }
+  };
+
+  const renderGameCard = (game: typeof GAMES[number]) => {
+      const badge = getBadgeConfig(game.id);
+      const Icon = game.icon;
+      const colors = game.colorClasses;
+      const isComingSoon = game.id === 'CAP';
+
+      return (
+        <button 
+          key={game.id}
+          onClick={() => handleGameSelect(game.id)}
+          disabled={isComingSoon}
+          className={`group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 transition-all duration-300 transform ${!isComingSoon ? 'hover:-translate-y-1 shadow-lg cursor-pointer' : 'cursor-default opacity-70'} ${!isComingSoon ? colors.border : 'border-gray-700'} ${!isComingSoon ? colors.shadow : ''}`}
+        >
+          {/* Standardized Badge */}
+          <div className="absolute top-4 right-4 z-10">
+            <UserBadge className="h-8" />
+          </div>
+
+          <div className={`p-4 rounded-xl transition-colors duration-300 ${!isComingSoon ? colors.bg : 'bg-gray-700'} ${!isComingSoon ? colors.bgHover : ''}`}>
+            <Icon size={40} className={`transition-colors ${!isComingSoon ? colors.text : 'text-gray-500'} ${!isComingSoon ? 'group-hover:text-white' : ''}`} />
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <span className={`text-xl font-bold text-white tracking-wider ${!isComingSoon ? colors.textHover : 'text-gray-400'}`}>{game.title}</span>
+            <span className={`text-sm font-medium text-gray-400 mt-1 ${!isComingSoon ? colors.descHover : ''}`}>{game.description}</span>
+            
+            {/* Badge Subtext */}
+            <div className="mt-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-900/80 px-2 py-1 rounded-md flex flex-col items-center text-center">
+               <span className={isComingSoon ? 'text-yellow-500' : ''}>{badge.subtext}</span>
+               {badge.microText && (
+                    <span className="text-[9px] normal-case text-gray-400 mt-1 border-t border-gray-700/50 pt-1 opacity-90 w-full">
+                        {badge.microText}
+                    </span>
+               )}
+            </div>
+          </div>
+        </button>
+      );
   };
 
   if (showAuth) {
@@ -205,7 +285,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             const pending = localStorage.getItem('pending_game');
             if (pending) {
                 localStorage.removeItem('pending_game');
-                onSelectGame(pending as 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE');
+                onSelectGame(pending as 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE' | 'CAP');
             }
         }} />
       </div>
@@ -263,47 +343,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         </button>
       )}
 
-      <div className="flex flex-col items-center">
-        <div className="bg-white/90 p-4 rounded-2xl mb-6 shadow-lg shadow-purple-500/20">
-          <img src="/logo.png" alt="CadetPrep Academy" className="h-24 md:h-32 drop-shadow-lg" />
+      <div className="flex flex-row items-center gap-6 mb-8">
+        <div className="bg-white/90 p-3 rounded-xl shadow-lg shadow-purple-500/20">
+          <img src="/logo.png" alt="CadetPrep Academy" className="h-12 drop-shadow-lg" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 tracking-wider text-center">SKY TEST SIMULATION</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wider text-center">SKY TEST SIMULATION</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full px-4">
-        {GAMES.map((game) => {
-          const badge = getBadgeConfig(game.id);
-          const Icon = game.icon;
-          const colors = game.colorClasses;
+      <div className="w-full max-w-[90rem] px-4 flex flex-col items-center gap-6">
+          {/* Top Row: 3 Games */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+            {GAMES.slice(0, 3).map(renderGameCard)}
+          </div>
 
-          return (
-            <button 
-              key={game.id}
-              onClick={() => handleGameSelect(game.id)}
-              className={`group relative flex flex-col items-center gap-4 p-6 bg-gray-800 rounded-2xl border-2 border-gray-700 transition-all duration-300 transform hover:-translate-y-1 shadow-lg ${colors.border} ${colors.shadow}`}
-            >
-              {/* Standardized Badge */}
-              <div className="absolute top-4 right-4 z-10">
-                <UserBadge className="h-8" />
-              </div>
-
-              <div className={`p-4 rounded-xl transition-colors duration-300 ${colors.bg} ${colors.bgHover}`}>
-                <Icon size={40} className={`transition-colors ${colors.text} group-hover:text-white`} />
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <span className={`text-xl font-bold text-white tracking-wider ${colors.textHover}`}>{game.title}</span>
-                <span className={`text-sm font-medium text-gray-400 mt-1 ${colors.descHover}`}>{game.description}</span>
-                
-                {/* Badge Subtext */}
-                <div className="mt-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-900/80 px-2 py-1 rounded-md">
-                   {badge.subtext}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+          {/* Bottom Row: 4 Games */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-[80rem]">
+            {GAMES.slice(3, 7).map(renderGameCard)}
+          </div>
       </div>
+
+      <FreeAccessModal 
+        isOpen={showFreeAccessModal}
+        onClose={() => setShowFreeAccessModal(false)}
+        onLogin={() => {
+            setShowFreeAccessModal(false);
+            setShowAuth(true);
+        }}
+      />
     </div>
   );
 };

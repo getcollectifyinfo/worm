@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useCubeGameLogic } from './useCubeGameLogic';
 import type { CubePosition } from './useCubeGameLogic';
-import { ArrowLeft, Play, Settings, HelpCircle, Book, FlaskConical, Box, RotateCw, Lightbulb, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Play, Settings, HelpCircle, Book, FlaskConical, Box, RotateCw, Lightbulb, ArrowRight, Clock } from 'lucide-react';
 import { GameTutorial } from '../GameTutorial';
 import { CubeDemoAnimation } from './CubeDemoAnimation';
 import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
+import { SubscriptionSuccess } from '../SubscriptionSuccess';
+import { useAuth } from '../../hooks/useAuth';
 
 import { PracticeMode } from './PracticeMode';
+import { CubeSettingsModal } from './CubeSettingsModal';
+import { MiniExamEndModal } from '../MiniExamEndModal';
 
 import { toast, Toaster } from 'react-hot-toast';
 
@@ -17,6 +21,7 @@ interface CubeGameProps {
 }
 
 export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
+  const { refreshSession } = useAuth();
   const {
     tier,
     checkAccess,
@@ -47,22 +52,34 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   const [hasStarted, setHasStarted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings' | 'mini-exam-end'>('default');
+  const [showSubscriptionSuccess, setShowSubscriptionSuccess] = useState(false);
+  const [subscriptionSource, setSubscriptionSource] = useState<string | null>(null);
+  const [isMiniExam, setIsMiniExam] = useState(false);
+  const [miniExamTimeLeft, setMiniExamTimeLeft] = useState(120);
+  const [showMiniExamModal, setShowMiniExamModal] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
+        // Refresh session to update user tier
+        if (refreshSession) {
+            refreshSession();
+        }
+        
+        const source = params.get('source');
+        
         setTimeout(() => {
-            setIsSettingsOpen(true);
-            setShowSuccessModal(true);
+            setSubscriptionSource(source);
+            setShowSubscriptionSuccess(true);
             // Clean URL
             window.history.replaceState({}, '', window.location.pathname);
-        }, 0);
+        }, 500);
     }
-  }, []);
+  }, [refreshSession]);
 
   const handleOpenTutorial = () => {
     setTutorialStep(0);
@@ -71,27 +88,30 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   const handleStartGame = () => {
     if (!checkAccess('cube')) return;
-    if (tier === 'GUEST') {
-      setCommandCount(3);
+    
+    // EXAM MODE is PRO only
+    if (tier !== 'PRO') {
+        setProModalVariant('exam-settings'); // Or just default
+        openProModal();
+        return;
     }
+
     setHasStarted(true);
+    setIsMiniExam(false);
     startGame();
   };
 
   const handleMiniExam = () => {
-    // Mini exam settings: Easy (3 commands), slower speed?
-    // Assuming 3 commands is easy.
+    // Mini exam settings: Easy (3 commands), slower speed
     setCommandCount(3);
-    setCommandSpeed(1500); // Slower/easier speed
+    setCommandSpeed(2000); // En yavaş
     setHasStarted(true);
+    setIsMiniExam(true);
+    setMiniExamTimeLeft(120); // 2 minutes
     startGame();
   };
 
   const handleOpenSettings = () => {
-    if (tier === 'GUEST') {
-        openLoginGate();
-        return;
-    }
     // Debug toast
     // toast.success('Practice Mode Loading...');
     
@@ -101,6 +121,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const handleCloseProModal = () => {
     closeProModal();
     setProModalVariant('default');
+    setIsMiniExam(false);
   };
 
   const handleLoginClose = () => {
@@ -116,11 +137,38 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   const handleLoginSuccess = () => {
     closeLoginGate();
+    
+    // Check for pending upgrades
+    const pendingUpgrade = localStorage.getItem('pending_pro_upgrade');
+    if (pendingUpgrade) {
+        localStorage.removeItem('pending_pro_upgrade');
+        handleUpgrade('mini-exam-end');
+        return;
+    }
+
     setIsSettingsOpen(true); // Directly open settings (practice mode) after login
   };
 
+  // Mini Exam Timer
   useEffect(() => {
-    if (hasStarted && maxDuration > 0) {
+    if (hasStarted && isMiniExam) {
+        const timer = setInterval(() => {
+            setMiniExamTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setHasStarted(false);
+                    setShowMiniExamModal(true);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }
+  }, [hasStarted, isMiniExam]);
+
+  useEffect(() => {
+    if (hasStarted && maxDuration > 0 && !isMiniExam) {
       const timer = setTimeout(() => {
         setHasStarted(false);
         setProModalVariant('default');
@@ -128,7 +176,13 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [hasStarted, maxDuration, openProModal]);
+  }, [hasStarted, maxDuration, openProModal, isMiniExam]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const renderCommand = () => {
     if (!currentCommand) return null;
@@ -178,11 +232,28 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center p-8 relative">
       <Toaster position="top-center" />
+      {showSubscriptionSuccess && (
+          <SubscriptionSuccess 
+              onContinue={() => {
+                  setShowSubscriptionSuccess(false);
+                  setIsSettingsOpen(true);
+              }}
+              onHome={() => {
+                  if (subscriptionSource === 'mini-exam-end') {
+                      setShowSubscriptionSuccess(false);
+                  } else {
+                      setShowSubscriptionSuccess(false);
+                      onExit();
+                  }
+              }}
+              source={subscriptionSource}
+          />
+      )}
       {showProModal && (
         <ProAccessModal 
           isOpen={showProModal} 
           onClose={handleCloseProModal}
-          onUpgrade={handleUpgrade}
+          onUpgrade={() => handleUpgrade(isMiniExam ? 'mini-exam-end' : 'menu')}
           variant={proModalVariant}
           title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
           description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}
@@ -191,6 +262,42 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         />
       )}
       
+      <MiniExamEndModal
+        isOpen={showMiniExamModal}
+        onClose={() => setShowMiniExamModal(false)}
+        onUpgrade={() => {
+            setShowMiniExamModal(false);
+            if (tier === 'GUEST') {
+                localStorage.setItem('pending_pro_upgrade', 'true');
+                openLoginGate();
+            } else {
+                handleUpgrade('mini-exam-end');
+            }
+        }}
+        onPractice={() => {
+             setShowMiniExamModal(false);
+             handleOpenSettings();
+        }}
+      />
+
+      <CubeSettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        tier={tier}
+        commandSpeed={1500} // Default for now, could be dynamic if we expose state
+        commandCount={3} // Default
+        onSave={(speed, count) => {
+            setCommandSpeed(speed);
+            setCommandCount(count);
+            setShowSettingsModal(false);
+        }}
+        onOpenProModal={() => {
+            setShowSettingsModal(false);
+            setProModalVariant('exam-settings');
+            openProModal();
+        }}
+      />
+
       <SmartLoginGate
         isOpen={showLoginGate}
         onClose={handleLoginClose}
@@ -520,6 +627,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         )}
       </GameTutorial>
 
+
+
       {isSettingsOpen && (
         <PracticeMode 
           onExit={() => setIsSettingsOpen(false)} 
@@ -528,8 +637,6 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             setIsSettingsOpen(false);
             openProModal();
           }}
-          showSuccessModal={showSuccessModal}
-          onCloseSuccessModal={() => setShowSuccessModal(false)}
         />
       )}
 
@@ -607,6 +714,16 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         </div>
       ) : (
         <>
+          {/* Mini Exam Timer */}
+          {isMiniExam && (
+            <div className="absolute top-24 right-8 z-20 flex items-center gap-2 bg-gray-800/80 backdrop-blur px-4 py-2 rounded-xl border border-gray-700 animate-in fade-in slide-in-from-top-4">
+                <Clock size={20} className="text-yellow-500" />
+                <span className="text-xl font-mono font-bold text-white">
+                    {formatTime(miniExamTimeLeft)}
+                </span>
+            </div>
+          )}
+
           {/* Header */}
           <div className="w-full flex justify-between items-center mb-12">
             <button 
@@ -637,7 +754,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                     <HelpCircle size={24} />
                 </button>
                 <button 
-                    onClick={() => setIsSettingsOpen(true)}
+                    onClick={() => setShowSettingsModal(true)}
                     className="p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                     title="Settings"
                 >

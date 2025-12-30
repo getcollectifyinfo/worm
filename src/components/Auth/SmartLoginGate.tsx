@@ -55,13 +55,23 @@ export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose,
             </div>
 
             <h2 className="text-2xl font-bold text-slate-900 mb-3">
-                Practice’a Hazırsın ✅
+                Devam etmek için son bir adım kaldı
             </h2>
             
-            <p className="text-slate-600 mb-8 text-lg leading-relaxed">
-                Alıştırmalar ve ilerlemeni kaydetmek için ücretsiz hesap gerekli. <br/>
-                <span className="text-sm text-slate-500 block mt-2">Kredi Kartı gerekmez. • 30 saniyeden kısa sürer.</span>
+            <p className="text-slate-600 mb-6 text-lg leading-relaxed">
+                Pro özellikleri açmak ve ilerlemeni kaydetmek için <br/>
+                ücretsiz bir hesap oluşturman gerekiyor.
             </p>
+
+            <div className="flex items-center justify-center gap-4 text-sm text-slate-500 mb-8 bg-slate-50 py-2 rounded-lg">
+                <span className="flex items-center gap-1">
+                    ⏱ 30 saniyeden kısa
+                </span>
+                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                <span className="flex items-center gap-1">
+                    💳 Kredi kartı şimdi değil
+                </span>
+            </div>
 
             <div className="space-y-3">
                 <button
@@ -97,10 +107,6 @@ export const SmartLoginGate: React.FC<SmartLoginGateProps> = ({ isOpen, onClose,
                     E-posta ile Devam Et
                 </button>
             </div>
-
-            <p className="mt-6 text-xs text-slate-400">
-                İstersen sonra Pro’ya geçebilirsin. (İstediğin zaman iptal)
-            </p>
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ interface ProAccessModalProps {
   ctaText?: string;
   trustText?: string;
   benefits?: string[];
-  variant?: 'default' | 'exam-settings';
+  variant?: 'default' | 'exam-settings' | 'mini-exam-end';
 }
 
 export const ProAccessModal: React.FC<ProAccessModalProps> = ({ 
@@ -34,17 +34,31 @@ export const ProAccessModal: React.FC<ProAccessModalProps> = ({
   if (!isOpen) return null;
 
   const isSettingsVariant = variant === 'exam-settings';
+  const isMiniExamVariant = variant === 'mini-exam-end';
   
-  const defaultTitle = "Pro Üyelik Gerekli";
-  const defaultDesc = "Seçtiğiniz özellik sadece Pro üyeler içindir.";
-  const defaultCta = "Hemen Yükselt";
+  const defaultTitle = isMiniExamVariant ? "Süreniz Doldu" : "Pro Üyelik Gerekli";
+  const defaultDesc = isMiniExamVariant 
+    ? <span className="text-yellow-400 font-bold block mt-2 text-lg">500 TL / Ay</span> 
+    : "Seçtiğiniz özellik sadece Pro üyeler içindir.";
+  
+  const defaultCta = "Pro'ya Geç";
   const defaultTrust = "İstediğiniz zaman iptal edebilirsiniz.";
-  const defaultBenefits = [
+  
+  let defaultBenefits = [
     "Tüm zorluk seviyeleri (Medium, Hard, Expert)",
     "Gerçek sınav süreleri ve sınırsız tekrar",
     "Detaylı performans analizi ve gelişim takibi",
     "Tüm eğitim modüllerine tam erişim"
   ];
+
+  if (isMiniExamVariant) {
+    defaultBenefits = [
+        "Ayarlanabilir soru ve süre seçenekleri",
+        "Gerçek sınav ortamına en yakın Exam Mode",
+        "Tüm modüllere (Cube, Snake, vb.) sınırsız erişim",
+        "Detaylı istatistikler ve karne sistemi"
+    ];
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -75,9 +89,9 @@ export const ProAccessModal: React.FC<ProAccessModalProps> = ({
           </div>
         </div>
 
-        {/* Benefits List - Only show if not settings variant or if explicitly passed */}
+        {/* Benefits List - Only show if not settings variant or if explicitly passed OR if mini-exam variant */}
         <div className="px-8 pb-8 space-y-4">
-          {(!isSettingsVariant || benefits) && (
+          {(!isSettingsVariant || benefits || isMiniExamVariant) && (
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <ul className="space-y-3">
                 {(benefits || defaultBenefits).map((benefit, i) => (

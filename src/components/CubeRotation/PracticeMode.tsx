@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Play, CheckCircle } from 'lucide-react';
+import { X, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -70,20 +70,20 @@ interface PracticeModeProps {
     onExit: () => void;
     tier: 'FREE' | 'PRO' | 'GUEST';
     onShowProModal: () => void;
-    showSuccessModal?: boolean;
-    onCloseSuccessModal?: () => void;
+    initialPhase?: 1 | 2 | 3 | 4;
+    initialQuestionIndex?: number;
 }
 
 export const PracticeMode: React.FC<PracticeModeProps> = ({ 
     onExit, 
-    tier, 
-    showSuccessModal = false,
-    onCloseSuccessModal
+    tier,
+    initialPhase = 1,
+    initialQuestionIndex = 0
 }) => {
     const { user } = useAuth();
-    const [phase, setPhase] = useState<1 | 2 | 3 | 4>(1);
+    const [phase, setPhase] = useState<1 | 2 | 3 | 4>(initialPhase);
     const [step, setStep] = useState<'START' | 'COMMAND' | 'QUESTION' | 'FEEDBACK' | 'RESULTS'>('START');
-    const [questionIndex, setQuestionIndex] = useState(0);
+    const [questionIndex, setQuestionIndex] = useState(initialQuestionIndex);
     const [startFace, setStartFace] = useState<CubeLabel>('RIGHT');
     const [commands, setCommands] = useState<Command[]>(['LEFT']);
     const [currentCommandIndex, setCurrentCommandIndex] = useState(0);
@@ -112,6 +112,10 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
         }
 
         try {
+            // Determine return URL with source parameter
+            const returnUrl = new URL(window.location.href);
+            returnUrl.searchParams.set('source', 'practice');
+
             const response = await fetch('http://localhost:3001/api/create-checkout-session', {
                 method: 'POST',
                 headers: {
@@ -120,7 +124,7 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
                 body: JSON.stringify({
                     userId: user.id,
                     userEmail: user.email,
-                    returnUrl: window.location.href,
+                    returnUrl: returnUrl.toString(),
                 }),
             });
 
@@ -338,7 +342,7 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
                     setQuestionIndex(0);
                 }, 1500);
             } else if (phase === 2) {
-                if (tier === 'FREE') {
+                if (tier === 'FREE' || tier === 'GUEST') {
                      // Show Results Screen instead of Pro Modal directly
                      setStep('RESULTS');
                 } else {
@@ -484,7 +488,7 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
 
                     {/* Pro Teaser Cards or Exam Mode Prompt */}
                     <div className="space-y-4">
-                        {tier === 'FREE' && phase === 2 && (
+                        {(tier === 'FREE' || tier === 'GUEST') && phase === 2 && (
                             <>
                                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 opacity-75 relative overflow-hidden group">
                                     <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">PRO</div>
@@ -719,45 +723,7 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
                 )}
             </div>
 
-            {/* Success Modal */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-                    <div className="bg-gray-800 border border-green-500/50 rounded-2xl p-8 max-w-md w-full text-center relative overflow-hidden animate-in zoom-in duration-300">
-                        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-500 to-emerald-500"></div>
-                        
-                        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle size={40} className="text-green-400" />
-                        </div>
-
-                        <h2 className="text-3xl font-bold text-white mb-2">Ödeme Başarılı!</h2>
-                        <p className="text-gray-300 mb-8">
-                            Pro üyeliğiniz aktif edildi. Tüm modüller ve ileri seviye pratikler açıldı.
-                        </p>
-
-                        <div className="space-y-3">
-                            <button 
-                                onClick={() => {
-                                    setPhase(2);
-                                    setQuestionIndex(0);
-                                    setStep('START');
-                                    onCloseSuccessModal?.();
-                                }}
-                                className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-                            >
-                                <Play size={20} />
-                                Kaldığım Yerden Devam Et (Soru 6)
-                            </button>
-
-                            <button 
-                                onClick={onExit}
-                                className="w-full py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all hover:scale-105"
-                            >
-                                Ana Menüye Dön
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Success Modal Removed - Handled externally */}
         </div>
     );
 };

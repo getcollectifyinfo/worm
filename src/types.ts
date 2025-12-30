@@ -48,6 +48,7 @@ export type Page =
   | 'CAPACITY' 
   | 'VIGI1' 
   | 'CUBE'
+  | 'CAP'
   | 'STATISTICS' 
   | 'SKYTEST_PRODUCT' 
   | 'SKYTEST_BLOG_1' 

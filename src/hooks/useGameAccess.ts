@@ -17,7 +17,7 @@ export interface GameAccess {
   closeProModal: () => void;checkAccess: (moduleId: string, difficulty?: DifficultyLevel) => boolean;
   remainingGuestAttempts: number;
   decrementGuestAttempts: () => void;
-  handleUpgrade: () => Promise<void>;
+  handleUpgrade: (customSource?: string) => Promise<void>;
   showLoginGate: boolean;
   openLoginGate: () => void;
   closeLoginGate: () => void;
@@ -108,7 +108,7 @@ export const useGameAccess = (): GameAccess => {
     return true;
   };
 
-  const handleUpgrade = useCallback(async () => {
+  const handleUpgrade = useCallback(async (customSource?: string) => {
     if (!user) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('pending_pro_upgrade', 'true');
@@ -118,13 +118,17 @@ export const useGameAccess = (): GameAccess => {
     }
 
     try {
+      // Determine return URL with source parameter
+      const returnUrl = new URL(window.location.href);
+      returnUrl.searchParams.set('source', customSource || 'menu');
+
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          returnUrl: window.location.href,
+          returnUrl: returnUrl.toString(),
           userId: user.id,
           userEmail: user.email
         })
