@@ -6,9 +6,13 @@ interface SettingsMenuProps {
     settings: CapacitySettings;
     onUpdateSettings: (settings: Partial<CapacitySettings>) => void;
     onClose: () => void;
+    tier: 'GUEST' | 'FREE' | 'PRO';
+    onOpenProModal: () => void;
 }
 
-const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings, onClose }) => {
+const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings, onClose, tier, onOpenProModal }) => {
+  const isLocked = tier !== 'PRO';
+
   return (
     <GameSettingsModal
         isOpen={true}
@@ -25,6 +29,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings,
                 leftLabel="Short (30s)"
                 rightLabel="Long (300s)"
                 valueLabel={<>Duration: <span className="text-purple-600 font-bold">{settings.gameDuration}s</span></>}
+                isLocked={isLocked}
+                onLockedClick={onOpenProModal}
             />
             
             <SettingsRange
@@ -36,6 +42,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings,
                 leftLabel="Slow"
                 rightLabel="Fast"
                 valueLabel={<>Plane Speed: <span className="text-purple-600 font-bold">{settings.planeSpeed}</span></>}
+                isLocked={isLocked}
+                onLockedClick={onOpenProModal}
             />
 
             <SettingsRange
@@ -47,6 +55,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings,
                 leftLabel="Slow"
                 rightLabel="Fast"
                 valueLabel={<>Scroll Speed: <span className="text-purple-600 font-bold">{settings.scrollSpeed}</span></>}
+                isLocked={isLocked}
+                onLockedClick={onOpenProModal}
             />
 
             <SettingsRange
@@ -58,6 +68,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings,
                 leftLabel="Frequent (200ms)"
                 rightLabel="Sparse (2000ms)"
                 valueLabel={<>Spawn Rate: <span className="text-purple-600 font-bold">{settings.spawnRate}ms</span></>}
+                isLocked={isLocked}
+                onLockedClick={onOpenProModal}
             />
 
             <SettingsRange
@@ -69,6 +81,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ settings, onUpdateSettings,
                 leftLabel="Fast (1s)"
                 rightLabel="Slow (5s)"
                 valueLabel={<>Task Change: <span className="text-purple-600 font-bold">{settings.taskChangeSpeed}ms</span></>}
+                isLocked={isLocked}
+                onLockedClick={onOpenProModal}
             />
         </SettingsSection>
     </GameSettingsModal>

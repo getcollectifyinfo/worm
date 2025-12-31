@@ -10,6 +10,8 @@ import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
 import { toast, Toaster } from 'react-hot-toast';
+import { MiniExamEndModal } from '../MiniExamEndModal';
+import { GameResultsModal } from '../GameResultsModal';
 
 interface VIGIGameProps {
   onExit: () => void;
@@ -19,18 +21,25 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const { gameState, actions, settings: gameSettings } = useGameLogic();
   const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves } = gameState;
   const { startGame, stopGame, togglePause, handleInteraction, setSettings } = actions;
-  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade, showLoginGate, closeLoginGate } = useGameAccess();
+  const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade, showLoginGate, closeLoginGate, openLoginGate } = useGameAccess();
+
+  const [showMiniExamModal, setShowMiniExamModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   // Duration Timer
   useEffect(() => {
     if (isPlaying && maxDuration > 0) {
       const timer = setTimeout(() => {
         stopGame();
-        openProModal();
+        if (tier !== 'PRO') {
+            setShowMiniExamModal(true);
+        } else {
+            setShowResults(true);
+        }
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, maxDuration, stopGame, openProModal]);
+  }, [isPlaying, maxDuration, stopGame, tier]);
 
   // Calculate position
   const getPositionStyle = (pos: number) => {
@@ -103,11 +112,22 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
     }
 
     setShowPauseMenu(false);
-    onExit();
+    setShowResults(true);
   };
 
   const handleStartGame = () => {
     if (!checkAccess('vigi')) return;
+    setShowResults(false);
+
+    // Force settings for Guest/Free
+    if (tier !== 'PRO') {
+        setSettings(s => ({
+            ...s,
+            baseSpeed: 2000, // Slowest
+            changeFrequency: 0.1 // Rare
+        }));
+    }
+
     startGame();
   };
 
@@ -139,6 +159,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
+        initialLocale="tr"
         title="VIGI 2"
         description="Vigilance Test! Monitor the moving object and react instantly to specific changes in its behavior."
         rules={[
@@ -157,6 +178,29 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
             { key: "Bot Left Btn", action: "Report TURN", icon: <span className="text-xl">↙️</span> },
             { key: "Bot Right Btn", action: "Report SHAPE", icon: <span className="text-xl">↘️</span> }
         ]}
+        translations={{
+          tr: {
+            title: "VIGI 2",
+            description: "Uyanıklık testi! Daire içinde hareket eden nesneyi izle ve davranışındaki belirli değişikliklere anında tepki ver.",
+            rules: [
+              "Daire içindeki hareketi izle.",
+              "Özellik değişikliklerini fark et:",
+              "- JUMP: Nesne bir konumu atlar",
+              "- COLOR: Renk değişir",
+              "- TURN: Dönüş yönü değişir",
+              "- SHAPE: Şekil değişir",
+              "Değişiklik olduğunda ilgili butona hemen bas.",
+              "Hızlı ol! Tepki süren sınırlı."
+            ],
+            controls: [
+              { key: "Sol Üst", action: "JUMP bildir", icon: <span className="text-xl">↖️</span> },
+              { key: "Sağ Üst", action: "COLOR bildir", icon: <span className="text-xl">↗️</span> },
+              { key: "Sol Alt", action: "TURN bildir", icon: <span className="text-xl">↙️</span> },
+              { key: "Sağ Alt", action: "SHAPE bildir", icon: <span className="text-xl">↘️</span> }
+            ],
+            ctaText: "Tamam"
+          }
+        }}
       />
 
       {/* Top Right Standard Menu */}
@@ -209,23 +253,81 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       )}
 
       {/* Start Button Overlay */}
-      {!isPlaying && !showSettings && (
+      {!isPlaying && !showSettings && !showResults && !showMiniExamModal && (
         <GameStartMenu 
             title="VIGI"
-            startLabel={totalEvents > 0 ? "PLAY AGAIN" : "START GAME"}
+            startLabel={totalEvents > 0 ? "PLAY AGAIN" : "EXAM MODE"}
             onStart={handleStartGame}
-            onSettings={() => {
-                if (tier === 'GUEST' || tier === 'FREE') {
-                    openProModal();
-                } else {
-                    setShowSettings(true);
-                }
-            }}
+            onSettings={() => setShowSettings(true)}
+            onPractice={() => setShowSettings(true)}
             onBack={onExit}
             highScore={highScore}
-            onTutorial={() => setIsTutorialOpen(true)}
+            onLearn={() => setIsTutorialOpen(true)}
+            tier={tier}
         />
       )}
+
+      <GameResultsModal
+        isOpen={showResults}
+        score={score}
+        duration={formatTime(gameTime)}
+        onRetry={handleStartGame}
+        onExit={onExit}
+        tier={tier}
+      >
+        <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">Accuracy</div>
+                <div className="text-xl font-bold text-green-400">
+                    {totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0}%
+                </div>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">Events</div>
+                <div className="text-xl font-bold text-white">
+                    {caughtEvents}/{totalEvents}
+                </div>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">Errors</div>
+                <div className="text-xl font-bold text-red-400">
+                    {wrongMoves}
+                </div>
+            </div>
+        </div>
+        {tier === 'PRO' && (
+             <div className="mt-4 text-left bg-gray-800 p-3 rounded-lg text-xs font-mono">
+                <div className="mb-1 text-purple-400 font-bold">Detailed Analysis</div>
+                <div className="flex justify-between">
+                    <span>Reaction Speed:</span>
+                    <span>Excellent</span>
+                </div>
+                <div className="flex justify-between">
+                    <span>Attention Span:</span>
+                    <span>{gameTime > 60 ? 'High' : 'Normal'}</span>
+                </div>
+                {/* More detailed stats can be added here */}
+             </div>
+        )}
+      </GameResultsModal>
+
+      <MiniExamEndModal
+        isOpen={showMiniExamModal}
+        onClose={() => setShowMiniExamModal(false)}
+        onUpgrade={() => {
+            setShowMiniExamModal(false);
+            if (tier === 'GUEST') {
+                localStorage.setItem('pending_pro_upgrade', 'true');
+                openLoginGate();
+            } else {
+                handleUpgrade('vigi-end');
+            }
+        }}
+        onPractice={() => {
+             setShowMiniExamModal(false);
+             setShowSettings(true);
+        }}
+      />
 
       {/* Game Content Wrapper - Scaled and moved left */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 w-[calc(100%-100px)] h-[90%] pointer-events-none">
@@ -348,6 +450,8 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                 leftLabel="Fast (500ms)"
                 rightLabel="Slow (2000ms)"
                 valueLabel={<>Base Speed: <span className="text-purple-600 font-bold">{gameSettings.baseSpeed}ms</span></>}
+                isLocked={tier !== 'PRO'}
+                onLockedClick={openProModal}
             />
         </SettingsSection>
 
@@ -361,11 +465,13 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                 leftLabel="Rare"
                 rightLabel="Frequent"
                 valueLabel={<>Change Frequency: <span className="text-purple-600 font-bold">{gameSettings.changeFrequency}</span></>}
+                isLocked={tier !== 'PRO'}
+                onLockedClick={openProModal}
             />
         </SettingsSection>
 
         <SettingsSection title="Score Thresholds">
-            <div className="mb-4 p-4 bg-green-50 rounded-xl border border-green-100">
+            <div className={`mb-4 p-4 bg-green-50 rounded-xl border border-green-100 relative ${tier !== 'PRO' ? 'opacity-60 pointer-events-none' : ''}`}>
                <h3 className="font-bold mb-3 text-green-700">Excellent Score</h3>
                <div className="flex gap-4">
                  <div className="flex-1">
@@ -381,6 +487,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                        }
                      }))}
                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-800"
+                     disabled={tier !== 'PRO'}
                    />
                  </div>
                  <div className="flex-1">
@@ -396,12 +503,14 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                        }
                      }))}
                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-800"
+                     disabled={tier !== 'PRO'}
                    />
                  </div>
                </div>
+               {tier !== 'PRO' && <div className="absolute inset-0 z-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); openProModal(); }} />}
             </div>
 
-            <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+            <div className={`p-4 bg-yellow-50 rounded-xl border border-yellow-100 relative ${tier !== 'PRO' ? 'opacity-60 pointer-events-none' : ''}`}>
                <h3 className="font-bold mb-3 text-yellow-700">Good Score</h3>
                <div className="flex gap-4">
                  <div className="flex-1">
@@ -417,6 +526,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                        }
                      }))}
                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-800"
+                     disabled={tier !== 'PRO'}
                    />
                  </div>
                  <div className="flex-1">
@@ -432,9 +542,11 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                        }
                      }))}
                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-gray-800"
+                     disabled={tier !== 'PRO'}
                    />
                  </div>
                </div>
+               {tier !== 'PRO' && <div className="absolute inset-0 z-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); openProModal(); }} />}
             </div>
         </SettingsSection>
       </GameSettingsModal>
@@ -442,13 +554,21 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       <ProAccessModal
         isOpen={showProModal}
         onClose={closeProModal}
-        onUpgrade={handleUpgrade}
+        onUpgrade={() => handleUpgrade('vigi-settings')}
         variant="default"
       />
 
       <SmartLoginGate 
         isOpen={showLoginGate}
         onClose={closeLoginGate}
+        onLoginSuccess={() => {
+             closeLoginGate();
+             const pending = localStorage.getItem('pending_pro_upgrade');
+             if (pending) {
+                 localStorage.removeItem('pending_pro_upgrade');
+                 handleUpgrade('vigi-login');
+             }
+        }}
       />
     </div>
   );

@@ -23,7 +23,7 @@ export interface GameAccess {
   closeLoginGate: () => void;
 }
 
-const GUEST_ALLOWED_MODULES = ['cube', 'worm'];const GUEST_MAX_ATTEMPTS = 2;
+const GUEST_ALLOWED_MODULES = ['cube', 'worm', 'vigi', 'vigi1', 'ipp', 'capacity'];const GUEST_MAX_ATTEMPTS = 2;
 const DEMO_DURATION = 120; // 2 minutes in seconds
 
 export const useGameAccess = (): GameAccess => {

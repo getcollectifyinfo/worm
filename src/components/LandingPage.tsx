@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Plane } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Plane, Home } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
@@ -11,6 +11,7 @@ interface LandingPageProps {
   onSignOut: () => void;
   onShowStats: () => void;
   user: User | null;
+  onGoHome: () => void;
 }
 
 const GAMES = [
@@ -128,7 +129,7 @@ const GAMES = [
   },
 ] as const;
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user, onGoHome }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [showFreeAccessModal, setShowFreeAccessModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -294,6 +295,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
 
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8 relative">
+      <button
+        onClick={onGoHome}
+        className="absolute top-8 left-8 flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+      >
+        <Home size={20} />
+        <span className="font-bold">Ana Sayfa</span>
+      </button>
       {user ? (
         <div className="absolute top-8 right-8 z-50">
           <button

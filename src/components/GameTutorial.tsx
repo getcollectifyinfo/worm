@@ -7,6 +7,15 @@ interface ControlItem {
   icon?: React.ReactNode;
 }
 
+interface I18nContent {
+  title?: string;
+  description?: string;
+  rules?: string[];
+  controls?: ControlItem[];
+  ctaText?: string;
+  secondaryCtaText?: string;
+}
+
 interface GameTutorialProps {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +29,13 @@ interface GameTutorialProps {
   secondaryCtaText?: string;
   onSecondaryCtaClick?: () => void;
   hideTitleSuffix?: boolean;
+  translations?: {
+    en?: I18nContent;
+    tr?: I18nContent;
+  };
+  initialLocale?: 'en' | 'tr';
+  locale?: 'en' | 'tr';
+  onLocaleChange?: (locale: 'en' | 'tr') => void;
 }
 
 export const GameTutorial: React.FC<GameTutorialProps> = ({
@@ -35,7 +51,21 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
   secondaryCtaText,
   onSecondaryCtaClick,
   hideTitleSuffix = false,
+  translations,
+  initialLocale = 'en',
+  locale,
+  onLocaleChange,
 }) => {
+  const [localeState, setLocaleState] = React.useState<'en' | 'tr'>(initialLocale);
+  const effectiveLocale = locale ?? localeState;
+  const t = translations && translations[effectiveLocale] ? translations[effectiveLocale] : undefined;
+  const resolvedTitle = t?.title ?? title;
+  const resolvedDescription = t?.description ?? description;
+  const resolvedRules = t?.rules ?? rules;
+  const resolvedControls = t?.controls ?? controls;
+  const resolvedCtaText = t?.ctaText ?? ctaText;
+  const resolvedSecondaryCtaText = t?.secondaryCtaText ?? secondaryCtaText;
+
   if (!isOpen) return null;
 
   const handleCtaClick = onCtaClick || onClose;
@@ -48,15 +78,31 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
           <div className="flex items-center gap-3">
             <Gamepad2 className="text-blue-400" size={32} />
             <h2 className="text-3xl font-bold text-white tracking-wide">
-              {title}{!hideTitleSuffix && " TUTORIAL"}
+              {resolvedTitle}{!hideTitleSuffix && " TUTORIAL"}
             </h2>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-400 hover:text-white"
-          >
-            <X size={28} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="bg-gray-700 rounded-lg p-1 flex gap-1">
+              <button
+                onClick={() => (onLocaleChange ? onLocaleChange('tr') : setLocaleState('tr'))}
+                className={`px-3 py-1 rounded-md text-sm font-bold ${effectiveLocale === 'tr' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+              >
+                TR
+              </button>
+              <button
+                onClick={() => (onLocaleChange ? onLocaleChange('en') : setLocaleState('en'))}
+                className={`px-3 py-1 rounded-md text-sm font-bold ${effectiveLocale === 'en' ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+              >
+                EN
+              </button>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-400 hover:text-white"
+            >
+              <X size={28} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -66,21 +112,21 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
           ) : (
             <>
               {/* Description */}
-              {description && (
+              {resolvedDescription && (
                 <div className="text-gray-300 text-lg leading-relaxed border-l-4 border-blue-500 pl-4 bg-gray-800/50">
-                  {description}
+                  {resolvedDescription}
                 </div>
               )}
 
               {/* Controls Section */}
-              {controls && controls.length > 0 && (
+              {resolvedControls && resolvedControls.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-4 text-blue-400">
                     <Keyboard size={24} />
                     <h3 className="text-xl font-bold uppercase tracking-wider">Controls</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {controls.map((control, idx) => (
+                    {resolvedControls.map((control, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-gray-700/50 p-4 rounded-xl border border-gray-700">
                         <span className="text-gray-200 font-medium">{control.action}</span>
                         <div className="flex items-center gap-2">
@@ -96,14 +142,14 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
               )}
 
               {/* Rules Section */}
-              {rules && rules.length > 0 && (
+              {resolvedRules && resolvedRules.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-4 text-green-400">
                     <ScrollText size={24} />
                     <h3 className="text-xl font-bold uppercase tracking-wider">Rules & Objectives</h3>
                   </div>
                   <ul className="space-y-3">
-                    {rules.map((rule, idx) => (
+                    {resolvedRules.map((rule, idx) => (
                       <li key={idx} className="flex items-start gap-3 text-gray-300 bg-gray-700/30 p-3 rounded-lg">
                         <span className="flex-shrink-0 w-6 h-6 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center font-bold text-sm">
                           {idx + 1}
@@ -120,19 +166,19 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-700 flex justify-end bg-gray-800 rounded-b-2xl gap-3">
-          {secondaryCtaText && (
+          {resolvedSecondaryCtaText && (
             <button 
                 onClick={onSecondaryCtaClick}
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg flex items-center gap-2"
             >
-                {secondaryCtaText}
+                {resolvedSecondaryCtaText}
             </button>
           )}
           <button 
             onClick={handleCtaClick}
             className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg flex items-center gap-2"
           >
-            {ctaText}
+            {resolvedCtaText}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Lock, Zap, Gauge, Layers } from 'lucide-react';
+import { X, Gauge, Layers, Play } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 interface CubeSettingsModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface CubeSettingsModalProps {
   commandCount: number;
   onSave: (speed: number, count: number) => void;
   onOpenProModal: () => void;
+  onStart?: () => void;
 }
 
 export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
@@ -18,7 +20,8 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
   commandSpeed,
   commandCount,
   onSave,
-  onOpenProModal
+  onOpenProModal,
+  onStart
 }) => {
   if (!isOpen) return null;
 
@@ -47,7 +50,7 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
           
           {/* Overlay for Non-Pro */}
           {!isPro && (
-             <div className="absolute inset-0 z-10 bg-gray-900/10" /> 
+             <div className="absolute inset-0 z-10 bg-gray-900/10" onClick={onOpenProModal} /> 
           )}
 
           {/* Speed Setting */}
@@ -97,7 +100,7 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
                         disabled={!isPro}
                         onClick={() => onSave(commandSpeed, count)}
                         className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
-                            commandCount === count
+                            commandCount === count 
                             ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30' 
                             : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                         }`}
@@ -107,62 +110,22 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
                 ))}
             </div>
           </div>
-
         </div>
 
-        {/* Footer / CTA */}
-        <div className="p-6 bg-gray-900/50 border-t border-gray-700">
-            {!isPro ? (
-                <div className="space-y-4">
-                    <div className="flex items-start gap-3 text-sm text-gray-400 bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20">
-                        <Lock size={16} className="text-yellow-500 mt-0.5 shrink-0" />
-                        <p>
-                            <span className="text-yellow-200 font-bold block mb-1">Özelleştirme Kısıtlı</span>
-                            Hız ve komut sayısı ayarları sadece PRO üyelikte değiştirilebilir. Gerçek sınav koşullarını simüle etmek için yükseltin.
-                        </p>
-                    </div>
-                    
-                    <button
-                        onClick={() => {
-                            onClose();
-                            onOpenProModal();
-                        }}
-                        className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                    >
-                        <Zap size={20} />
-                        Pro'ya Geç ve Ayarları Aç
-                    </button>
-                </div>
-            ) : (
+        {/* Footer with Start Button */}
+        {onStart && (
+            <div className="p-6 border-t border-gray-700 bg-gray-800/50">
                 <button
-                    onClick={onClose}
-                    className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-colors"
+                    onClick={onStart}
+                    className="w-full py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                 >
-                    Kapat
+                    <Play size={24} className="fill-current" />
+                    BAŞLA
                 </button>
-            )}
-        </div>
+            </div>
+        )}
 
       </div>
     </div>
   );
 };
-
-// Internal Icon Component to avoid import errors if Lucide icon name changed
-const SettingsIcon = ({ className }: { className?: string }) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-);

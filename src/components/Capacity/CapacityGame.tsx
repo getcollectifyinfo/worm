@@ -8,15 +8,35 @@ import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { statsService } from '../../services/statsService';
 import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
+import { useGameAccess } from '../../hooks/useGameAccess';
+import { ProAccessModal } from '../ProAccessModal';
+import { SmartLoginGate } from '../Auth/SmartLoginGate';
+import { MiniExamEndModal } from '../MiniExamEndModal';
+
+import { GameResultsModal } from '../GameResultsModal';
 
 interface CapacityGameProps {
   onExit: () => void;
 }
 
 const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
+  const { 
+    tier, 
+    checkAccess, 
+    showProModal, 
+    closeProModal, 
+    openProModal, 
+    handleUpgrade, 
+    showLoginGate, 
+    closeLoginGate, 
+    openLoginGate 
+  } = useGameAccess();
+
   const [isFirePressed, setIsFirePressed] = useState(false);
   const [spacePressTimestamp, setSpacePressTimestamp] = useState(0);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [showMiniExamModal, setShowMiniExamModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   
   // Game State
   const [gameState, setGameState] = useState<'menu' | 'waiting' | 'reference' | 'running' | 'finished'>('menu');
@@ -120,8 +140,27 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
   }, []);
 
   const startNewGame = () => {
+    // Check access (assume 'capacity' module ID)
+    if (!checkAccess('capacity')) return;
+
     setGameMode('DICE'); // Always start with DICE
-    setTimeLeft(settings.gameDuration); // Use configured duration
+    
+    let duration = settings.gameDuration;
+    
+    // GUEST/FREE Restrictions
+    if (tier !== 'PRO') {
+        duration = 120; // 2 minutes fixed
+        setSettings(prev => ({
+            ...prev,
+            gameDuration: 120,
+            planeSpeed: 0.0005, // Slowest
+            scrollSpeed: 0.05,
+            spawnRate: 800,
+            taskChangeSpeed: 3000
+        }));
+    }
+
+    setTimeLeft(duration); 
     
     // Reset Stats
     setFlightFails(0);
@@ -139,28 +178,41 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     }, 2000);
   };
 
+  const [gameDuration, setGameDuration] = useState(0);
+
   // Handle Game Finish
   const finishGame = React.useCallback(async () => {
       setGameState('finished');
       
       const endTime = Date.now();
       const duration = (endTime - startTime) / 1000;
+      setGameDuration(Math.round(duration));
       
       // Calculate total score
       const totalHits = diceStats.hits + rodStats.hits;
       
-      await statsService.saveSession({
-          game_type: 'CAPACITY',
-          score: totalHits,
-          duration_seconds: duration,
-          metadata: {
-              flight_fails: flightFails,
-              total_obstacles: totalObstacles,
-              dice_stats: diceStats,
-              rod_stats: rodStats
-          }
-      });
-  }, [startTime, diceStats, rodStats, flightFails, totalObstacles]);
+      // Save stats if allowed
+      if (tier !== 'GUEST') {
+        await statsService.saveSession({
+            game_type: 'CAPACITY',
+            score: totalHits,
+            duration_seconds: duration,
+            metadata: {
+                flight_fails: flightFails,
+                total_obstacles: totalObstacles,
+                dice_stats: diceStats,
+                rod_stats: rodStats
+            }
+        });
+      }
+
+      // Show Mini Exam End Modal for Non-Pro
+      if (tier !== 'PRO') {
+          setShowMiniExamModal(true);
+      } else {
+          setShowResults(true);
+      }
+  }, [startTime, diceStats, rodStats, flightFails, totalObstacles, tier]);
 
   // Timer
   useEffect(() => {
@@ -202,6 +254,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
+        initialLocale="tr"
         title="CAPACITY"
         description="Multitasking Overload! Pilot your plane while monitoring a secondary matching task."
         rules={[
@@ -218,6 +271,27 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             { key: "SPACE", action: "Confirm Match (Right Panel)" },
             { key: "P / ESC", action: "Pause Game" }
         ]}
+        translations={{
+          tr: {
+            title: "CAPACITY",
+            description: "Çoklu görev yükü! Uçağı uçururken eşleştirme görevini de takip et.",
+            rules: [
+              "Sol panel (Uçuş): Uçağı boşluklardan geçir.",
+              "Sol/Sağ ok tuşlarıyla uçağı hareket ettir.",
+              "Sağ panel (Eşleştirme): İki öğeyi izle (Zar veya Çubuk).",
+              "AYNI iseler SPACE (Ateş) tuşuna bas.",
+              "Farklıysa yok say.",
+              "Oyun Zar ve Çubuk modları arasında otomatik geçer.",
+              "Mümkün olduğunca uzun süre hayatta kal ve her iki görevde yüksek skor yap."
+            ],
+            controls: [
+              { key: "← / →", action: "Uçağı hareket ettir" },
+              { key: "SPACE", action: "Eşleşmeyi onayla (Sağ panel)" },
+              { key: "P / ESC", action: "Duraklat" }
+            ],
+            ctaText: "Tamam"
+          }
+        }}
       />
 
       {/* In-Game Controls (Top Right) */}
@@ -274,8 +348,10 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             title="CAPACITY"
             onStart={startNewGame}
             onSettings={() => setShowSettings(true)}
+            onPractice={() => setShowSettings(true)}
             onBack={onExit}
-            onTutorial={() => setIsTutorialOpen(true)}
+            onLearn={() => setIsTutorialOpen(true)}
+            tier={tier}
           />
       )}
 
@@ -284,8 +360,78 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
               settings={settings}
               onUpdateSettings={updateSettings}
               onClose={() => setShowSettings(false)}
+              tier={tier}
+              onOpenProModal={openProModal}
           />
       )}
+
+      {/* Modals */}
+      <ProAccessModal
+        isOpen={showProModal}
+        onClose={closeProModal}
+        onUpgrade={() => handleUpgrade('capacity-settings')}
+      />
+
+      <SmartLoginGate
+        isOpen={showLoginGate}
+        onClose={closeLoginGate}
+        onLoginSuccess={() => {
+            closeLoginGate();
+            const pending = localStorage.getItem('pending_pro_upgrade');
+            if (pending) {
+                localStorage.removeItem('pending_pro_upgrade');
+                handleUpgrade('capacity-login');
+            }
+        }}
+      />
+
+      <MiniExamEndModal
+        isOpen={showMiniExamModal}
+        onClose={() => setShowMiniExamModal(false)}
+        onUpgrade={() => {
+            setShowMiniExamModal(false);
+            if (tier === 'GUEST') {
+                localStorage.setItem('pending_pro_upgrade', 'true');
+                openLoginGate();
+            } else {
+                handleUpgrade('capacity-end');
+            }
+        }}
+        onPractice={() => {
+             setShowMiniExamModal(false);
+             setShowSettings(true);
+        }}
+      />
+
+      <GameResultsModal
+        isOpen={showResults}
+        score={diceStats.hits + rodStats.hits}
+        duration={`${gameDuration}s`}
+        tier={tier}
+        onRetry={() => {
+            setShowResults(false);
+            startNewGame();
+        }}
+        onExit={onExit}
+      >
+         <div className="grid grid-cols-2 gap-4">
+             <div className="bg-gray-800 p-3 rounded-lg text-center">
+                 <h4 className="text-gray-400 text-xs uppercase mb-2">Flight</h4>
+                 <div className="text-2xl font-bold text-white">
+                     {totalObstacles > 0 ? Math.round(((totalObstacles - flightFails) / totalObstacles) * 100) : 100}%
+                 </div>
+                 <div className="text-xs text-red-400 mt-1">{flightFails} Fails</div>
+             </div>
+             <div className="bg-gray-800 p-3 rounded-lg text-center">
+                 <h4 className="text-gray-400 text-xs uppercase mb-2">Matching</h4>
+                 <div className="text-2xl font-bold text-white">
+                    {(diceStats.targets + rodStats.targets) > 0 ? Math.round(((diceStats.hits + rodStats.hits) / (diceStats.targets + rodStats.targets)) * 100) : 0}%
+                 </div>
+                 <div className="text-xs text-red-400 mt-1">{diceStats.fails + rodStats.fails} Fails</div>
+             </div>
+         </div>
+      </GameResultsModal>
+
       <div className="capacity-left-panel">
         <GameCanvas 
             gameState={gameState} 

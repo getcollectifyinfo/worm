@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { HelpCircle, Settings, LogOut, Home } from 'lucide-react';
+import { HelpCircle, Settings, LogOut } from 'lucide-react';
 import { Gauge } from './Gauge';
 import { GameStartMenu } from './GameStartMenu';
 import { GameTutorial } from './GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from './GameSettingsModal';
 import { statsService } from '../services/statsService';
+import { useGameAccess } from '../hooks/useGameAccess';
+import { ProAccessModal } from './ProAccessModal';
+import { SmartLoginGate } from './Auth/SmartLoginGate';
+import { MiniExamEndModal } from './MiniExamEndModal';
+import { GameResultsModal } from './GameResultsModal';
+import { toast, Toaster } from 'react-hot-toast';
 
 interface IPPGameProps {
   onExit: () => void;
@@ -49,9 +55,22 @@ const calculateNext = (current: number, num: number, rule: CalcRule) => {
 };
 
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
+  const { 
+    checkAccess, 
+    tier, 
+    showProModal, 
+    closeProModal, 
+    openProModal, 
+    handleUpgrade, 
+    showLoginGate, 
+    closeLoginGate, 
+    openLoginGate 
+  } = useGameAccess();
+
   // Game Stats & Timing
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
   const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState<number | null>(null);
   
   // Gauge Locks & Reaction Times
   const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
@@ -76,6 +95,9 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [gameDuration, setGameDuration] = useState(2); // Minutes
   const [ruleChangeFreq, setRuleChangeFreq] = useState(3); // 1-5 scale
   const [enabledRules, setEnabledRules] = useState<CalcRule[]>(['ADD', 'DOUBLE_ADD', 'SUBTRACT', 'DOUBLE_SUBTRACT']);
+
+  const [showMiniExamModal, setShowMiniExamModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const toggleRule = (rule: CalcRule) => {
     setEnabledRules(prev => {
@@ -312,24 +334,33 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     setGameOver(true);
     setHasStarted(false);
 
-    const endTime = Date.now();
-    const duration = (endTime - startTime) / 1000;
+    const now = Date.now();
+    setEndTime(now);
+    const duration = (now - startTime) / 1000;
     const totalQuestions = stats.correct + stats.wrong;
     const score = stats.correct;
 
-    await statsService.saveSession({
-        game_type: 'IPP',
-        score: score,
-        duration_seconds: duration,
-        metadata: {
-            difficulty: difficulty,
-            total_questions: totalQuestions,
-            wrong_answers: stats.wrong,
-            correct_answers: stats.correct
-        }
-    });
+    if (tier !== 'GUEST') {
+        await statsService.saveSession({
+            game_type: 'IPP',
+            score: score,
+            duration_seconds: duration,
+            metadata: {
+                difficulty: difficulty,
+                total_questions: totalQuestions,
+                wrong_answers: stats.wrong,
+                correct_answers: stats.correct
+            }
+        });
+    }
 
-  }, [stats, startTime, difficulty]);
+    if (tier !== 'PRO') {
+        setShowMiniExamModal(true);
+    } else {
+        setShowResults(true);
+    }
+
+  }, [stats, startTime, difficulty, tier]);
 
   // Reaction time tracking
   
@@ -432,11 +463,21 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   // Start Game
   const handleStart = () => {
+    if (!checkAccess('ipp')) return;
+
+    // GUEST/FREE Restrictions
+    if (tier !== 'PRO') {
+        setGameDuration(2); // 2 mins fixed
+        setDifficulty('EASY');
+        setRuleChangeFreq(1); // Low frequency
+    }
+
     setHasStarted(true);
     setGameOver(false);
     setStats({ correct: 0, wrong: 0 });
     setTimer(gameDuration * 60);
     setStartTime(Date.now());
+    setEndTime(null);
 
     // Reset Game State
     setAssignments(getRandomKeys());
@@ -453,7 +494,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     setCalcFeedback(null);
   };
 
-  // Exit on Escape key
+  // Escape Key Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -553,10 +594,31 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   return (
     <div className="w-full h-screen bg-gray-900 text-white p-4 font-mono relative overflow-hidden">
+      <Toaster position="top-center" />
+      <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
+      <SmartLoginGate
+        isOpen={showLoginGate}
+        onClose={() => {
+            closeLoginGate();
+            toast('Giriş yapmalısın.', { icon: '🔒' });
+        }}
+        onLoginSuccess={() => {
+            closeLoginGate();
+            const pending = localStorage.getItem('pending_pro_upgrade');
+            if (pending) {
+                localStorage.removeItem('pending_pro_upgrade');
+                handleUpgrade('ipp-login');
+            } else {
+                handleStart();
+            }
+        }}
+      />
+
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
-        title="IPP GAME"
+        initialLocale="tr"
+        title="IPP GAME - LEARN MODE"
         description="Multitasking Challenge! Balance gauge monitoring with mental arithmetic. Keep your focus sharp."
         rules={[
             "Monitor the 3 gauges (Left, Top, Right).",
@@ -569,19 +631,128 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         controls={[
             { key: "A-Z", action: "Reset Gauge (See assignments)", icon: <span className="text-xl">⚡</span> },
             { key: "0-9", action: "Type Answer" },
-            { key: "ENTER", action: "Submit Answer" }
+            { key: "ENTER", action: "Submit Answer" },
+            { key: "ESC", action: "Exit" }
         ]}
+        ctaText="START EXAM"
+        onCtaClick={() => {
+            setIsTutorialOpen(false);
+            handleStart();
+        }}
+        secondaryCtaText="PRACTICE"
+        onSecondaryCtaClick={() => {
+            setIsTutorialOpen(false);
+            if (tier === 'PRO') {
+                setIsSettingsOpen(true);
+            } else {
+                toast('Practice mode is available for PRO users.', { icon: '🔒' });
+                openProModal();
+            }
+        }}
+        translations={{
+          tr: {
+            title: "IPP OYUNU - ÖĞREN",
+            description: "Çoklu görev meydan okuması! Göstergeleri izlerken zihinsel aritmetiği dengede tut.",
+            rules: [
+              "3 göstergeyi izle (Sol, Üst, Sağ).",
+              "Bir gösterge çok düşerse atanmış tuşa bas.",
+              "Dikkat: Tuş atamaları periyodik olarak değişir.",
+              "Merkezdeki matematik sorularını çöz.",
+              "Geçerli matematik kuralını takip et (Topla, Çıkar).",
+              "Cevabı yaz ve Enter'a bas."
+            ],
+            controls: [
+              { key: "A-Z", action: "Göstergeyi sıfırla (Atamaları gör)", icon: <span className="text-xl">⚡</span> },
+              { key: "0-9", action: "Cevap yaz" },
+              { key: "ENTER", action: "Cevabı gönder" },
+              { key: "ESC", action: "Çıkış" }
+            ],
+            ctaText: "Sınavı Başlat",
+            secondaryCtaText: "Alıştırma"
+          },
+          en: { title: "IPP GAME - LEARN MODE" }
+        }}
       />
 
-      {!hasStarted && !isSettingsOpen && !gameOver && (
-        <GameStartMenu 
-          title="IPP" 
-          onStart={handleStart}
-          onSettings={() => setIsSettingsOpen(true)}
-          onBack={onExit}
-          onTutorial={() => setIsTutorialOpen(true)}
-        />
+      {!hasStarted && !isSettingsOpen && !showResults && !showMiniExamModal && (
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
+            <GameStartMenu 
+                title="IPP"
+                startLabel={timer > 0 && timer < gameDuration * 60 ? "RESUME" : "EXAM MODE"}
+                onStart={handleStart}
+                onSettings={() => {
+                    if (tier === 'PRO') {
+                        setIsSettingsOpen(true);
+                    } else {
+                        toast('Settings are available for PRO users.', { icon: '🔒' });
+                        openProModal();
+                    }
+                }}
+                onPractice={() => {
+                    if (tier === 'PRO') {
+                        setIsSettingsOpen(true);
+                    } else {
+                        toast('Practice mode is available for PRO users.', { icon: '🔒' });
+                        openProModal();
+                    }
+                }}
+                onLearn={() => setIsTutorialOpen(true)}
+                onBack={onExit}
+                tier={tier}
+            />
+        </div>
       )}
+
+      <MiniExamEndModal
+        isOpen={showMiniExamModal}
+        onClose={() => setShowMiniExamModal(false)}
+        onUpgrade={() => {
+            setShowMiniExamModal(false);
+            if (tier === 'GUEST') {
+                localStorage.setItem('pending_pro_upgrade', 'true');
+                openLoginGate();
+            } else {
+                handleUpgrade('ipp-end');
+            }
+        }}
+        onPractice={() => {
+             setShowMiniExamModal(false);
+             setIsSettingsOpen(true);
+        }}
+      />
+
+      <GameResultsModal
+        isOpen={showResults}
+        score={stats.correct}
+        duration={formatTime(((endTime || 0) - startTime) / 1000)}
+        tier={tier}
+        onRetry={() => {
+            setShowResults(false);
+            handleStart();
+        }}
+        onExit={onExit}
+      >
+        <div className="grid grid-cols-2 gap-3 mb-4 w-full">
+             <div className="bg-gray-800 p-2 rounded-lg text-center">
+                 <div className="text-xs text-gray-400 uppercase tracking-wider">Accuracy</div>
+                 <div className="text-xl font-bold text-green-400">
+                     {(stats.correct + stats.wrong) > 0 ? Math.round((stats.correct / (stats.correct + stats.wrong)) * 100) : 0}%
+                 </div>
+             </div>
+             <div className="bg-gray-800 p-2 rounded-lg text-center">
+                 <div className="text-xs text-gray-400 uppercase tracking-wider">Correct</div>
+                 <div className="text-xl font-bold text-white">{stats.correct}</div>
+             </div>
+             <div className="bg-gray-800 p-2 rounded-lg text-center">
+                 <div className="text-xs text-gray-400 uppercase tracking-wider">Wrong</div>
+                 <div className="text-xl font-bold text-red-400">{stats.wrong}</div>
+             </div>
+             <div className="bg-gray-800 p-2 rounded-lg text-center">
+                 <div className="text-xs text-gray-400 uppercase tracking-wider">Avg Reaction</div>
+                 <div className="text-xl font-bold text-blue-400">{avgReactionTime > 0 ? `${(avgReactionTime).toFixed(0)}ms` : '-'}</div>
+             </div>
+        </div>
+      </GameResultsModal>
 
       {/* Top Left Timer */}
       <div className="absolute top-8 left-8 flex flex-col items-start z-40">
@@ -631,16 +802,18 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     <button
                         key={rule}
                         onClick={() => toggleRule(rule)}
+                        disabled={tier !== 'PRO'}
                         className={`p-2 rounded-lg border-2 text-xs font-bold transition-all
                             ${enabledRules.includes(rule)
                               ? 'border-purple-600 bg-purple-50 text-purple-700' 
                               : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                            }`}
+                            } ${tier !== 'PRO' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {getRuleText(rule)}
                     </button>
                 ))}
             </div>
+            {tier !== 'PRO' && <div className="text-xs text-center text-purple-400 mt-2 cursor-pointer hover:underline" onClick={openProModal}>Unlock All Rules</div>}
         </SettingsSection>
 
         {/* Difficulty */}
@@ -651,31 +824,35 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     <button
                         key={d}
                         onClick={() => setDifficulty(d)}
+                        disabled={tier !== 'PRO'}
                         className={`p-3 rounded-lg border-2 text-sm font-bold transition-all
                             ${difficulty === d 
                               ? 'border-purple-600 bg-purple-50 text-purple-700' 
                               : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                            }`}
+                            } ${tier !== 'PRO' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {d}
                     </button>
                 ))}
             </div>
+            {tier !== 'PRO' && <div className="text-xs text-center text-purple-400 mt-2 cursor-pointer hover:underline" onClick={openProModal}>Unlock Difficulty Settings</div>}
         </SettingsSection>
 
         {/* Duration Slider */}
         <SettingsSection>
              <SettingsRange
-                min={2}
+                min={1}
                 max={12}
                 step={1}
                 value={gameDuration}
                 onChange={handleDurationChange}
-                leftLabel="2m"
+                leftLabel="1m"
                 rightLabel="12m"
                 valueLabel={
                     <>Game Duration: <span className="text-purple-600">{gameDuration} min</span></>
                 }
+                isLocked={tier !== 'PRO'}
+                onLockedClick={openProModal}
              />
         </SettingsSection>
 
@@ -696,6 +873,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                         </span>
                     </>
                 }
+                isLocked={tier !== 'PRO'}
+                onLockedClick={openProModal}
              />
         </SettingsSection>
       </GameSettingsModal>
@@ -717,7 +896,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 onRedZoneEnter={() => handleRedZoneEnter('top')}
                 onHitMax={() => handleHitMax('top')}
                 speedMultiplier={speedMultiplier}
-                isPaused={isSettingsOpen}
+                isPaused={isSettingsOpen || !hasStarted}
             />
         </div>
 
@@ -737,7 +916,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     onRedZoneEnter={() => handleRedZoneEnter('left')}
                     onHitMax={() => handleHitMax('left')}
                     speedMultiplier={speedMultiplier}
-                    isPaused={isSettingsOpen}
+                    isPaused={isSettingsOpen || !hasStarted}
                 />
             </div>
 
@@ -840,31 +1019,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     onRedZoneEnter={() => handleRedZoneEnter('right')}
                     onHitMax={() => handleHitMax('right')}
                     speedMultiplier={speedMultiplier}
-                    isPaused={isSettingsOpen}
+                    isPaused={isSettingsOpen || !hasStarted}
                 />
             </div>
         </div>
       </div>
-
-      {/* Game Over Overlay */}
-      {gameOver && (
-        <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50">
-          <h2 className="text-white text-6xl font-bold mb-8">GAME OVER</h2>
-          <div className="text-white text-2xl mb-4">Correct Presses: <span className="text-green-500">{stats.correct}</span></div>
-          <div className="text-white text-2xl mb-4">Wrong Presses: <span className="text-red-500">{stats.wrong}</span></div>
-          <div className="text-white text-2xl mb-8">
-            Avg Reaction Time: <span className="text-yellow-400">
-              {avgReactionTime.toFixed(0)}ms
-            </span>
-          </div>
-          <button 
-            onClick={onExit}
-            className="bg-white text-black text-2xl font-bold p-4 rounded-full hover:bg-gray-200 transition-colors flex items-center justify-center w-20 h-20"
-          >
-            <Home size={40} />
-          </button>
-        </div>
-      )}
     </div>
   );
 };

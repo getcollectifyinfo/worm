@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCubeGameLogic } from './useCubeGameLogic';
 import type { CubePosition } from './useCubeGameLogic';
-import { ArrowLeft, Play, Settings, HelpCircle, Book, FlaskConical, Box, RotateCw, Lightbulb, ArrowRight, Clock } from 'lucide-react';
+import { ArrowLeft, Play, Settings, HelpCircle, Box, RotateCw, Lightbulb, ArrowRight, Clock } from 'lucide-react';
 import { GameTutorial } from '../GameTutorial';
 import { CubeDemoAnimation } from './CubeDemoAnimation';
 import { useGameAccess } from '../../hooks/useGameAccess';
@@ -9,6 +9,9 @@ import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
 import { SubscriptionSuccess } from '../SubscriptionSuccess';
 import { useAuth } from '../../hooks/useAuth';
+import { GameStartMenu } from '../GameStartMenu';
+import { GameResultsModal } from '../GameResultsModal';
+import { statsService } from '../../services/statsService';
 
 import { PracticeMode } from './PracticeMode';
 import { CubeSettingsModal } from './CubeSettingsModal';
@@ -43,6 +46,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     correctAnswer,
     score,
     round,
+    commandSpeed,
+    commandCount,
     setCommandSpeed,
     setCommandCount,
     startGame,
@@ -53,8 +58,11 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const startTimeRef = React.useRef(0);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+  const [locale, setLocale] = useState<'tr' | 'en'>('tr');
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings' | 'mini-exam-end'>('default');
   const [showSubscriptionSuccess, setShowSubscriptionSuccess] = useState(false);
   const [subscriptionSource, setSubscriptionSource] = useState<string | null>(null);
@@ -89,26 +97,52 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const handleStartGame = () => {
     if (!checkAccess('cube')) return;
     
-    // EXAM MODE is PRO only
+    startTimeRef.current = Date.now();
+    
+    // GUEST & FREE -> MINI EXAM MODE (2 mins, Slow, Easy)
     if (tier !== 'PRO') {
-        setProModalVariant('exam-settings'); // Or just default
-        openProModal();
+        setCommandCount(3);
+        setCommandSpeed(2000); // En yavaş
+        setHasStarted(true);
+        setIsMiniExam(true);
+        setMiniExamTimeLeft(120); // 2 minutes
+        startGame();
         return;
     }
 
+    // PRO -> REAL EXAM MODE
     setHasStarted(true);
     setIsMiniExam(false);
+    setCommandCount(4);
+    setCommandSpeed(1500);
     startGame();
   };
 
-  const handleMiniExam = () => {
-    // Mini exam settings: Easy (3 commands), slower speed
-    setCommandCount(3);
-    setCommandSpeed(2000); // En yavaş
-    setHasStarted(true);
-    setIsMiniExam(true);
-    setMiniExamTimeLeft(120); // 2 minutes
-    startGame();
+  const [gameDuration, setGameDuration] = useState(0);
+
+  const handleEndGame = async () => {
+      setHasStarted(false);
+      const duration = (Date.now() - startTimeRef.current) / 1000;
+      setGameDuration(Math.round(duration));
+      
+      // Save stats
+      if (tier !== 'GUEST') {
+          await statsService.saveSession({
+              game_type: 'CUBE',
+              score: score,
+              duration_seconds: Math.round(duration),
+              metadata: {
+                  round: round,
+                  settings: { speed: commandSpeed, count: commandCount }
+              }
+          });
+      }
+
+      if (tier !== 'PRO' && isMiniExam && miniExamTimeLeft <= 1) {
+          setShowMiniExamModal(true);
+      } else {
+          setShowResults(true);
+      }
   };
 
   const handleOpenSettings = () => {
@@ -289,9 +323,21 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
       <GameTutorial
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
-        title={tutorialStep === 0 ? "Cube Rotation Testi Nasıl İşler?" : tutorialStep === 5 ? "Taktik ve Özet" : "Learn Mode"}
+        title={
+          tutorialStep === 0
+            ? (locale === 'tr' ? "Cube Rotation Testi Nasıl İşler?" : "How Does Cube Rotation Work?")
+            : tutorialStep === 5
+            ? (locale === 'tr' ? "Taktik ve Özet" : "Tips and Summary")
+            : "Learn Mode"
+          }
         hideTitleSuffix={true}
-        ctaText={tutorialStep === 0 ? "▶️ Mantığını Öğren" : tutorialStep === 5 ? "Practice Mode'a Geç" : "Sonraki"}
+        ctaText={
+          tutorialStep === 0
+            ? (locale === 'tr' ? "▶️ Mantığını Öğren" : "▶️ Learn the Logic")
+            : tutorialStep === 5
+            ? (locale === 'tr' ? "Practice Mode'a Geç" : "Go to Practice Mode")
+            : (locale === 'tr' ? "Sonraki" : "Next")
+          }
         onCtaClick={() => {
             if (tutorialStep === 0) {
                 setTutorialStep(1);
@@ -311,10 +357,13 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                 setIsTutorialOpen(false);
             }
         }}
-        secondaryCtaText={tutorialStep > 0 ? "Önceki" : undefined}
+        secondaryCtaText={tutorialStep > 0 ? (locale === 'tr' ? "Önceki" : "Previous") : undefined}
         onSecondaryCtaClick={() => {
             if (tutorialStep > 0) setTutorialStep(prev => prev - 1);
         }}
+        initialLocale="tr"
+        locale={locale}
+        onLocaleChange={setLocale}
       >
         {tutorialStep === 0 ? (
         <div className="space-y-8">
@@ -329,8 +378,12 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         <Box size={24} />
                     </div>
                     <div>
-                        <h3 className="text-white font-bold text-lg mb-1">1. Başlangıç</h3>
-                        <p className="text-gray-300">Size küpün altı yüzünden biri verilir.</p>
+                        <h3 className="text-white font-bold text-lg mb-1">{locale === 'tr' ? "1. Başlangıç" : "1. Start"}</h3>
+                        <p className="text-gray-300">
+                          {locale === 'tr'
+                            ? "Size küpün altı yüzünden biri verilir."
+                            : "You are given one of the cube's six faces."}
+                        </p>
                     </div>
                 </div>
 
@@ -340,8 +393,13 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         <RotateCw size={24} />
                     </div>
                     <div>
-                        <h3 className="text-white font-bold text-lg mb-1">2. Talimatlar</h3>
-                        <p className="text-gray-300">Ekrana sırayla yön talimatları gelir.<br/>(LEFT, RIGHT, FRONT, BACK)</p>
+                        <h3 className="text-white font-bold text-lg mb-1">{locale === 'tr' ? "2. Talimatlar" : "2. Commands"}</h3>
+                        <p className="text-gray-300">
+                          {locale === 'tr'
+                            ? "Ekrana sırayla yön talimatları gelir."
+                            : "Directional commands appear sequentially on screen."}
+                          <br/>(LEFT, RIGHT, FRONT, BACK)
+                        </p>
                     </div>
                 </div>
 
@@ -351,8 +409,12 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         <HelpCircle size={24} />
                     </div>
                     <div>
-                        <h3 className="text-white font-bold text-lg mb-1">3. Soru</h3>
-                        <p className="text-gray-300">Tüm talimatlar bittikten sonra, başlangıçta verilen yüzün şimdi nerede olduğu sorulur.</p>
+                        <h3 className="text-white font-bold text-lg mb-1">{locale === 'tr' ? "3. Soru" : "3. Question"}</h3>
+                        <p className="text-gray-300">
+                          {locale === 'tr'
+                            ? "Tüm talimatlar bittikten sonra, başlangıçta verilen yüzün şimdi nerede olduğu sorulur."
+                            : "After all commands, you're asked where the initially given face is now."}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -360,8 +422,13 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             {/* Sakinleştirici Cümle */}
             <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl">
                 <p className="text-blue-200 text-center font-medium">
-                    Bu testte küp çevrilmez. <br/>
-                    Küp, masadaki bir kutu gibi sağa, sola, öne veya arkaya yatırılır.
+                    {locale === 'tr'
+                      ? "Bu testte küp çevrilmez."
+                      : "The cube is not rotated."}
+                    <br/>
+                    {locale === 'tr'
+                      ? "Küp, masadaki bir kutu gibi sağa, sola, öne veya arkaya yatırılır."
+                      : "It is tilted like a box on a table to the left, right, front, or back."}
                 </p>
             </div>
         </div>
@@ -369,8 +436,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             <div className="space-y-8">
                 {/* Title */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-2">LEFT Komutu</h2>
-                    <p className="text-xl text-blue-400 font-medium">LEFT komutunda küp sola yatırılır.</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{locale === 'tr' ? "LEFT Komutu" : "LEFT Command"}</h2>
+                    <p className="text-xl text-blue-400 font-medium">
+                      {locale === 'tr' ? "LEFT komutunda küp sola yatırılır." : "In LEFT, the cube is tilted to the left."}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -384,24 +453,28 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         {/* Description */}
                         <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-700/50 text-center space-y-4">
                             <p className="text-white text-lg">
-                                Ön yüz (FRONT) ve arka yüz (BACK) değişmez.
+                              {locale === 'tr'
+                                ? "Ön yüz (FRONT) ve arka yüz (BACK) değişmez."
+                                : "Front (FRONT) and back (BACK) do not change."}
                             </p>
                             <p className="text-gray-400 text-sm">
-                                Sağ yüz (RIGHT) üste gelir, sol yüz (LEFT) alta iner.
+                              {locale === 'tr'
+                                ? "Sağ yüz (RIGHT) üste gelir, sol yüz (LEFT) alta iner."
+                                : "Right (RIGHT) moves to top, left (LEFT) moves to bottom."}
                             </p>
                         </div>
                         
                          {/* Extra Notes */}
                          <div className="space-y-2 text-gray-300 text-sm">
-                            <p>• LEFT komutunda sadece yandaki çizimdeki yeşil alanlar değişir.</p>
-                            <p>• Diğerlerine bakmanıza gerek yok.</p>
-                            <p>• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz.</p>
-                        </div>
+                            <p>{locale === 'tr' ? "• LEFT komutunda sadece yandaki çizimdeki yeşil alanlar değişir." : "• Only the green areas in the diagram change in LEFT."}</p>
+                            <p>{locale === 'tr' ? "• Diğerlerine bakmanıza gerek yok." : "• No need to consider the others."}</p>
+                            <p>{locale === 'tr' ? "• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz." : "• Follow the arrows to track each face."}</p>
+                         </div>
 
-                        {/* Tip */}
+                         {/* Tip */}
                         <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                             <p className="text-blue-200 text-sm">
-                                <span className="font-bold text-blue-100">Tip:</span> LEFT komutunda dış halka saat yönünün tersine sola doğru yer değiştirir.
+                              <span className="font-bold text-blue-100">{locale === 'tr' ? "Tip:" : "Tip:"}</span> {locale === 'tr' ? "LEFT komutunda dış halka saat yönünün tersine sola doğru yer değiştirir." : "In LEFT, the outer ring shifts counterclockwise to the left."}
                             </p>
                         </div>
                     </div>
@@ -421,8 +494,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             <div className="space-y-8">
                 {/* Title */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-2">RIGHT Komutu</h2>
-                    <p className="text-xl text-blue-400 font-medium">RIGHT komutunda küp sağa yatırılır.</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{locale === 'tr' ? "RIGHT Komutu" : "RIGHT Command"}</h2>
+                    <p className="text-xl text-blue-400 font-medium">
+                      {locale === 'tr' ? "RIGHT komutunda küp sağa yatırılır." : "In RIGHT, the cube is tilted to the right."}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -436,24 +511,29 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         {/* Description */}
                         <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-700/50 text-center space-y-4">
                             <p className="text-white text-lg">
-                                Ön yüz (FRONT) ve arka yüz (BACK) değişmez.
+                              {locale === 'tr'
+                                ? "Ön yüz (FRONT) ve arka yüz (BACK) değişmez."
+                                : "Front (FRONT) and back (BACK) do not change."}
                             </p>
                             <p className="text-gray-400 text-sm">
-                                Sol yüz (LEFT) üste gelir, sağ yüz (RIGHT) alta iner.
+                              {locale === 'tr'
+                                ? "Sol yüz (LEFT) üste gelir, sağ yüz (RIGHT) alta iner."
+                                : "Left (LEFT) moves to top, right (RIGHT) moves to bottom."}
                             </p>
                         </div>
                         
                          {/* Extra Notes */}
                          <div className="space-y-2 text-gray-300 text-sm">
-                            <p>• RIGHT komutunda sadece yandaki çizimdeki yeşil alanlar değişir. (LEFT ile aynı alanlar)</p>
-                            <p>• Diğerlerine bakmanıza gerek yok.</p>
-                            <p>• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz.</p>
-                        </div>
+                            <p>{locale === 'tr' ? "• RIGHT komutunda sadece yandaki çizimdeki yeşil alanlar değişir. (LEFT ile aynı alanlar)" : "• Only the green areas in the diagram change in RIGHT (same areas as LEFT)."}
+                            </p>
+                            <p>{locale === 'tr' ? "• Diğerlerine bakmanıza gerek yok." : "• No need to consider the others."}</p>
+                            <p>{locale === 'tr' ? "• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz." : "• Follow the arrows to track each face."}</p>
+                         </div>
 
-                        {/* Tip */}
+                         {/* Tip */}
                         <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                             <p className="text-blue-200 text-sm">
-                                <span className="font-bold text-blue-100">Tip:</span> RIGHT komutunda dış halka saat yönünde sağa doğru yer değiştirir.
+                              <span className="font-bold text-blue-100">{locale === 'tr' ? "Tip:" : "Tip:"}</span> {locale === 'tr' ? "RIGHT komutunda dış halka saat yönünde sağa doğru yer değiştirir." : "In RIGHT, the outer ring shifts clockwise to the right."}
                             </p>
                         </div>
                     </div>
@@ -473,8 +553,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             <div className="space-y-8">
                 {/* Title */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-2">FRONT Komutu</h2>
-                    <p className="text-xl text-blue-400 font-medium">FRONT komutunda küp öne yatırılır.</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{locale === 'tr' ? "FRONT Komutu" : "FRONT Command"}</h2>
+                    <p className="text-xl text-blue-400 font-medium">
+                      {locale === 'tr' ? "FRONT komutunda küp öne yatırılır." : "In FRONT, the cube is tilted forward."}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -488,24 +570,28 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         {/* Description */}
                         <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-700/50 text-center space-y-4">
                             <p className="text-white text-lg">
-                                Sağ yüz (RIGHT) ve sol yüz (LEFT) değişmez.
+                              {locale === 'tr'
+                                ? "Sağ yüz (RIGHT) ve sol yüz (LEFT) değişmez."
+                                : "Right (RIGHT) and left (LEFT) stay the same."}
                             </p>
                             <p className="text-gray-400 text-sm">
-                                Arka yüz (BACK) üste gelir, ön yüz (FRONT) alta iner.
+                              {locale === 'tr'
+                                ? "Arka yüz (BACK) üste gelir, ön yüz (FRONT) alta iner."
+                                : "Back (BACK) moves to top, front (FRONT) moves to bottom."}
                             </p>
                         </div>
                         
                          {/* Extra Notes */}
                          <div className="space-y-2 text-gray-300 text-sm">
-                            <p>• FRONT komutunda sadece yandaki çizimdeki yeşil alanlar değişir.</p>
-                            <p>• Diğerlerine bakmanıza gerek yok.</p>
-                            <p>• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz.</p>
-                        </div>
+                            <p>{locale === 'tr' ? "• FRONT komutunda sadece yandaki çizimdeki yeşil alanlar değişir." : "• Only the green areas in the diagram change in FRONT."}</p>
+                            <p>{locale === 'tr' ? "• Diğerlerine bakmanıza gerek yok." : "• No need to consider the others."}</p>
+                            <p>{locale === 'tr' ? "• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz." : "• Follow the arrows to track each face."}</p>
+                         </div>
 
-                        {/* Tip */}
+                         {/* Tip */}
                         <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                             <p className="text-blue-200 text-sm">
-                                <span className="font-bold text-blue-100">Tip:</span> FRONT komutunda iç halka aşağıya doğru yer değiştirir. BACK ten sonra tekrar TOP olur.
+                              <span className="font-bold text-blue-100">{locale === 'tr' ? "Tip:" : "Tip:"}</span> {locale === 'tr' ? "FRONT komutunda iç halka aşağıya doğru yer değiştirir. BACK ten sonra tekrar TOP olur." : "In FRONT, the inner ring shifts downward; after BACK it becomes TOP again."}
                             </p>
                         </div>
                     </div>
@@ -525,8 +611,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             <div className="space-y-8">
                 {/* Title */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-2">BACK Komutu</h2>
-                    <p className="text-xl text-blue-400 font-medium">BACK komutunda küp arkaya yatırılır.</p>
+                    <h2 className="text-3xl font-bold text-white mb-2">{locale === 'tr' ? "BACK Komutu" : "BACK Command"}</h2>
+                    <p className="text-xl text-blue-400 font-medium">
+                      {locale === 'tr' ? "BACK komutunda küp arkaya yatırılır." : "In BACK, the cube is tilted backward."}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -540,24 +628,28 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
                         {/* Description */}
                         <div className="bg-gray-700/30 p-6 rounded-xl border border-gray-700/50 text-center space-y-4">
                             <p className="text-white text-lg">
-                                Sağ yüz (RIGHT) ve sol yüz (LEFT) değişmez.
+                              {locale === 'tr'
+                                ? "Sağ yüz (RIGHT) ve sol yüz (LEFT) değişmez."
+                                : "Right (RIGHT) and left (LEFT) stay the same."}
                             </p>
                             <p className="text-gray-400 text-sm">
-                                Ön yüz (FRONT) üste gelir, arka yüz (BACK) alta iner.
+                              {locale === 'tr'
+                                ? "Ön yüz (FRONT) üste gelir, arka yüz (BACK) alta iner."
+                                : "Front (FRONT) moves to top, back (BACK) moves to bottom."}
                             </p>
                         </div>
                         
                          {/* Extra Notes */}
                          <div className="space-y-2 text-gray-300 text-sm">
-                            <p>• BACK komutunda sadece yandaki çizimdeki yeşil alanlar değişir.</p>
-                            <p>• Diğerlerine bakmanıza gerek yok.</p>
-                            <p>• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz.</p>
-                        </div>
+                            <p>{locale === 'tr' ? "• BACK komutunda sadece yandaki çizimdeki yeşil alanlar değişir." : "• Only the green areas in the diagram change in BACK."}</p>
+                            <p>{locale === 'tr' ? "• Diğerlerine bakmanıza gerek yok." : "• No need to consider the others."}</p>
+                            <p>{locale === 'tr' ? "• Hangi yüz nereye geliyor ok tuşlarını takip edebilirsiniz." : "• Follow the arrows to track each face."}</p>
+                         </div>
 
-                        {/* Tip */}
+                         {/* Tip */}
                         <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
                             <p className="text-blue-200 text-sm">
-                                <span className="font-bold text-blue-100">Tip:</span> BACK komutunda iç halka yukarıya doğru yer değiştirir. TOP tan sonra tekrar BACK olur.
+                              <span className="font-bold text-blue-100">{locale === 'tr' ? "Tip:" : "Tip:"}</span> {locale === 'tr' ? "BACK komutunda iç halka yukarıya doğru yer değiştirir. TOP tan sonra tekrar BACK olur." : "In BACK, the inner ring shifts upward; after TOP it becomes BACK again."}
                             </p>
                         </div>
                     </div>
@@ -582,16 +674,27 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
                 {/* Title */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white mb-4">Önemli Taktik</h2>
+                    <h2 className="text-3xl font-bold text-white mb-4">{locale === 'tr' ? "Önemli Taktik" : "Key Tactic"}</h2>
                 </div>
 
                 {/* Content */}
                 <div className="bg-gray-700/30 p-8 rounded-xl border border-gray-700/50 max-w-2xl text-center space-y-6 shadow-xl">
                     <p className="text-xl text-gray-200 leading-relaxed font-medium">
-                        "Küp çevirme testinde üç boyutlu bir kübü defalarca zihninizde çevirmek yerine, 
-                        bunu bir <span className="text-blue-400 font-bold">etiket yer değiştirme oyunu</span> şeklinde düşünmek, 
-                        iki boyutlu çizim ile size verilen yüzün her adımdaki gideceği yeri takip ederek sonuca ulaşmak 
-                        sıkça başvurulan ve başarıyı arttıran bir taktiktir."
+                      {locale === 'tr' ? (
+                        <>
+                          "Küp çevirme testinde üç boyutlu bir kübü defalarca zihninizde çevirmek yerine, 
+                          bunu bir <span className="text-blue-400 font-bold">etiket yer değiştirme oyunu</span> şeklinde düşünmek, 
+                          iki boyutlu çizim ile size verilen yüzün her adımdaki gideceği yeri takip ederek sonuca ulaşmak 
+                          sıkça başvurulan ve başarıyı arttıran bir taktiktir."
+                        </>
+                      ) : (
+                        <>
+                          "Instead of mentally rotating a 3D cube over and over, 
+                          think of it as a <span className="text-blue-400 font-bold">label-tracking game</span>. 
+                          Use the 2D diagram to track where the given face goes at each step. 
+                          This approach is common and increases success."
+                        </>
+                      )}
                     </p>
                 </div>
 
@@ -622,78 +725,16 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         />
       )}
 
-      {!hasStarted ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-            <div className="relative bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full flex flex-col gap-4 animate-fade-in">
-                
-                <div className="flex justify-center -mb-2">
-                    <img src="/logo.png" alt="Logo" className="h-32 drop-shadow-lg" />
-                </div>
-
-                <div className="flex items-center justify-center gap-3 mb-2">
-                    <h1 className="text-4xl font-bold text-center text-white tracking-wider">CUBE ROTATION</h1>
-                </div>
-
-                {/* EXAM MODE */}
-                <button 
-                    onClick={handleStartGame}
-                    className="group flex flex-col items-center justify-center w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl transition-all hover:scale-105 shadow-lg relative overflow-hidden"
-                >
-                    <div className="flex items-center gap-3">
-                        <Play size={28} className="fill-current" />
-                        <span className="text-2xl font-bold">EXAM MODE</span>
-                    </div>
-                    <span className="text-green-100 text-sm font-medium mt-1">Gerçek sınav temposu ve skor</span>
-                </button>
-
-                {/* PRACTICE MODE */}
-                <button 
-                    onClick={handleOpenSettings}
-                    className="group flex flex-col items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all hover:scale-105 shadow-lg"
-                >
-                    <div className="flex items-center gap-3">
-                        <Settings size={24} />
-                        <span className="text-xl font-bold">PRACTICE MODE</span>
-                    </div>
-                    <span className="text-blue-100 text-xs font-medium mt-1">Alıştırmalarla refleks kazan</span>
-                </button>
-
-                {/* LEARN MODE */}
-                <button 
-                    onClick={handleOpenTutorial}
-                    className="group flex flex-col items-center justify-center w-full py-3 bg-[#6d28d9] hover:bg-[#5b21b6] text-white rounded-xl transition-all hover:scale-105 shadow-lg"
-                >
-                    <div className="flex items-center gap-3">
-                        <Book size={24} />
-                        <span className="text-xl font-bold">LEARN MODE</span>
-                    </div>
-                    <span className="text-purple-100 text-xs font-medium mt-1">Küp mantığını kısa ve net öğren</span>
-                </button>
-
-                {/* MINI EXAM */}
-                <button 
-                    onClick={handleMiniExam}
-                    className="group flex flex-col items-center justify-center w-full py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 hover:text-white rounded-lg transition-all hover:scale-105 border border-gray-600 relative"
-                >
-                    <div className="flex items-center gap-2">
-                        <FlaskConical size={18} />
-                        <span className="text-lg font-bold">MINI EXAM (Easy)</span>
-                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-bold rounded border border-green-500/30">FREE</span>
-                    </div>
-                    <span className="text-gray-400 text-xs mt-0.5">2 dakikalık örnek sınav</span>
-                </button>
-
-                <div className="h-px bg-gray-700 my-2" />
-
-                <button 
-                    onClick={onExit}
-                    className="group flex items-center justify-center gap-3 w-full py-3 text-gray-400 hover:text-white transition-all"
-                >
-                    <ArrowLeft size={20} />
-                    BACK TO MENU
-                </button>
-            </div>
-        </div>
+      {!hasStarted && !isSettingsOpen ? (
+        <GameStartMenu
+            title="CUBE ROTATION"
+            onStart={handleStartGame}
+            onPractice={handleOpenSettings}
+            onLearn={handleOpenTutorial}
+            onBack={onExit}
+            startLabel="EXAM MODE"
+            tier={tier}
+        />
       ) : (
         <>
           {/* Mini Exam Timer */}
@@ -709,7 +750,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
           {/* Header */}
           <div className="w-full flex justify-between items-center mb-12">
             <button 
-              onClick={onExit}
+              onClick={handleEndGame}
               className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               <ArrowLeft size={20} />
@@ -808,6 +849,52 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
              handleOpenSettings();
         }}
       />
+
+      <GameResultsModal
+        isOpen={showResults}
+        score={score}
+        duration={`${gameDuration}s`}
+        tier={tier}
+        onRetry={() => {
+            setShowResults(false);
+            handleStartGame();
+        }}
+        onExit={onExit}
+      >
+        <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <span className="text-xs text-gray-400">Accuracy</span>
+                <span className="text-xl font-bold text-green-400">
+                    {round > 0 ? Math.round((Math.floor(score / 10) / round) * 100) : 0}%
+                </span>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <span className="text-xs text-gray-400">Events</span>
+                <span className="text-xl font-bold text-white">
+                    {Math.floor(score / 10)}/{round}
+                </span>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <span className="text-xs text-gray-400">Errors</span>
+                <span className="text-xl font-bold text-red-400">
+                    {round - Math.floor(score / 10)}
+                </span>
+            </div>
+        </div>
+        {tier === 'PRO' && (
+             <div className="mt-4 text-left bg-gray-800 p-3 rounded-lg text-xs font-mono">
+                <div className="mb-1 text-purple-400 font-bold">Detailed Analysis</div>
+                <div className="flex justify-between">
+                    <span>Reaction Speed:</span>
+                    <span>Excellent</span>
+                </div>
+                <div className="flex justify-between">
+                    <span>Spatial Awareness:</span>
+                    <span>High</span>
+                </div>
+             </div>
+        )}
+      </GameResultsModal>
 
     </div>
   );

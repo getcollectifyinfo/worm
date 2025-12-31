@@ -108,6 +108,9 @@ const MODULES = [
 
 export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onNavigate }) => {
   const [selectedModule, setSelectedModule] = useState<typeof MODULES[0] | null>(null);
+  const [cubePreviewImage, setCubePreviewImage] = useState<string | null>(null);
+  const [ippPreviewImage, setIppPreviewImage] = useState<string | null>(null);
+  const [wormPreviewImage, setWormPreviewImage] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLegalAccepted, setIsLegalAccepted] = useState(false);
@@ -281,16 +284,95 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
               <div key={module.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-slate-100 flex flex-col h-full group relative">
                 {/* Card Thumbnail */}
                 <div className="h-40 bg-slate-200 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-400 group-hover:scale-105 transition-transform duration-500">
-                    <div className="w-full h-full bg-slate-800 opacity-10"></div>
-                    {/* Placeholder Icon */}
-                    <Brain size={48} className="absolute opacity-20" />
-                  </div>
-                  <div className="absolute bottom-3 left-4">
-                     <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-800 uppercase tracking-wider">
-                       Simülasyon
-                     </span>
-                  </div>
+                  {module.id === 'cube' ? (
+                    <>
+                      <img
+                        src="/screenshots/Cube_ss/CUBE_SS00006.png"
+                        alt="Cube Rotation Screenshot"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        {['CUBE_SS00002.png','CUBE_SS00003.png','CUBE_SS00004.png'].map((name) => (
+                          <img
+                            key={name}
+                            src={`/screenshots/Cube_ss/${name}`}
+                            alt="Cube Rotation Thumb"
+                            className="w-10 h-10 object-cover rounded-md border border-white/50 shadow-sm"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-800 uppercase tracking-wider">
+                          Cube Rotation
+                        </span>
+                      </div>
+                    </>
+                  ) : module.id === 'ipp' ? (
+                    <>
+                      <img
+                        src="/screenshots/IPP_ss/IPP_SS00006.png"
+                        alt="IPP Test Screenshot"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        {['IPP_SS00002.png','IPP_SS00003.png','IPP_SS00004.png'].map((name) => (
+                          <img
+                            key={name}
+                            src={`/screenshots/IPP_ss/${name}`}
+                            alt="IPP Test Thumb"
+                            className="w-10 h-10 object-cover rounded-md border border-white/50 shadow-sm"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-800 uppercase tracking-wider">
+                          IPP Test
+                        </span>
+                      </div>
+                    </>
+                  ) : module.id === 'worm' ? (
+                    <>
+                      <img
+                        src="/screenshots/worm_ss/WORM_SS00005.png"
+                        alt="Spatial Worm Screenshot"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        {['WORM_SS00002.png','WORM_SS00003.png','WORM_SS00004.png'].map((name) => (
+                          <img
+                            key={name}
+                            src={`/screenshots/worm_ss/${name}`}
+                            alt="Spatial Worm Thumb"
+                            className="w-10 h-10 object-cover rounded-md border border-white/50 shadow-sm"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-800 uppercase tracking-wider">
+                          Spatial Worm
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 group-hover:scale-105 transition-transform duration-500">
+                        <div className="w-full h-full bg-slate-800 opacity-10"></div>
+                        {/* Placeholder Icon */}
+                        <Brain size={48} className="absolute opacity-20" />
+                      </div>
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-slate-800 uppercase tracking-wider">
+                          Simülasyon
+                        </span>
+                      </div>
+                    </>
+                  )}
                   {tier === 'GUEST' && !canAccessModule(module.id) && (
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center text-slate-800 font-bold text-sm">
                       Pro ile açılır
@@ -550,12 +632,119 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             
             {/* Modal Body */}
             <div className="p-6 md:p-8 overflow-y-auto max-h-[80vh]">
-              {/* Large Screenshot Placeholder */}
-              <div className="w-full aspect-video bg-slate-900 rounded-xl mb-6 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-slate-900/40"></div>
-                <Activity size={48} className="text-white/20" />
-                <span className="text-white/40 font-mono text-sm mt-2 ml-2">HD PREVIEW</span>
-              </div>
+              {/* Preview */}
+              {selectedModule.id === 'cube' ? (
+                <>
+                  <div className="w-full aspect-video bg-black rounded-xl mb-6 overflow-hidden">
+                    {cubePreviewImage ? (
+                      <img
+                        src={`/screenshots/Cube_ss/${cubePreviewImage}`}
+                        alt="Cube Rotation Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <video
+                        src="/screenshots/Cube_ss/Cube_ScreenRecording.mp4"
+                        className="w-full h-full"
+                        controls
+                        poster="/screenshots/Cube_ss/CUBE_SS00007.png"
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    {['CUBE_SS00001.png','CUBE_SS00005.png','CUBE_SS00006.png'].map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => setCubePreviewImage(name)}
+                        className={`rounded-lg border ${cubePreviewImage === name ? 'border-blue-600 ring-2 ring-blue-300' : 'border-slate-200'}`}
+                      >
+                        <img
+                          src={`/screenshots/Cube_ss/${name}`}
+                          alt="Cube Rotation Preview"
+                          className="w-full h-24 object-cover rounded-lg"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : selectedModule.id === 'ipp' ? (
+                <>
+                  <div className="w-full aspect-video bg-black rounded-xl mb-6 overflow-hidden">
+                    {ippPreviewImage ? (
+                      <img
+                        src={`/screenshots/IPP_ss/${ippPreviewImage}`}
+                        alt="IPP Test Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <video
+                        src="/screenshots/IPP_ss/IPP_Screen_Recording.mp4"
+                        className="w-full h-full"
+                        controls
+                        poster="/screenshots/IPP_ss/IPP_SS00007.png"
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    {['IPP_SS00001.png','IPP_SS00005.png','IPP_SS00006.png'].map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => setIppPreviewImage(name)}
+                        className={`rounded-lg border ${ippPreviewImage === name ? 'border-blue-600 ring-2 ring-blue-300' : 'border-slate-200'}`}
+                      >
+                        <img
+                          src={`/screenshots/IPP_ss/${name}`}
+                          alt="IPP Test Preview"
+                          className="w-full h-24 object-cover rounded-lg"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : selectedModule.id === 'worm' ? (
+                <>
+                  <div className="w-full aspect-video bg-black rounded-xl mb-6 overflow-hidden">
+                    {wormPreviewImage ? (
+                      <img
+                        src={`/screenshots/worm_ss/${wormPreviewImage}`}
+                        alt="Spatial Worm Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <video
+                        src="/screenshots/worm_ss/WORM_Recording.mp4"
+                        className="w-full h-full"
+                        controls
+                        poster="/screenshots/worm_ss/WORM_SS00007.png"
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    {['WORM_SS00001.png','WORM_SS00005.png','WORM_SS00006.png'].map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => setWormPreviewImage(name)}
+                        className={`rounded-lg border ${wormPreviewImage === name ? 'border-blue-600 ring-2 ring-blue-300' : 'border-slate-200'}`}
+                      >
+                        <img
+                          src={`/screenshots/worm_ss/${name}`}
+                          alt="Spatial Worm Preview"
+                          className="w-full h-24 object-cover rounded-lg"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full aspect-video bg-slate-900 rounded-xl mb-6 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-slate-900/40"></div>
+                  <Activity size={48} className="text-white/20" />
+                  <span className="text-white/40 font-mono text-sm mt-2 ml-2">HD PREVIEW</span>
+                </div>
+              )}
 
               <div className="space-y-6">
                 <div>
@@ -583,12 +772,14 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button 
                 onClick={() => {
-                  if (tier === 'GUEST' && !canAccessModule(selectedModule.id)) {
-                    openProModal();
-                  } else {
-                    setSelectedModule(null);
-                    onStartFree();
+                  if (selectedModule.id === 'cube') {
+                    onNavigate('CUBE');
+                  } else if (selectedModule.id === 'ipp') {
+                    onNavigate('IPP');
+                  } else if (selectedModule.id === 'worm') {
+                    onNavigate('WORM');
                   }
+                  setSelectedModule(null);
                 }}
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
               >

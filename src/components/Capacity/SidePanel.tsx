@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Target } from 'lucide-react';
+import { Target } from 'lucide-react';
 import type { CapacitySettings, CapacityStats } from './types';
 
 // --- VISUAL COMPONENTS ---
@@ -285,10 +285,9 @@ interface SidePanelProps {
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({ 
-    lastSpacePressTime, gameState, gameMode, timeLeft, flightFails, totalObstacles,
-    diceStats, rodStats, currentStats,
+    lastSpacePressTime, gameState, gameMode, timeLeft,
+    currentStats,
     isPaused, settings, isFirePressed, onFireStart, onFireEnd,
-    onExitGame,
     onUpdateTaskStats 
 }) => {
   
@@ -344,40 +343,8 @@ const SidePanel: React.FC<SidePanelProps> = ({
         alignItems: 'center'
       }}>
         {gameState === 'finished' ? (
-             <div style={{ textAlign: 'center', width: '100%' }}>
-                 <h2 style={{ fontSize: '32px', marginBottom: '30px' }}>GAME OVER</h2>
-                 
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', textAlign: 'left' }}>
-                    {/* FLIGHT STATS */}
-                    <div style={statBoxStyle}>
-                        <h3 style={statHeaderStyle}>FLIGHT</h3>
-                        <p>Total Obstacles: {totalObstacles}</p>
-                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{flightFails}</span></p>
-                        <p>Success Rate: {totalObstacles > 0 ? Math.round(((totalObstacles - flightFails) / totalObstacles) * 100) : 100}%</p>
-                    </div>
-
-                    {/* DICE STATS */}
-                    <div style={statBoxStyle}>
-                        <h3 style={statHeaderStyle}>DICE</h3>
-                        <p>Targets: {diceStats.targets}</p>
-                        <p>Hits: {diceStats.hits}</p>
-                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{diceStats.fails}</span></p>
-                        <p>Accuracy: {diceStats.targets > 0 ? Math.round((diceStats.hits / diceStats.targets) * 100) : 0}%</p>
-                    </div>
-
-                    {/* ROD STATS */}
-                    <div style={statBoxStyle}>
-                        <h3 style={statHeaderStyle}>ROD</h3>
-                        <p>Targets: {rodStats.targets}</p>
-                        <p>Hits: {rodStats.hits}</p>
-                        <p>Fails: <span style={{color: '#d63031', fontWeight: 'bold'}}>{rodStats.fails}</span></p>
-                        <p>Accuracy: {rodStats.targets > 0 ? Math.round((rodStats.hits / rodStats.targets) * 100) : 0}%</p>
-                    </div>
-                 </div>
-
-                 <button onClick={onExitGame} style={{...btnStyle, marginTop: '40px', backgroundColor: '#27ae60', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', width: '60px', height: '60px', padding: 0, margin: '40px auto'}}>
-                    <Home size={32} />
-                 </button>
+             <div style={{ textAlign: 'center', width: '100%', opacity: 0.5 }}>
+                 <h2 style={{ fontSize: '24px', marginBottom: '30px' }}>SESSION COMPLETE</h2>
              </div>
         ) : (
             <>
@@ -443,28 +410,6 @@ const SidePanel: React.FC<SidePanelProps> = ({
   );
 };
 
-const btnStyle: React.CSSProperties = { 
-    padding: '15px 30px', 
-    fontSize: '20px', 
-    cursor: 'pointer', 
-    backgroundColor: '#333', 
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '5px' 
-};
-
-const statBoxStyle: React.CSSProperties = {
-    backgroundColor: '#f1f2f6',
-    padding: '15px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-};
-
-const statHeaderStyle: React.CSSProperties = {
-    marginTop: 0,
-    marginBottom: '10px',
-    borderBottom: '2px solid #ccc',
-    paddingBottom: '5px'
-};
+ 
 
 export default SidePanel;

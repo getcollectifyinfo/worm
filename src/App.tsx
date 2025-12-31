@@ -890,7 +890,8 @@ function App() {
             onSelectGame={(game) => setCurrentPage(game)} 
             onSignOut={signOut} 
             onShowStats={() => setCurrentPage('STATISTICS')}
-            user={user} 
+            user={user}
+            onGoHome={() => setCurrentPage('MARKETING')}
         />
     );
   }
@@ -923,6 +924,7 @@ function App() {
             onClose={() => setIsTutorialOpen(false)}
             title="WORM"
             description="Master the art of navigation! Follow the generated flight instructions to guide your worm to the target. Precision is key."
+            initialLocale="tr"
             rules={[
                 "Read the current instruction in the Mission Panel.",
                 "Execute the command precisely using the keyboard.",
@@ -937,6 +939,52 @@ function App() {
                 { key: "↓", action: "Turn Back" },
                 { key: "SPACE", action: "Move Forward" }
             ]}
+            ctaText="EXAM MODE"
+            onCtaClick={() => {
+                setIsTutorialOpen(false);
+                if (!checkAccess('worm')) return;
+                if (tier === 'GUEST') {
+                    setDifficulty('EASY');
+                }
+                setGameMode('EXAM');
+                startExamSession();
+                setIsGameStarted(true);
+            }}
+            secondaryCtaText="PRACTISE"
+            onSecondaryCtaClick={() => {
+                setIsTutorialOpen(false);
+                if (!checkAccess('worm')) return;
+                if (tier === 'GUEST') {
+                    setDifficulty('EASY');
+                }
+                setGameMode('PRACTISE');
+                setIsGameStarted(true);
+            }}
+            translations={{
+              tr: {
+                title: "WORM",
+                description: "Navigasyon sanatını öğren! Üretilen uçuş talimatlarını takip ederek solucanı hedefe ulaştır. Hassasiyet önemlidir.",
+                rules: [
+                  "Mission Panel'deki talimatı oku.",
+                  "Komutu klavyede doğru uygula.",
+                  "Solucanı yön tuşları ile çevir.",
+                  "Boşluk tuşu ile ileri hareket et.",
+                  "Kırmızı hedefe ulaş.",
+                  "Hatasız yüksek skor hedefle."
+                ],
+                controls: [
+                  { key: "←", action: "Sola çevir" },
+                  { key: "→", action: "Sağa çevir" },
+                  { key: "↓", action: "Geri döndür" },
+                  { key: "SPACE", action: "İleri hareket" }
+                ],
+                ctaText: "Sınav Modu",
+                secondaryCtaText: "Alıştırma"
+              },
+              en: {
+                title: "WORM"
+              }
+            }}
         />
 
         {/* Game Start Menu */}
@@ -956,7 +1004,7 @@ function App() {
                    setIsSettingsOpen(true);
                }}
                onBack={() => setCurrentPage('LANDING')}
-               onTutorial={() => setIsTutorialOpen(true)}
+               onLearn={() => setIsTutorialOpen(true)}
              >
                 <button 
                   onClick={() => {

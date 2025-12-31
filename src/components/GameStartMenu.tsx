@@ -1,44 +1,38 @@
 import React from 'react';
-import { Play, Settings, ArrowLeft, HelpCircle } from 'lucide-react';
+import { Play, Settings, ArrowLeft, Book } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 
 interface GameStartMenuProps {
   title: string;
   onStart: () => void;
-  onSettings: () => void;
+  onSettings?: () => void;
+  onPractice?: () => void;
   onBack: () => void;
-  onTutorial?: () => void;
+  onLearn?: () => void;
   startLabel?: string;
   highScore?: number | string;
   children?: React.ReactNode;
+  tier?: 'GUEST' | 'FREE' | 'PRO';
 }
 
 export const GameStartMenu: React.FC<GameStartMenuProps> = ({ 
   title, 
   onStart, 
-  onSettings, 
+  onSettings,
+  onPractice, 
   onBack,
-  onTutorial,
-  startLabel = "START GAME",
+  onLearn,
+  startLabel = "EXAM MODE",
   highScore,
-  children
+  children,
+  tier
 }) => {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-      <div className="relative bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full flex flex-col gap-6 animate-fade-in">
+      <div className="relative bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full flex flex-col gap-4 animate-fade-in">
         
-        {onTutorial && (
-          <button 
-            onClick={onTutorial}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-all"
-            title="How to Play"
-          >
-            <HelpCircle size={24} />
-          </button>
-        )}
-
         <div className="flex justify-center -mb-2">
-          <img src="/logo.png" alt="Logo" className="h-40 drop-shadow-lg" />
+          <img src="/logo.png" alt="Logo" className="h-32 drop-shadow-lg" />
         </div>
 
         <div className="flex items-center justify-center gap-3 mb-2">
@@ -54,27 +48,64 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
 
         {children}
 
+        {/* EXAM MODE */}
         <button 
           onClick={onStart}
-          className="group flex items-center justify-center gap-3 w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 shadow-lg"
+          className="group flex flex-col items-center justify-center w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl transition-all hover:scale-105 shadow-lg relative overflow-hidden"
         >
-          <Play size={24} className="fill-current" />
-          {startLabel}
+          <div className="flex items-center gap-3">
+            <Play size={28} className="fill-current" />
+            <span className="text-2xl font-bold">{startLabel}</span>
+          </div>
+          <span className="text-green-100 text-sm font-medium mt-1">
+             {tier === 'PRO' ? 'Gerçek sınav temposu ve skor' : '2 dakikalık örnek sınav (Easy)'}
+          </span>
         </button>
 
-        <button 
-          onClick={onSettings}
-          className="group flex items-center justify-center gap-3 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 shadow-lg"
-        >
-          <Settings size={24} />
-          SETTINGS
-        </button>
+        {/* PRACTICE MODE */}
+        {onPractice && (
+            <button 
+            onClick={onPractice}
+            className="group flex flex-col items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all hover:scale-105 shadow-lg"
+            >
+            <div className="flex items-center gap-3">
+                <Settings size={24} />
+                <span className="text-xl font-bold">PRACTICE MODE</span>
+            </div>
+            <span className="text-blue-100 text-xs font-medium mt-1">Alıştırmalarla refleks kazan</span>
+            </button>
+        )}
+
+        {/* SETTINGS (Legacy or Config) */}
+        {onSettings && !onPractice && (
+          <button 
+            onClick={onSettings}
+            className="group flex items-center justify-center gap-3 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 shadow-lg"
+          >
+            <Settings size={24} />
+            SETTINGS
+          </button>
+        )}
+
+        {/* LEARN MODE */}
+        {onLearn && (
+            <button 
+            onClick={onLearn}
+            className="group flex flex-col items-center justify-center w-full py-3 bg-[#6d28d9] hover:bg-[#5b21b6] text-white rounded-xl transition-all hover:scale-105 shadow-lg"
+            >
+            <div className="flex items-center gap-3">
+                <Book size={24} />
+                <span className="text-xl font-bold">LEARN MODE</span>
+            </div>
+            <span className="text-purple-100 text-xs font-medium mt-1">Mantığını kısa ve net öğren</span>
+            </button>
+        )}
 
         <div className="h-px bg-gray-700 my-2" />
 
         <button 
           onClick={onBack}
-          className="group flex items-center justify-center gap-3 w-full py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl font-bold text-lg transition-all hover:scale-105"
+          className="group flex items-center justify-center gap-3 w-full py-3 text-gray-400 hover:text-white transition-all"
         >
           <ArrowLeft size={20} />
           BACK TO MENU
