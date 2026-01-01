@@ -13,33 +13,55 @@ import { toast, Toaster } from 'react-hot-toast';
 import { MiniExamEndModal } from '../MiniExamEndModal';
 import { GameResultsModal } from '../GameResultsModal';
 
+import { VIGIPractice } from './VIGIPractice';
+
 interface VIGIGameProps {
   onExit: () => void;
 }
 
 const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
   const { gameState, actions, settings: gameSettings } = useGameLogic();
-  const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves } = gameState;
+  const { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, totalEvents, caughtEvents, wrongMoves, avgReactionTime } = gameState;
   const { startGame, stopGame, togglePause, handleInteraction, setSettings } = actions;
   const { checkAccess, maxDuration, canRecordStats, tier, showProModal, openProModal, closeProModal, handleUpgrade, showLoginGate, closeLoginGate, openLoginGate } = useGameAccess();
 
   const [showMiniExamModal, setShowMiniExamModal] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isPracticeMode, setIsPracticeMode] = useState(false);
+
+  const handleEndGame = React.useCallback(async () => {
+    stopGame();
+    
+    // Save Stats if allowed
+    if (canRecordStats) {
+      await statsService.saveSession({
+        game_type: 'VIGI',
+        score: score,
+        duration_seconds: gameTime,
+        metadata: {
+            level: level.name,
+            total_events: totalEvents,
+            caught_events: caughtEvents,
+            wrong_moves: wrongMoves,
+            missed_events: totalEvents - caughtEvents,
+            accuracy: totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0,
+            avg_speed_ms: Math.round(avgReactionTime)
+        }
+      });
+    }
+
+    setShowResults(true);
+  }, [stopGame, canRecordStats, score, gameTime, level, totalEvents, caughtEvents, wrongMoves, avgReactionTime]);
 
   // Duration Timer
   useEffect(() => {
     if (isPlaying && maxDuration > 0) {
       const timer = setTimeout(() => {
-        stopGame();
-        if (tier !== 'PRO') {
-            setShowMiniExamModal(true);
-        } else {
-            setShowResults(true);
-        }
+        handleEndGame();
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, maxDuration, stopGame, tier]);
+  }, [isPlaying, maxDuration, tier]);
 
   // Calculate position
   const getPositionStyle = (pos: number) => {
@@ -93,27 +115,12 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
     setShowSettings(true);
   };
 
-  const handleQuitFromPause = async () => {
-    stopGame();
-    
-    // Save Stats if allowed
-    if (canRecordStats) {
-      await statsService.saveSession({
-        game_type: 'VIGI',
-        score: score,
-        duration_seconds: gameTime,
-        metadata: {
-            level: level.name,
-            total_events: totalEvents,
-            caught_events: caughtEvents,
-            wrong_moves: wrongMoves
-        }
-      });
-    }
-
+  const handleQuit = async () => {
+    await handleEndGame();
     setShowPauseMenu(false);
-    setShowResults(true);
   };
+
+  const handleQuitFromPause = handleQuit;
 
   const handleStartGame = () => {
     if (!checkAccess('vigi')) return;
@@ -147,6 +154,10 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
     startGame();
   };
 
+  if (isPracticeMode) {
+    return <VIGIPractice onExit={() => setIsPracticeMode(false)} tier={tier} />;
+  }
+
   return (
     <div className="relative w-full h-screen bg-gray-900 text-white overflow-hidden select-none font-mono">
       <Toaster position="top-center" />
@@ -160,7 +171,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         initialLocale="tr"
-        title="VIGI 2"
+        title="VIGI 1"
         description="Vigilance Test! Monitor the moving object and react instantly to specific changes in its behavior."
         rules={[
             "Watch the object moving in the circle.",
@@ -180,15 +191,15 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         ]}
         translations={{
           tr: {
-            title: "VIGI 2",
+            title: "VIGI 1",
             description: "Uyanıklık testi! Daire içinde hareket eden nesneyi izle ve davranışındaki belirli değişikliklere anında tepki ver.",
             rules: [
               "Daire içindeki hareketi izle.",
-              "Özellik değişikliklerini fark et:",
-              "- JUMP: Nesne bir konumu atlar",
-              "- COLOR: Renk değişir",
-              "- TURN: Dönüş yönü değişir",
-              "- SHAPE: Şekil değişir",
+              "Özellik değişikliklerini fark et ve ilgili tuşa bas:",
+              "- JUMP: Nesne bir konum atladı",
+              "- COLOR: Nesne renk değiştirdi",
+              "- TURN: Nesne yön değiştirdi",
+              "- SHAPE: Nesne şekil değiştirdi",
               "Değişiklik olduğunda ilgili butona hemen bas.",
               "Hızlı ol! Tepki süren sınırlı."
             ],
@@ -197,8 +208,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
               { key: "Sağ Üst", action: "COLOR bildir", icon: <span className="text-xl">↗️</span> },
               { key: "Sol Alt", action: "TURN bildir", icon: <span className="text-xl">↙️</span> },
               { key: "Sağ Alt", action: "SHAPE bildir", icon: <span className="text-xl">↘️</span> }
-            ],
-            ctaText: "Tamam"
+            ]
           }
         }}
       />
@@ -243,7 +253,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
           )}
           {/* Exit */}
           <button 
-            onClick={onExit}
+            onClick={handleQuit}
             className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white pointer-events-auto"
             title="Exit to Main Menu"
           >
@@ -255,11 +265,11 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       {/* Start Button Overlay */}
       {!isPlaying && !showSettings && !showResults && !showMiniExamModal && (
         <GameStartMenu 
-            title="VIGI"
+            title="VIGI 1"
             startLabel={totalEvents > 0 ? "PLAY AGAIN" : "EXAM MODE"}
             onStart={handleStartGame}
             onSettings={() => setShowSettings(true)}
-            onPractice={() => setShowSettings(true)}
+            onPractice={() => setIsPracticeMode(true)}
             onBack={onExit}
             highScore={highScore}
             onLearn={() => setIsTutorialOpen(true)}
@@ -275,23 +285,35 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         onExit={onExit}
         tier={tier}
       >
-        <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-gray-800 p-2 rounded-lg">
+        <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="bg-gray-800 p-2 rounded-lg col-span-2">
                 <div className="text-xs text-gray-400">Accuracy</div>
                 <div className="text-xl font-bold text-green-400">
                     {totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0}%
                 </div>
             </div>
             <div className="bg-gray-800 p-2 rounded-lg">
-                <div className="text-xs text-gray-400">Events</div>
-                <div className="text-xl font-bold text-white">
-                    {caughtEvents}/{totalEvents}
+                <div className="text-xs text-gray-400">Correct</div>
+                <div className="text-xl font-bold text-green-400">
+                    {caughtEvents}
                 </div>
             </div>
             <div className="bg-gray-800 p-2 rounded-lg">
-                <div className="text-xs text-gray-400">Errors</div>
+                <div className="text-xs text-gray-400">Missed</div>
+                <div className="text-xl font-bold text-yellow-400">
+                    {totalEvents - caughtEvents}
+                </div>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">Wrong</div>
                 <div className="text-xl font-bold text-red-400">
                     {wrongMoves}
+                </div>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">Avg Speed</div>
+                <div className="text-xl font-bold text-cyan-400">
+                    {Math.round(avgReactionTime)} ms
                 </div>
             </div>
         </div>

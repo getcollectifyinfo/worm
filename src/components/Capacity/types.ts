@@ -4,6 +4,7 @@ export interface CapacitySettings {
   spawnRate: number;
   taskChangeSpeed: number;
   gameDuration: number;
+  gapWidth: number;
 }
 
 export interface CapacityStats {

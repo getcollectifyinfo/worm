@@ -60,7 +60,8 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     scrollSpeed: 0.1,
     spawnRate: 600,
     taskChangeSpeed: 2000,
-    gameDuration: 120
+    gameDuration: 120,
+    gapWidth: 0.25
   });
 
   const togglePause = () => {

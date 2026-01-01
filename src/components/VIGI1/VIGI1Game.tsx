@@ -6,7 +6,6 @@ import { useVIGI1GameLogic } from './useVIGI1GameLogic';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
-import { statsService } from '../../services/statsService';
 import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
@@ -34,10 +33,12 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       audioEvents,
       caughtAudio,
       wrongAudio,
-      audioDifficulty
+      audioDifficulty,
+      avgReactionTime
   } = gameState;
   const { 
       startGame, 
+      stopGame,
       handleEyeClick, 
       handleNoteClick, 
       setGameDuration, 
@@ -131,34 +132,13 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const prevIsPlayingRef = useRef(false);
 
   const handleEndGame = useCallback(async () => {
-    // Save stats
-    if (tier !== 'GUEST') {
-        await statsService.saveSession({
-            game_type: 'VIGI1',
-            score: score,
-            duration_seconds: gameDuration - gameTime, // Approximate if gameTime counts down?
-            // Wait, gameTime in VIGI1 usually counts UP or DOWN?
-            // In the display it shows "TIME: formatTime(gameTime)".
-            // If it counts down, duration is total - remaining.
-            // If it counts up, duration is gameTime.
-            // Let's assume it counts down from gameDuration.
-            metadata: {
-                total_events: totalEvents,
-                caught_events: caughtEvents,
-                wrong_moves: wrongMoves,
-                audio_events: audioEvents,
-                caught_audio: caughtAudio,
-                wrong_audio: wrongAudio
-            }
-        });
-    }
+    // Save stats logic moved to stopGame in hook to prevent duplication/inconsistency
+    setShowResults(true);
+  }, []);
 
-    if (tier !== 'PRO') {
-        setShowMiniExamModal(true);
-    } else {
-        setShowResults(true);
-    }
-  }, [tier, score, gameDuration, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio]);
+  const handleQuit = () => {
+      stopGame();
+  };
 
   useEffect(() => {
     const prev = prevIsPlayingRef.current;
@@ -562,9 +542,9 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
 
             {/* Exit */}
             <button 
-              onClick={onExit}
+              onClick={handleQuit}
               className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white"
-              title="Exit to Main Menu"
+              title="End Game & View Stats"
             >
                <LogOut size={24} />
             </button>
@@ -603,7 +583,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         initialLocale="tr"
-        title="VIGI 1 (Audio-Visual Vigilance)"
+        title="VIGI 2 (Audio-Visual Vigilance)"
         description="Monitor the gauge and digital display for discrepancies."
         rules={[
           "The analog needle moves randomly (Clockwise/Counter-clockwise).",
@@ -620,7 +600,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         ]}
         translations={{
           tr: {
-            title: "VIGI 1 (Görsel-İşitsel Uyanıklık)",
+            title: "VIGI 2 (Görsel-İşitsel Uyanıklık)",
             description: "İbreyi ve dijital ekranı uyuşmazlık için izle.",
             rules: [
               "Analog ibre rastgele hareket eder (Saat yönü / ters yönde).",
@@ -643,7 +623,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       {/* Start Menu Overlay */}
       {!isPlaying && !showResults && !showMiniExamModal && (
         <GameStartMenu 
-            title="VIGI 1"
+            title="VIGI 2"
             startLabel={score > 0 ? "PLAY AGAIN" : "EXAM MODE"}
             onStart={handleStartGame}
             onSettings={() => setIsSettingsOpen(true)}
@@ -675,40 +655,41 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       <GameResultsModal
         isOpen={showResults}
         score={score}
-        duration={formatTime(gameDuration)} // Assuming gameDuration is the full time
-        tier={tier}
+        duration={formatTime(gameTime)}
         onRetry={() => {
             setShowResults(false);
             handleStartGame();
         }}
         onExit={onExit}
+        tier={tier}
       >
         <div className="grid grid-cols-2 gap-3 mb-4 w-full">
             <div className="bg-gray-800 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Accuracy</div>
-                <div className="text-xl font-bold text-green-400">
-                    {totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0}%
-                </div>
-            </div>
-             <div className="bg-gray-800 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Caught</div>
-                <div className="text-lg font-bold text-white">{caughtEvents} / {totalEvents}</div>
-            </div>
-
-            <div className="bg-gray-800 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Accuracy</div>
-                <div className="text-xl font-bold text-blue-400">
-                    {audioEvents > 0 ? Math.round((caughtAudio / audioEvents) * 100) : 0}%
-                </div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Correct</div>
+                <div className="text-lg font-bold text-green-400">{caughtEvents}</div>
             </div>
             <div className="bg-gray-800 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Caught</div>
-                <div className="text-lg font-bold text-white">{caughtAudio} / {audioEvents}</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Correct</div>
+                <div className="text-lg font-bold text-blue-400">{caughtAudio}</div>
+            </div>
+            
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Visual Missed</div>
+                <div className="text-lg font-bold text-yellow-400">{totalEvents - caughtEvents}</div>
+            </div>
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Audio Missed</div>
+                <div className="text-lg font-bold text-yellow-400">{audioEvents - caughtAudio}</div>
             </div>
 
             <div className="col-span-2 bg-gray-800 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400 uppercase tracking-wider">Total False Alarms</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Total Wrong</div>
                 <div className="text-lg font-bold text-red-400">{wrongMoves + wrongAudio}</div>
+            </div>
+
+            <div className="col-span-2 bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Average Reaction</div>
+                <div className="text-xl font-bold text-cyan-400">{Math.round(avgReactionTime)} ms</div>
             </div>
         </div>
       </GameResultsModal>

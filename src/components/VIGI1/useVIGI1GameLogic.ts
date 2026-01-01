@@ -50,21 +50,26 @@ export const useVIGI1GameLogic = () => {
   // Audio Logic Refs
   const toneHistoryRef = useRef<string[]>([]);
   const isAudioTargetRef = useRef<boolean>(false); // True if currently in the window after 3rd same tone
+  const audioTargetStartTimeRef = useRef<number>(0);
+  const mismatchStartTimeRef = useRef<number>(0);
+  const reactionTimesRef = useRef<number[]>([]);
+  const [avgReactionTime, setAvgReactionTime] = useState(0);
+
   const canClickAudioRef = useRef<boolean>(true); // Prevent double clicking for same event
 
   // Sync refs for cleanup/save
   const statsRef = useRef({
     score, gameTime, totalEvents, caughtEvents, wrongMoves,
-    audioEvents, caughtAudio, wrongAudio, audioDifficulty
+    audioEvents, caughtAudio, wrongAudio, audioDifficulty, avgReactionTime
   });
   const isPlayingRef = useRef(isPlaying);
 
   useEffect(() => {
     statsRef.current = {
       score, gameTime, totalEvents, caughtEvents, wrongMoves,
-      audioEvents, caughtAudio, wrongAudio, audioDifficulty
+      audioEvents, caughtAudio, wrongAudio, audioDifficulty, avgReactionTime
     };
-  }, [score, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio, audioDifficulty]);
+  }, [score, gameTime, totalEvents, caughtEvents, wrongMoves, audioEvents, caughtAudio, wrongAudio, audioDifficulty, avgReactionTime]);
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -115,6 +120,7 @@ export const useVIGI1GameLogic = () => {
         if (history[0] === history[1] && history[1] === history[2]) {
             // TARGET!
             isAudioTargetRef.current = true;
+            audioTargetStartTimeRef.current = Date.now();
             setAudioEvents(prev => prev + 1);
             // Clear history so we don't trigger again on 4th same tone (unless that's desired? 
             // User said "3 times same tone". 
@@ -174,6 +180,7 @@ export const useVIGI1GameLogic = () => {
             if (nextDigital === nextAnalog * 10) nextDigital += 10;
 
             setTotalEvents(prev => prev + 1);
+            mismatchStartTimeRef.current = Date.now();
         }
 
         setDigitalValue(nextDigital);
@@ -185,6 +192,9 @@ export const useVIGI1GameLogic = () => {
     // Check ref to see if we were playing (avoids saving if already stopped)
     if (isPlayingRef.current) {
         const s = statsRef.current;
+        const totalOps = s.totalEvents + s.audioEvents;
+        const caughtOps = s.caughtEvents + s.caughtAudio;
+        
         statsService.saveSession({
             game_type: 'VIGI1',
             score: s.score,
@@ -197,7 +207,9 @@ export const useVIGI1GameLogic = () => {
                 caughtAudio: s.caughtAudio,
                 wrongAudio: s.wrongAudio,
                 audioDifficulty: s.audioDifficulty,
-                accuracy: s.totalEvents > 0 ? Math.round((s.caughtEvents / s.totalEvents) * 100) : 0
+                missed_events: totalOps - caughtOps,
+                accuracy: totalOps > 0 ? Math.round((caughtOps / totalOps) * 100) : 0,
+                avg_speed_ms: Math.round(s.avgReactionTime)
             }
         }).catch(err => console.error("Failed to save VIGI1 stats:", err));
     }
@@ -261,6 +273,8 @@ export const useVIGI1GameLogic = () => {
     setTotalEvents(0);
     setCaughtEvents(0);
     setWrongMoves(0);
+    reactionTimesRef.current = [];
+    setAvgReactionTime(0);
     
     // Reset Audio Stats
     setAudioEvents(0);
@@ -292,6 +306,13 @@ export const useVIGI1GameLogic = () => {
       // Correct detection!
       setScore(prev => prev + 10);
       setCaughtEvents(prev => prev + 1);
+      
+      const rt = Date.now() - mismatchStartTimeRef.current;
+      reactionTimesRef.current.push(rt);
+      setAvgReactionTime(
+          reactionTimesRef.current.reduce((a, b) => a + b, 0) / reactionTimesRef.current.length
+      );
+
       // Feedback?
     } else {
       // False alarm (It was a match, but user clicked)
@@ -311,6 +332,13 @@ export const useVIGI1GameLogic = () => {
         setScore(prev => prev + 10);
         setCaughtAudio(prev => prev + 1);
         isAudioTargetRef.current = false; // Consumed
+
+        const rt = Date.now() - audioTargetStartTimeRef.current;
+        reactionTimesRef.current.push(rt);
+        setAvgReactionTime(
+            reactionTimesRef.current.reduce((a, b) => a + b, 0) / reactionTimesRef.current.length
+        );
+
     } else {
         // Fail
         setScore(prev => Math.max(0, prev - 5));
@@ -351,7 +379,8 @@ export const useVIGI1GameLogic = () => {
       audioEvents,
       caughtAudio,
       wrongAudio,
-      audioDifficulty
+      audioDifficulty,
+      avgReactionTime
     },
     actions: {
       startGame,

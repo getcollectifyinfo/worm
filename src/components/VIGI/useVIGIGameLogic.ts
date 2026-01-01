@@ -48,6 +48,10 @@ export const useGameLogic = () => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Reaction Times
+  const reactionTimesRef = useRef<number[]>([]);
+  const [avgReactionTime, setAvgReactionTime] = useState(0);
+
   const startGame = () => {
     setIsPlaying(true);
     setIsPaused(false);
@@ -55,6 +59,9 @@ export const useGameLogic = () => {
     setGameTime(0);
     setTotalEvents(0);
     setCaughtEvents(0);
+    setWrongMoves(0);
+    reactionTimesRef.current = [];
+    setAvgReactionTime(0);
     setLevel(LEVELS.EASY);
     setPosition(0);
     setShape(SHAPES[0]);
@@ -231,10 +238,18 @@ export const useGameLogic = () => {
       setScore(s => s + settings.scoreWindows.excellent.points);
       event.handled = true;
       setCaughtEvents(prev => prev + 1);
+      reactionTimesRef.current.push(diff);
+      setAvgReactionTime(
+        reactionTimesRef.current.reduce((a, b) => a + b, 0) / reactionTimesRef.current.length
+      );
     } else if (diff <= settings.scoreWindows.good.time) {
       setScore(s => s + settings.scoreWindows.good.points);
       event.handled = true;
       setCaughtEvents(prev => prev + 1);
+      reactionTimesRef.current.push(diff);
+      setAvgReactionTime(
+        reactionTimesRef.current.reduce((a, b) => a + b, 0) / reactionTimesRef.current.length
+      );
     } else {
       // Too late, or wrong click. 
       setWrongMoves(prev => prev + 1);
@@ -242,7 +257,7 @@ export const useGameLogic = () => {
   };
 
   return {
-    gameState: { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, direction, totalEvents, caughtEvents, wrongMoves },
+    gameState: { isPlaying, isPaused, score, highScore, gameTime, level, position, shape, color, direction, totalEvents, caughtEvents, wrongMoves, avgReactionTime },
     actions: { startGame, stopGame, togglePause, handleInteraction, setSettings },
     settings
   };

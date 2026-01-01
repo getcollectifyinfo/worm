@@ -46,6 +46,9 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
     correctAnswer,
     score,
     round,
+    avgReactionTime,
+    correctCount,
+    wrongCount,
     commandSpeed,
     commandCount,
     setCommandSpeed,
@@ -120,7 +123,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   const [gameDuration, setGameDuration] = useState(0);
 
-  const handleEndGame = async () => {
+  const handleEndGame = React.useCallback(async () => {
       setHasStarted(false);
       const duration = (Date.now() - startTimeRef.current) / 1000;
       setGameDuration(Math.round(duration));
@@ -133,17 +136,17 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
               duration_seconds: Math.round(duration),
               metadata: {
                   round: round,
+                  correct_count: correctCount,
+                  wrong_count: wrongCount,
+                  avg_reaction_time_ms: avgReactionTime,
+                  accuracy: (correctCount + wrongCount) > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0,
                   settings: { speed: commandSpeed, count: commandCount }
               }
           });
       }
 
-      if (tier !== 'PRO' && isMiniExam && miniExamTimeLeft <= 1) {
-          setShowMiniExamModal(true);
-      } else {
-          setShowResults(true);
-      }
-  };
+      setShowResults(true);
+  }, [tier, score, round, correctCount, wrongCount, avgReactionTime, commandSpeed, commandCount]);
 
   const handleOpenSettings = () => {
     // Debug toast
@@ -204,13 +207,11 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   useEffect(() => {
     if (hasStarted && maxDuration > 0 && !isMiniExam) {
       const timer = setTimeout(() => {
-        setHasStarted(false);
-        setProModalVariant('default');
-        openProModal();
+        handleEndGame();
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [hasStarted, maxDuration, openProModal, isMiniExam]);
+  }, [hasStarted, maxDuration, isMiniExam, handleEndGame]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -853,7 +854,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
       <GameResultsModal
         isOpen={showResults}
         score={score}
-        duration={`${gameDuration}s`}
+        duration={formatTime(gameDuration)}
         tier={tier}
         onRetry={() => {
             setShowResults(false);
@@ -861,39 +862,33 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
         }}
         onExit={onExit}
       >
-        <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-gray-800 p-2 rounded-lg">
-                <span className="text-xs text-gray-400">Accuracy</span>
-                <span className="text-xl font-bold text-green-400">
-                    {round > 0 ? Math.round((Math.floor(score / 10) / round) * 100) : 0}%
-                </span>
+        <div className="grid grid-cols-2 gap-3 mb-4 w-full">
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Correct</div>
+                <div className="text-lg font-bold text-green-400">{correctCount}</div>
             </div>
-            <div className="bg-gray-800 p-2 rounded-lg">
-                <span className="text-xs text-gray-400">Events</span>
-                <span className="text-xl font-bold text-white">
-                    {Math.floor(score / 10)}/{round}
-                </span>
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Wrong</div>
+                <div className="text-lg font-bold text-red-400">{wrongCount}</div>
             </div>
-            <div className="bg-gray-800 p-2 rounded-lg">
-                <span className="text-xs text-gray-400">Errors</span>
-                <span className="text-xl font-bold text-red-400">
-                    {round - Math.floor(score / 10)}
-                </span>
+            
+            <div className="col-span-2 bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Average Reaction</div>
+                <div className="text-xl font-bold text-cyan-400">{avgReactionTime} ms</div>
+            </div>
+
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Accuracy</div>
+                <div className="text-lg font-bold text-white">
+                    {(correctCount + wrongCount) > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0}%
+                </div>
+            </div>
+
+            <div className="bg-gray-800 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Total Rounds</div>
+                <div className="text-lg font-bold text-white">{round}</div>
             </div>
         </div>
-        {tier === 'PRO' && (
-             <div className="mt-4 text-left bg-gray-800 p-3 rounded-lg text-xs font-mono">
-                <div className="mb-1 text-purple-400 font-bold">Detailed Analysis</div>
-                <div className="flex justify-between">
-                    <span>Reaction Speed:</span>
-                    <span>Excellent</span>
-                </div>
-                <div className="flex justify-between">
-                    <span>Spatial Awareness:</span>
-                    <span>High</span>
-                </div>
-             </div>
-        )}
       </GameResultsModal>
 
     </div>

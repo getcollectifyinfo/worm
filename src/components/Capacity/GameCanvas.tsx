@@ -175,7 +175,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         
         // Spawn Obstacles
         if (lastTimeRef.current - lastSpawnTimeRef.current > spawnRate) {
-          const gapWidth = 0.25; 
+          const gapWidth = settingsRef.current.gapWidth || 0.25; 
           
           // Smooth Path Logic: Move center slightly from previous position
           const maxShift = 0.08; 

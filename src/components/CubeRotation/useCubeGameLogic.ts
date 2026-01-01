@@ -132,6 +132,10 @@ export const useCubeGameLogic = () => {
   const [round, setRound] = useState(0);
   const [correctAnswer, setCorrectAnswer] = useState<CubePosition>('RIGHT');
   const [userAnswer, setUserAnswer] = useState<CubePosition | null>(null);
+  const [reactionTimes, setReactionTimes] = useState<number[]>([]);
+  const [waitingStartTime, setWaitingStartTime] = useState<number | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [wrongCount, setWrongCount] = useState(0);
   
   // Settings
   const [commandSpeed, setCommandSpeed] = useState(1500);
@@ -173,6 +177,9 @@ export const useCubeGameLogic = () => {
   const startGame = useCallback(() => {
     setScore(0);
     setRound(1);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setReactionTimes([]);
     startRound();
   }, [startRound]);
 
@@ -184,6 +191,7 @@ export const useCubeGameLogic = () => {
           // Check if this was the last command
           if (currentCommandIndex + 1 >= commands.length) {
              setPhase('WAITING_ANSWER');
+             setWaitingStartTime(Date.now());
           } else {
              setCurrentCommandIndex(prev => prev + 1);
           }
@@ -196,12 +204,24 @@ export const useCubeGameLogic = () => {
   const handleAnswer = (position: CubePosition) => {
     if (phase !== 'WAITING_ANSWER') return;
     
+    if (waitingStartTime) {
+        const timeTaken = Date.now() - waitingStartTime;
+        setReactionTimes(prev => [...prev, timeTaken]);
+    }
+
     setUserAnswer(position);
     if (position === correctAnswer) {
       setScore(s => s + 10);
+      setCorrectCount(c => c + 1);
+    } else {
+      setWrongCount(w => w + 1);
     }
     setPhase('FEEDBACK');
   };
+
+  const avgReactionTime = reactionTimes.length > 0 
+    ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) 
+    : 0;
 
   const nextRound = () => {
     setRound(r => r + 1);
@@ -218,6 +238,9 @@ export const useCubeGameLogic = () => {
     correctAnswer,
     score,
     round,
+    correctCount,
+    wrongCount,
+    avgReactionTime,
     commandSpeed,
     commandCount,
     setCommandSpeed,

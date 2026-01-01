@@ -100,9 +100,12 @@ export const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
                                     session.game_type === 'IPP' ? 'bg-blue-900 text-blue-300' :
                                     session.game_type === 'VIGI1' ? 'bg-orange-900 text-orange-300' :
                                     session.game_type === 'CAPACITY' ? 'bg-red-900 text-red-300' :
+                                    session.game_type === 'CUBE' ? 'bg-pink-900 text-pink-300' :
                                     'bg-purple-900 text-purple-300'
                                 }`}>
-                                    {session.game_type}
+                                    {session.game_type === 'VIGI' ? 'VIGI 1' : 
+                                     session.game_type === 'VIGI1' ? 'VIGI 2' : 
+                                     session.game_type}
                                 </span>
                                 <div className="flex items-center gap-1 text-gray-400 text-xs">
                                     <Calendar size={12} />
