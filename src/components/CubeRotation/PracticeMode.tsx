@@ -70,6 +70,7 @@ interface PracticeModeProps {
     onExit: () => void;
     tier: 'FREE' | 'PRO' | 'GUEST';
     onShowProModal: () => void;
+    onLoginRequest: () => void;
     initialPhase?: 1 | 2 | 3 | 4;
     initialQuestionIndex?: number;
 }
@@ -77,6 +78,7 @@ interface PracticeModeProps {
 export const PracticeMode: React.FC<PracticeModeProps> = ({ 
     onExit, 
     tier,
+    onLoginRequest,
     initialPhase = 1,
     initialQuestionIndex = 0
 }) => {
@@ -107,7 +109,8 @@ export const PracticeMode: React.FC<PracticeModeProps> = ({
 
     const handleUpgrade = async () => {
         if (!user) {
-            toast.error('Lütfen önce giriş yapın');
+            localStorage.setItem('pending_pro_upgrade', 'true');
+            onLoginRequest();
             return;
         }
 

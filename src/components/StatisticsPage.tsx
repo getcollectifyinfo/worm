@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { statsService } from '../services/statsService';
 import type { GameSession, GameType } from '../services/statsService';
-import { Loader2, ArrowLeft, Trophy, Clock, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, Trophy, Clock, Calendar, LayoutList, Gauge } from 'lucide-react';
+import { CockpitDashboard } from './Cockpit/CockpitDashboard';
 
 interface StatisticsPageProps {
   onBack: () => void;
@@ -11,6 +12,7 @@ export const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<GameSession[]>([]);
   const [selectedGame, setSelectedGame] = useState<GameType | 'ALL'>('ALL');
+  const [viewMode, setViewMode] = useState<'LIST' | 'COCKPIT'>('COCKPIT');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -63,89 +65,121 @@ export const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
           Your Performance Statistics
         </h1>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-            {(['ALL', 'WORM', 'IPP', 'VIGI1', 'VIGI', 'CAPACITY'] as const).map(type => (
+        {/* View Mode Toggle */}
+        <div className="flex justify-center mb-8">
+            <div className="flex bg-gray-800 p-1 rounded-xl border border-gray-700">
                 <button
-                    key={type}
-                    onClick={() => setSelectedGame(type)}
-                    className={`px-4 py-2 rounded-full font-medium transition-colors whitespace-nowrap ${
-                        selectedGame === type 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    onClick={() => setViewMode('COCKPIT')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
+                        viewMode === 'COCKPIT' 
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg' 
+                        : 'text-gray-400 hover:text-white'
                     }`}
                 >
-                    {type === 'ALL' ? 'All Games' : type}
+                    <Gauge size={20} />
+                    COCKPIT
                 </button>
-            ))}
+                <button
+                    onClick={() => setViewMode('LIST')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
+                        viewMode === 'LIST' 
+                        ? 'bg-purple-600 text-white shadow-lg' 
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    <LayoutList size={20} />
+                    LIST VIEW
+                </button>
+            </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-purple-500" size={48} />
           </div>
+        ) : viewMode === 'COCKPIT' ? (
+           <CockpitDashboard stats={stats} />
         ) : (
-          <div className="grid gap-6">
-            {filteredStats.length === 0 ? (
-                <div className="text-center py-20 text-gray-500 bg-gray-800/50 rounded-2xl">
-                    No game sessions found. Start playing to track your progress!
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredStats.map((session, idx) => (
-                        <div key={idx} className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500/50 transition-colors shadow-lg">
-                            <div className="flex justify-between items-start mb-4">
-                                <span className={`px-3 py-1 rounded text-xs font-bold ${
-                                    session.game_type === 'WORM' ? 'bg-green-900 text-green-300' :
-                                    session.game_type === 'IPP' ? 'bg-blue-900 text-blue-300' :
-                                    session.game_type === 'VIGI1' ? 'bg-orange-900 text-orange-300' :
-                                    session.game_type === 'CAPACITY' ? 'bg-red-900 text-red-300' :
-                                    session.game_type === 'CUBE' ? 'bg-pink-900 text-pink-300' :
-                                    'bg-purple-900 text-purple-300'
-                                }`}>
-                                    {session.game_type === 'VIGI' ? 'VIGI 1' : 
-                                     session.game_type === 'VIGI1' ? 'VIGI 2' : 
-                                     session.game_type}
-                                </span>
-                                <div className="flex items-center gap-1 text-gray-400 text-xs">
-                                    <Calendar size={12} />
-                                    {formatDate(session.started_at)}
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-end mb-4">
-                                <div>
-                                    <div className="text-gray-400 text-sm mb-1">Score</div>
-                                    <div className="text-3xl font-bold text-white">{session.score}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-gray-400 text-sm mb-1 flex items-center gap-1 justify-end">
-                                        <Clock size={12} /> Duration
-                                    </div>
-                                    <div className="text-xl text-gray-300 font-mono">{formatDuration(session.duration_seconds)}</div>
-                                </div>
-                            </div>
+          <>
+            {/* Filter Tabs */}
+            <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                {(['ALL', 'WORM', 'IPP', 'VIGI1', 'VIGI', 'CAPACITY'] as const).map(type => (
+                    <button
+                        key={type}
+                        onClick={() => setSelectedGame(type)}
+                        className={`px-4 py-2 rounded-full font-medium transition-colors whitespace-nowrap ${
+                            selectedGame === type 
+                            ? 'bg-purple-600 text-white' 
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        }`}
+                    >
+                        {type === 'ALL' ? 'All Games' : type}
+                    </button>
+                ))}
+            </div>
 
-                            {/* Detailed Metadata if available */}
-                            {session.metadata && (
-                                <div className="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-400 space-y-1">
-                                    {Object.entries(session.metadata).map(([key, value]) => {
-                                        // Skip complex objects for now or render them simply
-                                        if (typeof value === 'object') return null;
-                                        return (
-                                            <div key={key} className="flex justify-between">
-                                                <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
-                                                <span className="text-gray-200">{String(value)}</span>
-                                            </div>
-                                        );
-                                    })}
+            <div className="grid gap-6">
+                {filteredStats.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500 bg-gray-800/50 rounded-2xl">
+                        No game sessions found. Start playing to track your progress!
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredStats.map((session, idx) => (
+                            <div key={idx} className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-purple-500/50 transition-colors shadow-lg">
+                                <div className="flex justify-between items-start mb-4">
+                                    <span className={`px-3 py-1 rounded text-xs font-bold ${
+                                        session.game_type === 'WORM' ? 'bg-green-900 text-green-300' :
+                                        session.game_type === 'IPP' ? 'bg-blue-900 text-blue-300' :
+                                        session.game_type === 'VIGI1' ? 'bg-orange-900 text-orange-300' :
+                                        session.game_type === 'CAPACITY' ? 'bg-red-900 text-red-300' :
+                                        session.game_type === 'CUBE' ? 'bg-pink-900 text-pink-300' :
+                                        'bg-purple-900 text-purple-300'
+                                    }`}>
+                                        {session.game_type === 'VIGI' ? 'VIGI 2' : 
+                                         session.game_type === 'VIGI1' ? 'VIGI 1' : 
+                                         session.game_type}
+                                    </span>
+                                    <div className="flex items-center gap-1 text-gray-400 text-xs">
+                                        <Calendar size={12} />
+                                        {formatDate(session.started_at)}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
-          </div>
+                                
+                                <div className="flex justify-between items-end mb-4">
+                                    <div>
+                                        <div className="text-gray-400 text-sm mb-1">Score</div>
+                                        <div className="text-3xl font-bold text-white">{session.score}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-gray-400 text-sm mb-1 flex items-center gap-1 justify-end">
+                                            <Clock size={12} /> Duration
+                                        </div>
+                                        <div className="text-xl text-gray-300 font-mono">{formatDuration(session.duration_seconds)}</div>
+                                    </div>
+                                </div>
+
+                                {/* Detailed Metadata if available */}
+                                {session.metadata && (
+                                    <div className="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-400 space-y-1">
+                                        {Object.entries(session.metadata).map(([key, value]) => {
+                                            // Skip complex objects for now or render them simply
+                                            if (typeof value === 'object') return null;
+                                            return (
+                                                <div key={key} className="flex justify-between">
+                                                    <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
+                                                    <span className="text-gray-200">{String(value)}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+          </>
         )}
       </div>
     </div>

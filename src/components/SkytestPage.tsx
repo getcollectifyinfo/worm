@@ -61,7 +61,7 @@ const MODULES = [
   },
   {
     id: 'vigi',
-    name: 'VIGI Test',
+    name: 'VIGI 1',
     shortDesc: 'Görsel ve işitsel dikkat ile tepki süresini ölçen çift görevli simülasyon.',
     fullDesc: 'VIGI Testi, uyanıklık (vigilance) seviyenizi ölçer. Uzun süreli monoton görevler sırasında dikkatinizi korumanız gerekir. Nadiren gerçekleşen görsel veya işitsel sinyalleri yakalamanız ve yanlış alarmları (false positives) ayırt etmeniz istenir. Bu modül, uzun uçuşlardaki dikkat sürdürülebilirliğini simüle eder.',
     measures: [
@@ -284,6 +284,13 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
               <div key={module.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-slate-100 flex flex-col h-full group relative">
                 {/* Card Thumbnail */}
                 <div className="h-40 bg-slate-200 relative overflow-hidden">
+                  {module.id === 'cap' && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        YAKINDA
+                      </span>
+                    </div>
+                  )}
                   {module.id === 'cube' ? (
                     <>
                       <img
@@ -373,7 +380,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                       </div>
                     </>
                   )}
-                  {tier === 'GUEST' && !canAccessModule(module.id) && (
+                  {tier === 'GUEST' && !canAccessModule(module.id) && module.id !== 'cap' && module.id !== 'vigi2' && (
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center text-slate-800 font-bold text-sm">
                       Pro ile açılır
                     </div>
@@ -770,21 +777,34 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-              <button 
-                onClick={() => {
-                  if (selectedModule.id === 'cube') {
-                    onNavigate('CUBE');
-                  } else if (selectedModule.id === 'ipp') {
-                    onNavigate('IPP');
-                  } else if (selectedModule.id === 'worm') {
-                    onNavigate('WORM');
-                  }
-                  setSelectedModule(null);
-                }}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-              >
-                Bu Modülü Dene
-              </button>
+              {selectedModule.id === 'cap' ? (
+                 <button 
+                   disabled
+                   className="px-6 py-2 bg-slate-200 text-slate-500 rounded-lg font-medium cursor-not-allowed"
+                 >
+                   Yakında
+                 </button>
+              ) : (
+                <button 
+                  onClick={() => {
+                    if (selectedModule.id === 'cube') {
+                      onNavigate('CUBE');
+                    } else if (selectedModule.id === 'ipp') {
+                      onNavigate('IPP');
+                    } else if (selectedModule.id === 'worm') {
+                      onNavigate('WORM');
+                    } else if (selectedModule.id === 'vigi') {
+                      onNavigate('VIGI1');
+                    } else if (selectedModule.id === 'vigi2') {
+                      onNavigate('VIGI');
+                    }
+                    setSelectedModule(null);
+                  }}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Bu Modülü Dene
+                </button>
+              )}
             </div>
           </div>
         </div>

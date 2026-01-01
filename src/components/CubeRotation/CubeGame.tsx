@@ -17,7 +17,7 @@ import { PracticeMode } from './PracticeMode';
 import { CubeSettingsModal } from './CubeSettingsModal';
 import { MiniExamEndModal } from '../MiniExamEndModal';
 
-import { toast, Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 interface CubeGameProps {
   onExit: () => void;
@@ -163,13 +163,6 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
 
   const handleLoginClose = () => {
     closeLoginGate();
-    toast('Practice için giriş yapmalısın.', {
-        icon: '🔒',
-        style: {
-            background: '#333',
-            color: '#fff',
-        },
-    });
   };
 
   const handleLoginSuccess = () => {
@@ -290,8 +283,8 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
           onClose={handleCloseProModal}
           onUpgrade={() => handleUpgrade(isMiniExam ? 'mini-exam-end' : 'menu')}
           variant={proModalVariant}
-          title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : undefined}
-          description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : undefined}
+          title={proModalVariant === 'exam-settings' ? "Gerçek Sınav Ayarları" : "Neredeyse Bitti!"}
+          description={proModalVariant === 'exam-settings' ? "Orta ve zor seviye ayarlar, zaman baskısı ve görev yoğunluğu açısından gerçek sınav koşullarına en yakın yapılandırmadır. Bu ayarlar yalnızca Pro üyelikte açılır." : "Pro üyelik için bir adım kaldı, işlem sadece 30 sn sürer."}
           ctaText={proModalVariant === 'exam-settings' ? "Pro’ya Geç – Gerçek Sınav Modu" : undefined}
           trustText={proModalVariant === 'exam-settings' ? "İstediğin zaman iptal edebilirsin." : undefined}
         />
@@ -723,6 +716,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             setIsSettingsOpen(false);
             openProModal();
           }}
+          onLoginRequest={openLoginGate}
         />
       )}
 

@@ -12,6 +12,7 @@ import { SmartLoginGate } from '../Auth/SmartLoginGate';
 import { MiniExamEndModal } from '../MiniExamEndModal';
 import { GameResultsModal } from '../GameResultsModal';
 import { toast, Toaster } from 'react-hot-toast';
+import { statsService } from '../../services/statsService';
 
 interface VIGI1GameProps {
   onExit: () => void;
@@ -91,11 +92,17 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const practiseCurrentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [visualCorrect, setVisualCorrect] = useState(0);
   const [visualWrong, setVisualWrong] = useState(0);
+  const [visualTotalEvents, setVisualTotalEvents] = useState(0);
+  const [visualLagErrors, setVisualLagErrors] = useState(0);
+  const [visualRandomErrors, setVisualRandomErrors] = useState(0);
   const [visualAnalogValue, setVisualAnalogValue] = useState(36);
   const [visualDigitalValue, setVisualDigitalValue] = useState(360);
   const visualLoopRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const visualDirectionRef = useRef<1 | -1>(1);
   const visualStepsUntilTurnRef = useRef<number>(0);
+
+  // Audio Practice Extra Stats
+  const [audioTotalEvents, setAudioTotalEvents] = useState(0);
 
   // Auto-end game logic needs to be handled.
   // The hook useVIGI1GameLogic seems to handle timer?
@@ -223,13 +230,18 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         let nextDigital = nextAnalog * 10;
 
         if (shouldMismatch) {
+            // Track stats
+            setVisualTotalEvents(prev => prev + 1);
+            
             const isLagError = Math.random() < 0.6; 
             if (isLagError) {
+                setVisualLagErrors(prev => prev + 1);
                 let prevPos = nextAnalog - visualDirectionRef.current;
                 if (prevPos > 36) prevPos = 1;
                 if (prevPos < 1) prevPos = 36;
                 nextDigital = prevPos * 10;
             } else {
+                 setVisualRandomErrors(prev => prev + 1);
                  const offset = Math.random() < 0.5 ? -10 : 10;
                  nextDigital += offset;
             }
@@ -314,6 +326,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       if (h.length === 3 && h[0] === h[1] && h[1] === h[2]) {
         practiseTargetActiveRef.current = true;
         practiseTargetTsRef.current = Date.now();
+        setAudioTotalEvents(prev => prev + 1);
         practiseToneHistoryRef.current = [];
       } else {
         if (practiseTargetActiveRef.current) {
@@ -468,6 +481,41 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
     } catch { void 0; }
   }, [tier, startAudioPractise, startVisualPractise, practiseDurationMinutes]);
 
+  // Save Practice Stats when Summary is shown
+  useEffect(() => {
+    if (showPractiseSummary && practiseMode !== 'NONE') {
+        const isAudio = practiseMode === 'AUDIO';
+        const score = isAudio ? audioCorrect : visualCorrect;
+        
+        // Calculate duration played
+        const totalDuration = tier === 'PRO' ? practiseDurationMinutes * 60 : (maxDuration || 120);
+        const playedSeconds = totalDuration - practiseTimeLeft;
+
+        // Detailed metadata
+        const metadata = {
+            is_practice: true,
+            mode: practiseMode,
+            difficulty: practiseDifficulty,
+            total_events: isAudio ? audioTotalEvents : visualTotalEvents,
+            caught: isAudio ? audioCorrect : visualCorrect,
+            wrong: isAudio ? audioWrong : visualWrong,
+            // For visual
+            lag_errors: visualLagErrors,
+            random_errors: visualRandomErrors,
+            // For audio
+            avg_reaction_ms: avgReactionMs
+        };
+
+        statsService.saveSession({
+            game_type: 'VIGI1',
+            score: score,
+            duration_seconds: playedSeconds > 0 ? playedSeconds : 0,
+            started_at: new Date().toISOString(),
+            metadata: metadata
+        });
+    }
+  }, [showPractiseSummary, practiseMode, audioCorrect, visualCorrect, audioTotalEvents, visualTotalEvents, audioWrong, visualWrong, visualLagErrors, visualRandomErrors, avgReactionMs, practiseDurationMinutes, maxDuration, practiseTimeLeft, tier, practiseDifficulty]);
+
   return (
     <div className="relative w-full h-screen bg-gray-200 flex flex-col items-center justify-center font-sans select-none">
       <Toaster position="top-center" />
@@ -583,7 +631,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         initialLocale="tr"
-        title="VIGI 2 (Audio-Visual Vigilance)"
+        title="VIGI 1 (Audio-Visual Vigilance)"
         description="Monitor the gauge and digital display for discrepancies."
         rules={[
           "The analog needle moves randomly (Clockwise/Counter-clockwise).",
@@ -600,7 +648,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         ]}
         translations={{
           tr: {
-            title: "VIGI 2 (Görsel-İşitsel Uyanıklık)",
+            title: "VIGI 1 (Görsel-İşitsel Uyanıklık)",
             description: "İbreyi ve dijital ekranı uyuşmazlık için izle.",
             rules: [
               "Analog ibre rastgele hareket eder (Saat yönü / ters yönde).",
@@ -623,7 +671,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       {/* Start Menu Overlay */}
       {!isPlaying && !showResults && !showMiniExamModal && (
         <GameStartMenu 
-            title="VIGI 2"
+            title="VIGI 1"
             startLabel={score > 0 ? "PLAY AGAIN" : "EXAM MODE"}
             onStart={handleStartGame}
             onSettings={() => setIsSettingsOpen(true)}
@@ -806,8 +854,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             <button
               onClick={() => {
                 stopPractise();
-                setPractiseMode('NONE');
-                setIsPractiseSelectOpen(true);
+                setShowPractiseSummary(true);
               }}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
             >
@@ -879,10 +926,30 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             <div className="fixed inset-0 z-[2600] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                 <div className="text-xl font-bold text-slate-900 mb-4">Visual Practise Sonuçları</div>
-                <div className="space-y-2 text-slate-800">
-                  <div>Doğru Basmalar: {visualCorrect}</div>
-                  <div>Hatalı Basmalar: {visualWrong}</div>
-                  <div>Başarı Oranı: {(visualCorrect + visualWrong) > 0 ? Math.round((visualCorrect / (visualCorrect + visualWrong)) * 100) : 0}%</div>
+                <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Toplam Değişim</div>
+                        <div className="text-xl font-bold text-slate-800">{visualTotalEvents}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Yakalanan</div>
+                        <div className="text-xl font-bold text-green-600">{visualCorrect}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Kaçırılan</div>
+                        <div className="text-xl font-bold text-orange-600">{Math.max(0, visualTotalEvents - visualCorrect)}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Hatalı Basma</div>
+                        <div className="text-xl font-bold text-red-600">{visualWrong}</div>
+                    </div>
+                    <div className="col-span-2 bg-slate-100 p-3 rounded-lg">
+                        <div className="text-slate-500 text-xs uppercase font-bold mb-2 text-center">Hata Detayı</div>
+                        <div className="flex justify-around text-sm font-semibold text-slate-700">
+                            <span>Lag Hatası: <span className="text-red-500">{visualLagErrors}</span></span>
+                            <span>Rastgele: <span className="text-red-500">{visualRandomErrors}</span></span>
+                        </div>
+                    </div>
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button
@@ -959,8 +1026,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             <button
               onClick={() => {
                 stopPractise();
-                setPractiseMode('NONE');
-                setIsPractiseSelectOpen(true);
+                setShowPractiseSummary(true);
               }}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
             >
@@ -1034,10 +1100,27 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
             <div className="fixed inset-0 z-[2600] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                 <div className="text-xl font-bold text-slate-900 mb-4">Audio Practise Sonuçları</div>
-                <div className="space-y-2 text-slate-800">
-                  <div>Doğru Basmalar: {audioCorrect}</div>
-                  <div>Hatalı Basmalar: {audioWrong}</div>
-                  <div>Ortalama Hız: {avgReactionMs !== null ? `${avgReactionMs} ms` : '—'}</div>
+                <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Toplam Hedef (3'lü)</div>
+                        <div className="text-xl font-bold text-slate-800">{audioTotalEvents}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Yakalanan</div>
+                        <div className="text-xl font-bold text-green-600">{audioCorrect}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Kaçırılan</div>
+                        <div className="text-xl font-bold text-orange-600">{Math.max(0, audioTotalEvents - audioCorrect)}</div>
+                    </div>
+                    <div className="bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Hatalı Basma</div>
+                        <div className="text-xl font-bold text-red-600">{audioWrong}</div>
+                    </div>
+                    <div className="col-span-2 bg-slate-100 p-3 rounded-lg text-center">
+                        <div className="text-slate-500 text-xs uppercase font-bold">Ortalama Reaksiyon</div>
+                        <div className="text-2xl font-bold text-blue-600">{avgReactionMs !== null ? `${avgReactionMs} ms` : '—'}</div>
+                    </div>
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button

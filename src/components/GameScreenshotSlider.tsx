@@ -35,14 +35,14 @@ const SLIDES: Slide[] = [
   {
     id: 'vigi1',
     title: 'Vigilance 1 (VIGI 1)',
-    subtitle: 'Dikkat ve Tepki Süresi Ölçümü',
+    subtitle: 'Dikkat ve Tepki Süresi Ölçümü (Audio/Visual)',
     icon: <Eye size={64} />,
     color: 'from-amber-600 to-orange-700'
   },
   {
     id: 'vigi2',
     title: 'Vigilance 2 (VIGI 2)',
-    subtitle: 'Dinamik Görsel Tarama',
+    subtitle: 'Dinamik Görsel Tarama (Dot/Shape)',
     icon: <Eye size={64} />,
     color: 'from-red-600 to-rose-700'
   },

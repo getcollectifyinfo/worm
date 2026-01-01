@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Gauge, Layers, Play } from 'lucide-react';
+import { X, Gauge, Layers, Play, Lock } from 'lucide-react';
 import { Settings as SettingsIcon } from 'lucide-react';
 
 interface CubeSettingsModalProps {
@@ -48,13 +48,8 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
         {/* Content */}
         <div className="p-6 space-y-8 relative">
           
-          {/* Overlay for Non-Pro */}
-          {!isPro && (
-             <div className="absolute inset-0 z-10 bg-gray-900/10" onClick={onOpenProModal} /> 
-          )}
-
           {/* Speed Setting */}
-          <div className={`space-y-3 ${!isPro ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+          <div className={`space-y-3 ${!isPro ? 'opacity-60 grayscale pointer-events-none' : ''}`}>
             <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                     <Gauge size={16} className="text-blue-400" />
@@ -83,7 +78,7 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
           </div>
 
           {/* Command Count Setting */}
-          <div className={`space-y-3 ${!isPro ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+          <div className={`space-y-3 ${!isPro ? 'opacity-60 grayscale pointer-events-none' : ''}`}>
              <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                     <Layers size={16} className="text-purple-400" />
@@ -110,6 +105,25 @@ export const CubeSettingsModal: React.FC<CubeSettingsModalProps> = ({
                 ))}
             </div>
           </div>
+
+          {/* CTA for Non-Pro */}
+          {!isPro && (
+            <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-xl p-4 text-center mt-4">
+              <div className="flex items-center justify-center mb-2 gap-2">
+                 <Lock size={16} className="text-blue-400" />
+                 <h3 className="text-white font-bold text-sm">Özelleştirme Kilitli</h3>
+              </div>
+              <p className="text-gray-400 text-xs mb-3">
+                Kendi hızınızı ve zorluk seviyenizi belirlemek için PRO pakete geçin.
+              </p>
+              <button 
+                onClick={onOpenProModal}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm shadow-lg shadow-blue-900/30 transition-all hover:scale-[1.02]"
+              >
+                PRO'ya Yükselt
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer with Start Button */}

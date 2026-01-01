@@ -42,7 +42,7 @@ import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from
 
 import { statsService } from './services/statsService';
 
-import { Toaster, toast } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { user, loading, signOut, refreshSession } = useAuth();
@@ -262,13 +262,6 @@ function App() {
 
   const handleLoginClose = () => {
     closeLoginGate();
-    toast('Practice için giriş yapmalısın.', {
-        icon: '🔒',
-        style: {
-            background: '#333',
-            color: '#fff',
-        },
-    });
   };
 
   const handleLoginSuccess = () => {
@@ -923,15 +916,16 @@ function App() {
             isOpen={isTutorialOpen}
             onClose={() => setIsTutorialOpen(false)}
             title="WORM"
-            description="Master the art of navigation! Follow the generated flight instructions to guide your worm to the target. Precision is key."
+            description="Visualize the movement! In an 8x8 grid, guide the Green Object (line-headed circle) to the Red Dot. Commands appear sequentially (e.g., TURN TO THE LEFT and GO AHEAD). Visualize these moves in your mind. At the end, 4 options appear. Select the grid where the Green Object lands on the Red Dot."
             initialLocale="tr"
             rules={[
-                "Read the current instruction in the Mission Panel.",
-                "Execute the command precisely using the keyboard.",
-                "Turn the worm using arrow keys.",
-                "Move forward using the Space bar.",
-                "Reach the target (Red Circle) to complete the mission.",
-                "Avoid wrong inputs to maintain a perfect score."
+                "Follow sequential commands: TURN TO THE LEFT/RIGHT/BACK and GO AHEAD.",
+                "Visualize the moves mentally without seeing the object move.",
+                "After commands end, choose the correct final position from 4 options.",
+                "Orientation Tip: Directions are relative to the object's head.",
+                "• Head Down (Circle Up): Right Turn → Moves Left on screen.",
+                "• Head Left: Right Turn → Moves Up on screen.",
+                "• Head Right: Right Turn → Moves Down on screen."
             ]}
             controls={[
                 { key: "←", action: "Turn Left" },
@@ -963,14 +957,15 @@ function App() {
             translations={{
               tr: {
                 title: "WORM",
-                description: "Navigasyon sanatını öğren! Üretilen uçuş talimatlarını takip ederek solucanı hedefe ulaştır. Hassasiyet önemlidir.",
+                description: "8x8'lik 64 kareden oluşan bir alanda, yeşil renkli (baş kısmı çizgi olan) nesneyi kırmızı nokta ile buluşturmalısın. Ekrana sırasıyla rastgele komutlar gelir (örn: TURN TO THE LEFT and GO AHEAD). Bu komutları zihninde canlandırmalısın. Komutlar bittiğinde ekrana 4 farklı seçenek gelir. Hangi seçenekte yeşil nesnenin kırmızı noktanın üzerine geldiğini bulmalısın.",
                 rules: [
-                  "Mission Panel'deki talimatı oku.",
-                  "Komutu klavyede doğru uygula.",
-                  "Solucanı yön tuşları ile çevir.",
-                  "Boşluk tuşu ile ileri hareket et.",
-                  "Kırmızı hedefe ulaş.",
-                  "Hatasız yüksek skor hedefle."
+                  "Komutları takip et: TURN TO THE LEFT/RIGHT/BACK and GO AHEAD.",
+                  "Hareketleri zihninde canlandır.",
+                  "4 seçenek arasından doğru konumu bul.",
+                  "İpucu: Nesnenin yönüne göre sağ/sol değişir.",
+                  "• Baş aşağı bakıyorsa (Daire yukarıda): Sağa dönmek = Sola (size göre).",
+                  "• Baş sola bakıyorsa: Sağa dönmek = Yukarıya.",
+                  "• Baş sağa bakıyorsa: Sağa dönmek = Aşağıya."
                 ],
                 controls: [
                   { key: "←", action: "Sola çevir" },
@@ -982,7 +977,25 @@ function App() {
                 secondaryCtaText: "Alıştırma"
               },
               en: {
-                title: "WORM"
+                title: "WORM",
+                description: "Visualize the movement! In an 8x8 grid, guide the Green Object (line-headed circle) to the Red Dot. Commands appear sequentially (e.g., TURN TO THE LEFT and GO AHEAD). Visualize these moves in your mind. At the end, 4 options appear. Select the grid where the Green Object lands on the Red Dot.",
+                rules: [
+                    "Follow sequential commands: TURN TO THE LEFT/RIGHT/BACK and GO AHEAD.",
+                    "Visualize the moves mentally without seeing the object move.",
+                    "After commands end, choose the correct final position from 4 options.",
+                    "Orientation Tip: Directions are relative to the object's head.",
+                    "• Head Down (Circle Up): Right Turn → Moves Left on screen.",
+                    "• Head Left: Right Turn → Moves Up on screen.",
+                    "• Head Right: Right Turn → Moves Down on screen."
+                ],
+                controls: [
+                    { key: "←", action: "Turn Left" },
+                    { key: "→", action: "Turn Right" },
+                    { key: "↓", action: "Turn Back" },
+                    { key: "SPACE", action: "Move Forward" }
+                ],
+                ctaText: "EXAM MODE",
+                secondaryCtaText: "PRACTISE"
               }
             }}
         />

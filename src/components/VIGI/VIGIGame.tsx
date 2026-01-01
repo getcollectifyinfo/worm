@@ -61,7 +61,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       }, maxDuration * 1000);
       return () => clearTimeout(timer);
     }
-  }, [isPlaying, maxDuration, tier]);
+  }, [isPlaying, maxDuration, tier, handleEndGame]);
 
   // Calculate position
   const getPositionStyle = (pos: number) => {
@@ -171,7 +171,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
         initialLocale="tr"
-        title="VIGI 1"
+        title="VIGI 2"
         description="Vigilance Test! Monitor the moving object and react instantly to specific changes in its behavior."
         rules={[
             "Watch the object moving in the circle.",
@@ -191,7 +191,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         ]}
         translations={{
           tr: {
-            title: "VIGI 1",
+            title: "VIGI 2",
             description: "Uyanıklık testi! Daire içinde hareket eden nesneyi izle ve davranışındaki belirli değişikliklere anında tepki ver.",
             rules: [
               "Daire içindeki hareketi izle.",
@@ -265,7 +265,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
       {/* Start Button Overlay */}
       {!isPlaying && !showSettings && !showResults && !showMiniExamModal && (
         <GameStartMenu 
-            title="VIGI 1"
+            title="VIGI 2"
             startLabel={totalEvents > 0 ? "PLAY AGAIN" : "EXAM MODE"}
             onStart={handleStartGame}
             onSettings={() => setShowSettings(true)}

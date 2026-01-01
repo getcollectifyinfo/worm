@@ -65,7 +65,7 @@ const GAMES = [
   },
   { 
     id: 'VIGI1', 
-    title: 'VIGI 2', 
+    title: 'VIGI 1', 
     description: 'Audio-Visual Vigilance', 
     icon: Eye, 
     color: 'orange',
@@ -81,7 +81,7 @@ const GAMES = [
   },
   { 
     id: 'VIGI', 
-    title: 'VIGI 1', 
+    title: 'VIGI 2', 
     description: 'Dot Vigilance Test', 
     icon: Zap, 
     color: 'purple',
