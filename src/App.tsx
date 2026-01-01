@@ -129,6 +129,22 @@ function App() {
             
             // Stay on simulation page (no auto-redirect to Stripe)
         }
+
+        const pendingCheckout = localStorage.getItem('pending_checkout_skytest');
+        if (pendingCheckout) {
+            localStorage.removeItem('pending_checkout_skytest');
+            // Show toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
+            toast.innerHTML = '<span>Hesap oluşturuldu. Ödeme sayfasına yönlendiriliyorsunuz...</span>';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+
+            // Redirect to Stripe
+            setTimeout(() => {
+                handleUpgrade();
+            }, 1000);
+        }
     }
   }, [user, handleUpgrade]);
 

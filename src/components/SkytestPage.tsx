@@ -17,6 +17,7 @@ import type { Page } from '../types';
 import { GameScreenshotSlider } from './GameScreenshotSlider';
 import { useGameAccess } from '../hooks/useGameAccess';
 import { ProAccessModal } from './ProAccessModal';
+import { SmartLoginGate } from './Auth/SmartLoginGate';
 
 interface SkytestPageProps {
   onBack: () => void;
@@ -120,19 +121,13 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
     showProModal, 
     openProModal, 
     closeProModal,
-    handleUpgrade 
+    handleUpgrade,
+    showLoginGate,
+    openLoginGate,
+    closeLoginGate
   } = useGameAccess();
 
-  const handleBuy = async () => {
-    if (!isLegalAccepted) {
-      alert('Lütfen satın alma işlemine devam etmek için Yasal Uyarıyı okuyup kabul ediniz.');
-      const pricingSection = document.getElementById('pricing');
-      if (pricingSection) {
-        pricingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-      return;
-    }
-
+  const performCheckout = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/create-checkout-session', {
@@ -156,6 +151,25 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBuy = async () => {
+    if (!isLegalAccepted) {
+      alert('Lütfen satın alma işlemine devam etmek için Yasal Uyarıyı okuyup kabul ediniz.');
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
+    if (tier === 'GUEST') {
+        localStorage.setItem('pending_checkout_skytest', 'true');
+        openLoginGate();
+        return;
+    }
+
+    performCheckout();
   };
 
   return (
@@ -810,6 +824,10 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
         </div>
       )}
       <ProAccessModal isOpen={showProModal} onClose={closeProModal} onUpgrade={handleUpgrade} />
-    </div>
-  );
+      <SmartLoginGate 
+         isOpen={showLoginGate}
+         onClose={closeLoginGate}
+       />
+     </div>
+   );
 };
