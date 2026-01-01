@@ -123,14 +123,11 @@ function App() {
             // Show toast
             const toast = document.createElement('div');
             toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
-            toast.innerHTML = '<span>Hesap oluşturuldu. Pro üyeliğini tamamlayalım.</span>';
+            toast.innerHTML = '<span>Hesap oluşturuldu.</span>';
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
             
-            // Trigger upgrade logic with a small delay to ensure state is stable
-            setTimeout(() => {
-                handleUpgrade();
-            }, 500);
+            // Stay on simulation page (no auto-redirect to Stripe)
         }
     }
   }, [user, handleUpgrade]);
