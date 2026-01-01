@@ -13,7 +13,7 @@ interface SubscriptionSuccessProps {
 export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({ onClose }) => {
   const { t } = useLanguage();
   const { tier } = useGameAccess();
-  const { refreshSession } = useAuth();
+  const { refreshSession, session } = useAuth();
   const { width, height } = useWindowSize();
   
   const [retryCount, setRetryCount] = useState(0);
@@ -24,6 +24,29 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({ onClos
       return;
     }
 
+    const verifySubscription = async () => {
+        try {
+            if (!session?.access_token) return;
+
+            const res = await fetch('/api/verify-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'active' && refreshSession) {
+                    await refreshSession();
+                }
+            }
+        } catch (err) {
+            console.error('Verification error:', err);
+        }
+    };
+
     const interval = setInterval(async () => {
       if (retryCount > 10) { // Stop auto-polling after ~20 seconds
         clearInterval(interval);
@@ -31,6 +54,9 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({ onClos
       }
       
       console.log('Polling for subscription status update...');
+      await verifySubscription();
+      
+      // Fallback standard refresh
       if (refreshSession) {
         await refreshSession();
       }
@@ -38,9 +64,30 @@ export const SubscriptionSuccess: React.FC<SubscriptionSuccessProps> = ({ onClos
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [tier, refreshSession, retryCount]);
+  }, [tier, refreshSession, retryCount, session]);
 
   const handleManualRefresh = async () => {
+    if (session?.access_token) {
+        try {
+            const res = await fetch('/api/verify-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'active' && refreshSession) {
+                    await refreshSession();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     if (refreshSession) {
       await refreshSession();
     }

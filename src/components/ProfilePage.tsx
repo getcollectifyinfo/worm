@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useGameAccess } from '../hooks/useGameAccess';
 import { statsService } from '../services/statsService';
 import { UserBadge } from './UserBadge';
-import { Crown, Calendar, Clock, CreditCard, Check, AlertTriangle, LogOut } from 'lucide-react';
+import { Crown, Calendar, Clock, CreditCard, Check, AlertTriangle, LogOut, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ProfilePageProps {
@@ -12,10 +12,11 @@ interface ProfilePageProps {
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
   const { t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, signOut, refreshSession, session } = useAuth();
   const { tier, openLoginGate, handleUpgrade } = useGameAccess();
   const [totalPlayTime, setTotalPlayTime] = useState<number>(0);
   const [canceling, setCanceling] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [cancelMessage, setCancelMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +40,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
 
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return t('unknown_date');
-    return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return t('unknown_date');
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const handleCancelSubscription = async () => {
@@ -74,6 +77,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
         setCancelMessage(t('error_generic'));
     } finally {
         setCanceling(false);
+    }
+  };
+
+  const handleSyncSubscription = async () => {
+    if (!session?.access_token) return;
+    setIsSyncing(true);
+    try {
+        const res = await fetch('/api/verify-subscription', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+        
+        if (res.ok) {
+            if (refreshSession) {
+                await refreshSession();
+            }
+            // Optional: Show success feedback
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsSyncing(false);
     }
   };
 
@@ -165,6 +193,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
 
                 {isPro ? (
                     <div className="space-y-6 relative z-10">
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={handleSyncSubscription}
+                                disabled={isSyncing}
+                                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                            >
+                                <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+                                {t('sync_status')}
+                            </button>
+                        </div>
                         <div className="bg-yellow-500/5 rounded-xl p-5 border border-yellow-500/20">
                             <p className="text-yellow-200/80 mb-1 uppercase tracking-wider text-xs font-bold">{t('current_plan')}</p>
                             <p className="text-3xl font-bold text-yellow-400">{t('skytest_pro')}</p>

@@ -91,6 +91,7 @@ export type TranslationKey =
   | 'skytest_pro'
   | 'renewal_date'
   | 'active'
+  | 'sync_status'
   | 'cancel_subscription'
   | 'cancel_warning'
   | 'benefits_1'

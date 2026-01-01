@@ -59,8 +59,14 @@ function SnakeApp() {
     showLoginGate,
     closeLoginGate
   } = useGameAccess();
+  const [showSuccessModal, setShowSuccessModal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('success') === 'true';
+    }
+    return false;
+  });
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>(() => {
@@ -68,7 +74,6 @@ function SnakeApp() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('success') === 'true') {
-        // Query param clearing handled by wrapper
         return 'LANDING';
       }
     }
@@ -100,16 +105,18 @@ function SnakeApp() {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
-  // Handle Stripe Success Return
+  // Handle Stripe Success Return - Cleanup URL
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('success') === 'true') {
-        setShowSuccessModal(true);
-        window.history.replaceState({}, '', window.location.pathname);
+    if (showSuccessModal && typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('success')) {
+        url.searchParams.delete('success');
+        // We use replaceState to remove the query param without triggering a navigation
+        // But we must preserve the current pathname which might have been updated by the routing effect
+        window.history.replaceState({}, '', window.location.pathname + url.search);
       }
     }
-  }, []);
+  }, [showSuccessModal]);
 
   // Save current page for return after payment
   useEffect(() => {
@@ -846,8 +853,10 @@ function SnakeApp() {
   // RENDER LOGIC
   // ----------------------------------------------------------------------
 
+  let content;
+
   if (currentPage === 'MARKETING') {
-    return (
+    content = (
       <MarketingPage 
         onStartDemo={() => setCurrentPage('LANDING')} 
         onViewProduct={() => setCurrentPage('SKYTEST_PRODUCT')}
@@ -856,52 +865,32 @@ function SnakeApp() {
         onSignOut={signOut}
       />
     );
-  }
-
-  if (currentPage === 'PROFILE') {
-    return <ProfilePage onBack={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'SKYTEST_BLOG_1') {
-    return <SkytestBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
-  }
-
-  if (currentPage === 'SKYTEST_PEGASUS_BLOG') {
-    return <SkytestPegasusBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
-  }
-
-  if (currentPage === 'SKYTEST_PREPARATION_BLOG') {
-    return <SkytestPreparationBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
-  }
-
-  if (currentPage === 'PRIVACY_POLICY') {
-    return <PrivacyPolicyPage onBack={() => setCurrentPage('MARKETING')} />;
-  }
-
-  if (currentPage === 'TERMS_OF_SERVICE') {
-    return <TermsOfServicePage onBack={() => setCurrentPage('MARKETING')} />;
-  }
-
-  if (currentPage === 'LEGAL_DISCLAIMER') {
-    return <LegalDisclaimerPage onBack={() => setCurrentPage('MARKETING')} />;
-  }
-
-  if (currentPage === 'SKYTEST_PRODUCT') {
-    return (
+  } else if (currentPage === 'PROFILE') {
+    content = <ProfilePage onBack={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'SKYTEST_BLOG_1') {
+    content = <SkytestBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  } else if (currentPage === 'SKYTEST_PEGASUS_BLOG') {
+    content = <SkytestPegasusBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  } else if (currentPage === 'SKYTEST_PREPARATION_BLOG') {
+    content = <SkytestPreparationBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  } else if (currentPage === 'PRIVACY_POLICY') {
+    content = <PrivacyPolicyPage onBack={() => setCurrentPage('MARKETING')} />;
+  } else if (currentPage === 'TERMS_OF_SERVICE') {
+    content = <TermsOfServicePage onBack={() => setCurrentPage('MARKETING')} />;
+  } else if (currentPage === 'LEGAL_DISCLAIMER') {
+    content = <LegalDisclaimerPage onBack={() => setCurrentPage('MARKETING')} />;
+  } else if (currentPage === 'SKYTEST_PRODUCT') {
+    content = (
       <SkytestPage 
         onBack={() => setCurrentPage('MARKETING')}
         onStartFree={() => setCurrentPage('LANDING')}
         onNavigate={(page) => setCurrentPage(page as Page)}
       />
     );
-  }
-
-  if (currentPage === 'STATISTICS') {
-    return <StatisticsPage onBack={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'LANDING') {
-    return (
+  } else if (currentPage === 'STATISTICS') {
+    content = <StatisticsPage onBack={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'LANDING') {
+    content = (
         <LandingPage 
             onSelectGame={(game) => setCurrentPage(game)} 
             onSignOut={signOut} 
@@ -911,42 +900,19 @@ function SnakeApp() {
             onGoHome={() => setCurrentPage('MARKETING')}
         />
     );
-  }
-
-  if (currentPage === 'VIGI') {
-    return <VIGIGame onExit={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'VIGI1') {
-    return <VIGI1Game onExit={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'CAPACITY') {
-    return <CapacityGame onExit={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'IPP') {
-    return <IPPGame onExit={() => setCurrentPage('LANDING')} />;
-  }
-
-  if (currentPage === 'CUBE') {
-    return <CubeGame onExit={() => setCurrentPage('LANDING')} />;
-  }
-
-  return (
+  } else if (currentPage === 'VIGI') {
+    content = <VIGIGame onExit={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'VIGI1') {
+    content = <VIGI1Game onExit={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'CAPACITY') {
+    content = <CapacityGame onExit={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'IPP') {
+    content = <IPPGame onExit={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'CUBE') {
+    content = <CubeGame onExit={() => setCurrentPage('LANDING')} />;
+  } else {
+    content = (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
-        <Toaster position="top-center" />
-        {showSuccessModal && (
-            <SubscriptionSuccess 
-                onClose={() => {
-                    setShowSuccessModal(false);
-                    const lastPage = localStorage.getItem('last_active_page');
-                    if (lastPage) {
-                        setCurrentPage(lastPage as Page);
-                    }
-                }} 
-            />
-        )}
         <GameTutorial
             isOpen={isTutorialOpen}
             onClose={() => setIsTutorialOpen(false)}
@@ -1467,30 +1433,25 @@ function SnakeApp() {
         />
     </div>
   );
-}
-
-export default App;
-
-function App() {
-  const [showSuccessModal, setShowSuccessModal] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get('success') === 'true';
-    }
-    return false;
-  });
+  }
 
   return (
     <>
-      <SnakeApp />
-      {showSuccessModal && (
-        <SubscriptionSuccess 
-            onClose={() => {
-                setShowSuccessModal(false);
-                window.history.replaceState({}, '', window.location.pathname);
-            }} 
-        />
-      )}
+        <Toaster position="top-center" />
+        {showSuccessModal && (
+            <SubscriptionSuccess 
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    const lastPage = localStorage.getItem('last_active_page');
+                    if (lastPage) {
+                        setCurrentPage(lastPage as Page);
+                    }
+                }} 
+            />
+        )}
+        {content}
     </>
   );
 }
+
+export default SnakeApp;

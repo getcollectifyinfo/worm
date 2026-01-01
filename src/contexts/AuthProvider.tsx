@@ -60,8 +60,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Session is already gone, just ignore
         return;
       }
-      console.error('Error signing out:', error);
-      throw error;
+      // Log as warning instead of error for network aborts (common during navigation)
+      console.warn('Sign out notice:', error);
+      
+      // Ensure local state is cleared even if server request fails
+      setSession(null);
+      setUser(null);
     }
   };
 

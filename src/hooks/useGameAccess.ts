@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { DifficultyLevel } from '../types';
 
 export type UserTier = 'GUEST' | 'FREE' | 'PRO';
@@ -28,6 +29,7 @@ const DEMO_DURATION = 120; // 2 minutes in seconds
 
 export const useGameAccess = (): GameAccess => {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [showProModal, setShowProModal] = useState(false);
   const [showLoginGate, setShowLoginGate] = useState(false);
   
@@ -130,7 +132,8 @@ export const useGameAccess = (): GameAccess => {
         body: JSON.stringify({
           returnUrl: returnUrl.toString(),
           userId: user.id,
-          userEmail: user.email
+          userEmail: user.email,
+          locale: language
         })
       });
       
@@ -145,7 +148,7 @@ export const useGameAccess = (): GameAccess => {
       console.error('Error creating checkout session:', error);
       alert('Payment initialization failed. Please try again.');
     }
-  }, [user]);
+  }, [user, language]);
 
   return {
     tier,
