@@ -12,6 +12,7 @@ import { useGameAccess } from '../../hooks/useGameAccess';
 import { ProAccessModal } from '../ProAccessModal';
 import { SmartLoginGate } from '../Auth/SmartLoginGate';
 import { MiniExamEndModal } from '../MiniExamEndModal';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 import { GameResultsModal } from '../GameResultsModal';
 
@@ -20,6 +21,7 @@ interface CapacityGameProps {
 }
 
 const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
+  const { t } = useLanguage();
   const { 
     tier, 
     checkAccess, 
@@ -350,7 +352,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             onStart={startNewGame}
             onSettings={() => setShowSettings(true)}
             onPractice={() => {}}
-            practiceLabel="COMING SOON"
+            practiceLabel={t('coming_soon')}
             isPracticeDisabled={true}
             onBack={onExit}
             onLearn={() => setIsTutorialOpen(true)}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface MiniExamEndModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
   onPractice,
   isPracticeDisabled
 }) => {
+  const { t } = useLanguage();
+
   if (!isOpen) return null;
 
   return (
@@ -29,35 +32,34 @@ export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
             
             {/* Header */}
             <h2 className="text-3xl font-black text-white mb-4 leading-tight">
-                Bu, gerçek sınavın<br/>
+                {t('mini_exam_title').replace(t('mini_exam_title_highlight'), '')}<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
-                    sadece başlangıcıydı.
+                    {t('mini_exam_title_highlight')}
                 </span>
             </h2>
 
             <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                Az önce oynadığın Mini Exam,<br/>
-                gerçek sınavın en kolay ve en kısa versiyonuydu.
+                {t('mini_exam_desc')}
             </p>
 
             {/* Value Props */}
             <div className="bg-gray-800/50 rounded-2xl p-6 mb-8 border border-gray-700/50 text-left">
                 <div className="flex items-center gap-2 mb-4">
                     <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">PRO</span>
-                    <span className="text-white font-bold">Pro Üyelikle:</span>
+                    <span className="text-white font-bold">{t('pro_with_membership')}</span>
                 </div>
                 <ul className="space-y-3">
                     <li className="flex items-center gap-3 text-gray-300">
                         <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                        Daha uzun ve zor sınavlar
+                        {t('benefit_longer')}
                     </li>
                     <li className="flex items-center gap-3 text-gray-300">
                         <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                        Gerçek tempo (Medium / Hard)
+                        {t('benefit_tempo')}
                     </li>
                     <li className="flex items-center gap-3 text-gray-300">
                         <CheckCircle2 size={18} className="text-green-500 shrink-0" />
-                        Practice + detaylı analizler
+                        {t('benefit_practice')}
                     </li>
                 </ul>
             </div>
@@ -68,7 +70,7 @@ export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
                     onClick={onUpgrade}
                     className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-green-900/30 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] group"
                 >
-                    Gerçek Exam Moduna Geç (Pro)
+                    {t('switch_to_pro')}
                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
 
@@ -81,7 +83,7 @@ export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
                         : 'text-gray-500 hover:text-gray-300'
                     }`}
                 >
-                    {isPracticeDisabled ? 'Practice modu çok yakında!' : 'Practice ile biraz daha hazırlan.'}
+                    {isPracticeDisabled ? t('practice_mode_soon') : t('practice_suggestion')}
                 </button>
             </div>
 

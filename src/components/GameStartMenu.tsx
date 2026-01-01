@@ -1,6 +1,7 @@
 import React from 'react';
 import { Play, Settings, ArrowLeft, Book } from 'lucide-react';
 import { UserBadge } from './UserBadge';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface GameStartMenuProps {
   title: string;
@@ -26,11 +27,14 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
   isPracticeDisabled,
   onBack,
   onLearn,
-  startLabel = "EXAM MODE",
+  startLabel,
   highScore,
   children,
   tier
 }) => {
+  const { t } = useLanguage();
+  const effectiveStartLabel = startLabel || t('exam_mode');
+
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
       <div className="relative bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-md w-full flex flex-col gap-4 animate-fade-in">
@@ -46,7 +50,7 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
         
         {highScore !== undefined && (
            <div className="text-center text-gray-400 -mt-4 mb-2">
-             High Score: <span className="text-yellow-400 font-bold">{highScore}</span>
+             {t('high_score')}: <span className="text-yellow-400 font-bold">{highScore}</span>
            </div>
         )}
 
@@ -59,10 +63,10 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
         >
           <div className="flex items-center gap-3">
             <Play size={28} className="fill-current" />
-            <span className="text-2xl font-bold">{startLabel}</span>
+            <span className="text-2xl font-bold">{effectiveStartLabel}</span>
           </div>
           <span className="text-green-100 text-sm font-medium mt-1">
-             {tier === 'PRO' ? 'Gerçek sınav temposu ve skor' : '2 dakikalık örnek sınav (Easy)'}
+             {tier === 'PRO' ? t('exam_mode_pro_desc') : t('exam_mode_free_desc')}
           </span>
         </button>
 
@@ -79,10 +83,10 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
             >
             <div className="flex items-center gap-3">
                 <Settings size={24} />
-                <span className="text-xl font-bold">{practiceLabel || "PRACTICE MODE"}</span>
+                <span className="text-xl font-bold">{practiceLabel || t('practice_mode')}</span>
             </div>
             <span className={`text-xs font-medium mt-1 ${isPracticeDisabled ? 'text-gray-300' : 'text-blue-100'}`}>
-                {isPracticeDisabled ? 'Çok yakında!' : 'Alıştırmalarla refleks kazan'}
+                {isPracticeDisabled ? t('practice_mode_soon') : t('practice_mode_desc')}
             </span>
             </button>
         )}
@@ -94,7 +98,7 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
             className="group flex items-center justify-center gap-3 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 shadow-lg"
           >
             <Settings size={24} />
-            SETTINGS
+            {t('settings')}
           </button>
         )}
 
@@ -106,9 +110,9 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
             >
             <div className="flex items-center gap-3">
                 <Book size={24} />
-                <span className="text-xl font-bold">LEARN MODE</span>
+                <span className="text-xl font-bold">{t('learn_mode')}</span>
             </div>
-            <span className="text-purple-100 text-xs font-medium mt-1">Mantığını kısa ve net öğren</span>
+            <span className="text-purple-100 text-xs font-medium mt-1">{t('learn_mode_desc')}</span>
             </button>
         )}
 
@@ -119,7 +123,7 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
           className="group flex items-center justify-center gap-3 w-full py-3 text-gray-400 hover:text-white transition-all"
         >
           <ArrowLeft size={20} />
-          BACK TO MENU
+          {t('back_to_menu')}
         </button>
       </div>
     </div>

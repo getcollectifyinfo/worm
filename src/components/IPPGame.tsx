@@ -11,6 +11,7 @@ import { SmartLoginGate } from './Auth/SmartLoginGate';
 import { MiniExamEndModal } from './MiniExamEndModal';
 import { GameResultsModal } from './GameResultsModal';
 import { toast, Toaster } from 'react-hot-toast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface IPPGameProps {
   onExit: () => void;
@@ -55,6 +56,7 @@ const calculateNext = (current: number, num: number, rule: CalcRule) => {
 };
 
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
+  const { t } = useLanguage();
   const { 
     checkAccess, 
     tier, 
@@ -652,7 +654,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             setIsTutorialOpen(false);
             handleStart();
         }}
-        secondaryCtaText="COMING SOON"
+        secondaryCtaText={t('coming_soon')}
         isSecondaryCtaDisabled={true}
         onSecondaryCtaClick={() => {}}
         translations={{
@@ -695,7 +697,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     }
                 }}
                 onPractice={() => {}}
-                practiceLabel="COMING SOON"
+                practiceLabel={t('coming_soon')}
                 isPracticeDisabled={true}
                 onLearn={() => setIsTutorialOpen(true)}
                 onBack={onExit}

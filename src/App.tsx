@@ -33,6 +33,7 @@ import { SkytestPreparationBlogPage } from './components/SkytestPreparationBlogP
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
+import { ProfilePage } from './components/ProfilePage';
 import { SmartLoginGate } from './components/Auth/SmartLoginGate';
 import { useAuth } from './hooks/useAuth';
 import { useGameAccess } from './hooks/useGameAccess';
@@ -42,10 +43,11 @@ import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from
 
 import { statsService } from './services/statsService';
 
+import { SubscriptionSuccess } from './components/SubscriptionSuccess';
 import { Toaster } from 'react-hot-toast';
 
-function App() {
-  const { user, loading, signOut, refreshSession } = useAuth();
+function SnakeApp() {
+  const { user, loading, signOut } = useAuth();
   const { 
     tier, 
     maxDuration, 
@@ -58,6 +60,7 @@ function App() {
     closeLoginGate
   } = useGameAccess();
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings'>('default');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>(() => {
@@ -65,8 +68,7 @@ function App() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('success') === 'true') {
-        // Clear the query param to keep URL clean
-        window.history.replaceState({}, '', window.location.pathname);
+        // Query param clearing handled by wrapper
         return 'LANDING';
       }
     }
@@ -100,19 +102,21 @@ function App() {
 
   // Handle Stripe Success Return
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true' && refreshSession) {
-      // Force refresh session to get new subscription status
-      refreshSession().then(() => {
-        // Show success toast
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
-        toast.innerHTML = '<span>🎉 Tebrikler! Pro üyelik aktif edildi.</span>';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-      });
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('success') === 'true') {
+        setShowSuccessModal(true);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
-  }, [refreshSession]);
+  }, []);
+
+  // Save current page for return after payment
+  useEffect(() => {
+    if (currentPage && currentPage !== 'PROFILE') {
+        localStorage.setItem('last_active_page', currentPage);
+    }
+  }, [currentPage]);
 
   // Handle pending pro upgrade after login
   useEffect(() => {
@@ -165,6 +169,8 @@ function App() {
         setCurrentPage('LANDING');
       } else if (window.location.pathname === '/yasal-uyari') {
         setCurrentPage('LEGAL_DISCLAIMER');
+      } else if (window.location.pathname === '/profile') {
+        setCurrentPage('PROFILE');
       } else if (window.location.pathname === '/') {
         setCurrentPage('MARKETING');
       }
@@ -852,6 +858,10 @@ function App() {
     );
   }
 
+  if (currentPage === 'PROFILE') {
+    return <ProfilePage onBack={() => setCurrentPage('LANDING')} />;
+  }
+
   if (currentPage === 'SKYTEST_BLOG_1') {
     return <SkytestBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
   }
@@ -896,6 +906,7 @@ function App() {
             onSelectGame={(game) => setCurrentPage(game)} 
             onSignOut={signOut} 
             onShowStats={() => setCurrentPage('STATISTICS')}
+            onOpenProfile={() => setCurrentPage('PROFILE')}
             user={user}
             onGoHome={() => setCurrentPage('MARKETING')}
         />
@@ -925,6 +936,17 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
         <Toaster position="top-center" />
+        {showSuccessModal && (
+            <SubscriptionSuccess 
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    const lastPage = localStorage.getItem('last_active_page');
+                    if (lastPage) {
+                        setCurrentPage(lastPage as Page);
+                    }
+                }} 
+            />
+        )}
         <GameTutorial
             isOpen={isTutorialOpen}
             onClose={() => setIsTutorialOpen(false)}
@@ -1448,3 +1470,27 @@ function App() {
 }
 
 export default App;
+
+function App() {
+  const [showSuccessModal, setShowSuccessModal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('success') === 'true';
+    }
+    return false;
+  });
+
+  return (
+    <>
+      <SnakeApp />
+      {showSuccessModal && (
+        <SubscriptionSuccess 
+            onClose={() => {
+                setShowSuccessModal(false);
+                window.history.replaceState({}, '', window.location.pathname);
+            }} 
+        />
+      )}
+    </>
+  );
+}

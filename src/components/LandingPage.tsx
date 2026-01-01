@@ -6,6 +6,9 @@ import { useGameAccess } from '../hooks/useGameAccess';
 import { useAuth } from '../hooks/useAuth';
 import { UserBadge } from './UserBadge';
 import { FreeAccessModal } from './FreeAccessModal';
+import type { TranslationKey } from '../i18n/translations';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LanguageToggle } from './LanguageToggle';
 
 interface LandingPageProps {
   onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE' | 'CAP') => void;
@@ -13,13 +16,14 @@ interface LandingPageProps {
   onShowStats: () => void;
   user: User | null;
   onGoHome: () => void;
+  onOpenProfile: () => void;
 }
 
 const GAMES = [
   { 
     id: 'CUBE', 
     title: 'CUBE', 
-    description: 'Spatial Orientation', 
+    descKey: 'game_cube_desc', 
     icon: Box, 
     color: 'pink',
     colorClasses: {
@@ -35,7 +39,7 @@ const GAMES = [
   { 
     id: 'WORM', 
     title: 'WORM', 
-    description: 'Grid Orientation Test', 
+    descKey: 'game_worm_desc', 
     icon: Gamepad2, 
     color: 'green',
     colorClasses: {
@@ -51,7 +55,7 @@ const GAMES = [
   { 
     id: 'IPP', 
     title: 'IPP', 
-    description: 'Instrument Flight Rules', 
+    descKey: 'game_ipp_desc', 
     icon: Gauge, 
     color: 'blue',
     colorClasses: {
@@ -67,7 +71,7 @@ const GAMES = [
   { 
     id: 'VIGI1', 
     title: 'VIGI 1', 
-    description: 'Audio-Visual Vigilance', 
+    descKey: 'game_vigi1_desc', 
     icon: Eye, 
     color: 'orange',
     colorClasses: {
@@ -83,7 +87,7 @@ const GAMES = [
   { 
     id: 'VIGI', 
     title: 'VIGI 2', 
-    description: 'Dot Vigilance Test', 
+    descKey: 'game_vigi2_desc', 
     icon: Zap, 
     color: 'purple',
     colorClasses: {
@@ -99,7 +103,7 @@ const GAMES = [
   { 
     id: 'CAPACITY', 
     title: 'CAPACITY', 
-    description: 'Attention Capacity', 
+    descKey: 'game_capacity_desc', 
     icon: Brain, 
     color: 'yellow',
     colorClasses: {
@@ -115,7 +119,7 @@ const GAMES = [
   { 
     id: 'CAP', 
     title: 'Flight Capacity (CAP)', 
-    description: 'Capacity Test', 
+    descKey: 'game_cap_desc', 
     icon: Plane, 
     color: 'sky',
     colorClasses: {
@@ -130,12 +134,13 @@ const GAMES = [
   },
 ] as const;
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user, onGoHome }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, onShowStats, user, onGoHome, onOpenProfile }) => {
   const [showAuth, setShowAuth] = useState(false);
   const [showFreeAccessModal, setShowFreeAccessModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tier } = useGameAccess();
   const { signInWithGoogle } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -182,8 +187,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   const getBadgeConfig = (gameId: string): BadgeConfig => {
     if (gameId === 'CAP') {
         return {
-            label: 'SOON',
-            subtext: 'YAKINDA',
+            label: t('badge_soon'),
+            subtext: t('badge_soon_sub'),
             bgColor: 'bg-slate-700',
             textColor: 'text-slate-400',
             icon: null
@@ -194,7 +199,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     if (tier === 'PRO') {
         return {
             label: 'PRO',
-            subtext: 'Sınırsız Kullanım',
+            subtext: t('badge_pro_sub'),
             bgColor: 'bg-purple-600',
             textColor: 'text-white',
             icon: null
@@ -205,7 +210,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     if (tier === 'FREE') {
         return {
             label: 'FREE',
-            subtext: 'Mini deneme',
+            subtext: t('badge_free_sub'),
             bgColor: 'bg-yellow-500',
             textColor: 'text-black', // Yellow bg usually needs dark text
             icon: null
@@ -216,7 +221,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
     if (['CUBE', 'WORM'].includes(gameId)) {
         return {
             label: 'DEMO',
-            subtext: '2 dk • Kayıt gerekmez',
+            subtext: t('badge_demo_sub'),
             bgColor: 'bg-green-600',
             textColor: 'text-white',
             icon: null
@@ -225,8 +230,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         // Guest looking at restricted games
         return {
             label: 'FREE',
-            subtext: 'Ücretsiz Üyelikle Açık',
-            microText: 'Giriş yaparak erişebilirsin.',
+            subtext: t('badge_free_restricted_sub'),
+            microText: t('badge_free_restricted_micro'),
             bgColor: 'bg-yellow-500',
             textColor: 'text-black',
             icon: null
@@ -258,7 +263,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           
           <div className="flex flex-col items-center">
             <span className={`text-xl font-bold text-white tracking-wider ${!isComingSoon ? colors.textHover : 'text-gray-400'}`}>{game.title}</span>
-            <span className={`text-sm font-medium text-gray-400 mt-1 ${!isComingSoon ? colors.descHover : ''}`}>{game.description}</span>
+            <span className={`text-sm font-medium text-gray-400 mt-1 ${!isComingSoon ? colors.descHover : ''}`}>{t(game.descKey as TranslationKey)}</span>
             
             {/* Badge Subtext */}
             <div className="mt-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-900/80 px-2 py-1 rounded-md flex flex-col items-center text-center">
@@ -281,7 +286,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           onClick={() => setShowAuth(false)}
           className="absolute top-4 left-4 z-50 text-white hover:text-gray-300"
         >
-          ← Back
+          ← {t('back')}
         </button>
         <AuthPage onSuccess={() => {
             setShowAuth(false);
@@ -297,13 +302,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
 
   return (
     <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8 relative">
-      <button
-        onClick={onGoHome}
-        className="absolute top-8 left-8 flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
-      >
-        <Home size={20} />
-        <span className="font-bold">Ana Sayfa</span>
-      </button>
+      <div className="absolute top-8 left-8 flex items-center gap-4">
+        <button
+          onClick={onGoHome}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+        >
+          <Home size={20} />
+          <span className="font-bold">{t('home')}</span>
+        </button>
+        <LanguageToggle />
+      </div>
+
       {user ? (
         <div className="absolute top-8 right-8 z-50">
           <button
@@ -312,7 +321,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           >
             <UserBadge className="h-8 w-auto" />
             <div className="flex flex-col items-start">
-                <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
+              <span className="text-gray-300 text-sm hidden sm:inline">{user.email}</span>
             </div>
             <span className={`text-xs transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
@@ -322,12 +331,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
                 <button
                     onClick={() => {
                         setIsMenuOpen(false);
+                        onOpenProfile();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                >
+                    <UserBadge className="h-4 w-4" />
+                    {t('profile')}
+                </button>
+                <div className="h-px bg-gray-700" />
+                <button
+                    onClick={() => {
+                        setIsMenuOpen(false);
                         onShowStats();
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                 >
                     <Trophy size={16} className="text-yellow-500" />
-                    Statistics
+                    {t('statistics')}
                 </button>
                 <div className="h-px bg-gray-700" />
                 <button
@@ -338,7 +358,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-400 hover:bg-red-900/20 transition-colors"
                 >
                     <LogOut size={16} />
-                    Sign Out
+                    {t('signOut')}
                 </button>
             </div>
           )}
@@ -349,7 +369,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           className="absolute top-8 right-8 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
         >
           <LogIn size={20} />
-          <span className="font-bold">Sign In</span>
+          <span className="font-bold">{t('signIn')}</span>
         </button>
       )}
 

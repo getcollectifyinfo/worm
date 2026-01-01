@@ -61,6 +61,16 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
                       <Play size={16} className="text-blue-500" />
                       Uygulamaya Git
                   </button>
+                  <button
+                      onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigate('PROFILE'); 
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                  >
+                      <UserBadge className="h-4 w-4 text-blue-500" />
+                      Profilim
+                  </button>
                   <div className="h-px bg-gray-700" />
                   <button
                       onClick={() => {

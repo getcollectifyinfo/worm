@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { Mail, Lock, Loader2 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AuthPageProps {
   onSuccess: () => void;
@@ -9,6 +10,7 @@ interface AuthPageProps {
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = false }) => {
+  const { t } = useLanguage();
   const { signInWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -32,7 +34,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
         // Show success message
         const toast = document.createElement('div');
         toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-full shadow-xl z-[200] animate-in slide-in-from-top-4 duration-300 font-medium flex items-center gap-2';
-        toast.innerHTML = '<span>Giriş yapılıyor...</span>';
+        toast.innerHTML = `<span>${t('auth_logging_in')}</span>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 2000);
 
@@ -49,7 +51,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
             onSuccess();
         } else {
             // Should not happen if email confirmation is disabled, but handle just in case
-            setError('Account created! Please sign in.');
+            setError(t('auth_account_created'));
             setIsLogin(true);
         }
       }
@@ -57,7 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An unexpected error occurred');
+        setError(t('error_generic'));
       }
     } finally {
       setLoading(false);
@@ -71,10 +73,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
           <img src="/logo.png" alt="CadetPrep Academy" className="h-32" />
         </div>
         <h2 className="text-3xl font-bold text-white text-center mb-2">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+          {isLogin ? t('auth_welcome_back') : t('auth_create_account')}
         </h2>
         <p className="text-gray-400 text-center mb-8">
-          {isLogin ? 'Sign in to access Cadetprep Academy' : 'Join Cadetprep Academy today'}
+          {isLogin ? t('auth_signin_desc') : t('auth_signup_desc')}
         </p>
 
         {error && (
@@ -105,7 +107,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
               fill="#EA4335"
             />
           </svg>
-          Sign in with Google
+          {t('auth_signin_google')}
         </button>
 
         <div className="relative mb-6">
@@ -113,13 +115,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
             <div className="w-full border-t border-gray-700"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-800 text-gray-400">Or continue with email</span>
+            <span className="px-2 bg-gray-800 text-gray-400">{t('auth_or_email')}</span>
           </div>
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">{t('auth_email')}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input
@@ -134,7 +136,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">{t('auth_password')}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input
@@ -157,38 +159,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
             {loading ? (
               <Loader2 className="animate-spin" size={20} />
             ) : (
-              isLogin ? 'Sign In' : 'Sign Up'
+              isLogin ? t('auth_signin_button') : t('auth_signup_button')
             )}
           </button>
           
           {!isLogin && (
             <p className="text-xs text-gray-500 text-center mt-2">
-              Hesap oluşturarak, <a href="/terms" className="text-purple-400 hover:underline">Kullanım Şartları</a>, <a href="/privacy" className="text-purple-400 hover:underline">Gizlilik Politikası</a> ve <a href="/yasal-uyari" className="text-purple-400 hover:underline">Yasal Uyarı</a> metinlerini okuduğunuzu ve kabul ettiğinizi beyan edersiniz.
+              {t('auth_legal_text')}
             </p>
           )}
         </form>
 
-        {/* 
-        <div className="relative my-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-800 text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => signInWithGoogle()}
-          className="w-full bg-white text-gray-900 font-bold py-3 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 mb-6"
-        >
-          <Chrome size={20} />
-          Google
-        </button> 
-        */}
-
-        <p className="text-center text-gray-400 text-sm">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+        <p className="text-center text-gray-400 text-sm mt-8">
+          {isLogin ? `${t('auth_no_account')} ` : `${t('auth_has_account')} `}
           <button
             onClick={() => {
               setIsLogin(!isLogin);
@@ -196,17 +179,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
             }}
             className="text-purple-400 hover:text-purple-300 font-bold"
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? t('auth_signup_button') : t('auth_signin_button')}
           </button>
         </p>
         
         <div className="mt-8 pt-6 border-t border-gray-700 text-center">
           <p className="text-xs text-gray-500 leading-relaxed">
-            CadetPrep Academy, bağımsız bir hazırlık platformudur. SkyTest, Pegasus ve diğer tüm ticari markalar ilgili hak sahiplerine aittir. 
-            Platform, herhangi bir havayolu veya resmi test sağlayıcısı ile bağlantılı değildir.
+            {t('auth_footer_disclaimer')}
             <br />
             <a href="/yasal-uyari" className="text-purple-400 hover:text-purple-300 underline mt-1 inline-block">
-              Yasal Uyarı (Legal Disclaimer)
+              {t('auth_legal_disclaimer_link')}
             </a>
           </p>
         </div>

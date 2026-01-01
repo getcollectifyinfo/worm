@@ -18,6 +18,8 @@ import { GameScreenshotSlider } from './GameScreenshotSlider';
 import { useGameAccess } from '../hooks/useGameAccess';
 import { ProAccessModal } from './ProAccessModal';
 import { SmartLoginGate } from './Auth/SmartLoginGate';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LanguageToggle } from './LanguageToggle';
 
 interface SkytestPageProps {
   onBack: () => void;
@@ -28,87 +30,88 @@ interface SkytestPageProps {
 const MODULES = [
   {
     id: 'cube',
-    name: 'Cube Rotation Pro',
-    shortDesc: 'Uzaysal algı ve 3 boyutlu düşünme becerilerini geliştirmeye yönelik zihinsel rotasyon simülasyonu.',
-    fullDesc: 'Cube Rotation Pro, pilot adaylarının 3 boyutlu nesneleri zihinlerinde manipüle etme yeteneğini test eder. Küplerin uzaydaki hareketlerini takip ederek son pozisyonlarını veya yönelimlerini doğru tahmin etmeniz gerekir. Bu modül, kokpit göstergelerini ve uçağın uzaydaki konumunu hızlıca yorumlamak için kritik olan uzaysal farkındalığı artırır.',
-    measures: [
-      '3 Boyutlu Düşünme',
-      'Uzaysal Algı ve Yönelim',
-      'Zihinsel Rotasyon Hızı'
+    nameKey: 'module_name_cube',
+    shortDescKey: 'cube_short',
+    fullDescKey: 'cube_full',
+    measureKeys: [
+      'measures_3d',
+      'measures_spatial',
+      'measures_rotation'
     ]
   },
   {
     id: 'cap',
-    name: 'Flight Capacity (CAP)',
-    shortDesc: 'Aynı anda birden fazla görevi yönetme ve psikomotor koordinasyonu ölçen multitasking simülasyonu.',
-    fullDesc: 'Flight Capacity (CAP) modülü, kokpit ortamındaki yüksek iş yükünü simüle eder. Adaydan aynı anda irtifa, hız ve yön gibi parametreleri takip etmesi, işitsel uyaranlara tepki vermesi ve basit matematiksel işlemleri çözmesi istenir. Bu test, stres altında karar verme ve önceliklendirme becerilerini ölçer.',
-    measures: [
-      'Multitasking (Çoklu Görev)',
-      'Psikomotor Koordinasyon',
-      'Seçici Dikkat',
-      'Stres Yönetimi'
+    nameKey: 'module_name_cap',
+    shortDescKey: 'cap_short',
+    fullDescKey: 'cap_full',
+    measureKeys: [
+      'measures_multi',
+      'measures_psychomotor',
+      'measures_selective',
+      'measures_stress'
     ]
   },
   {
     id: 'capacity',
-    name: 'Capacity Test',
-    shortDesc: 'Uçuş kontrolü ve görsel dikkat görevlerini aynı anda yürütmeye dayalı çoklu görev testi.',
-    fullDesc: 'Capacity Test, görsel dikkati ve motor becerileri birleştirir. Bir yandan hareketli bir nesneyi merkezde tutmaya çalışırken, diğer yandan ekranda beliren şekil veya renk değişikliklerine anında tepki vermeniz gerekir. Bölünmüş dikkat kapasitenizi ve sürekli dikkat performansınızı zorlar.',
-    measures: [
-      'Bölünmüş Dikkat',
-      'Sürekli Dikkat',
-      'El-Göz Koordinasyonu'
+    nameKey: 'module_name_capacity',
+    shortDescKey: 'capacity_short',
+    fullDescKey: 'capacity_full',
+    measureKeys: [
+      'measures_divided',
+      'measures_sustained',
+      'measures_hand_eye'
     ]
   },
   {
     id: 'vigi',
-    name: 'VIGI 1',
-    shortDesc: 'Görsel ve işitsel dikkat ile tepki süresini ölçen çift görevli simülasyon.',
-    fullDesc: 'VIGI Testi, uyanıklık (vigilance) seviyenizi ölçer. Uzun süreli monoton görevler sırasında dikkatinizi korumanız gerekir. Nadiren gerçekleşen görsel veya işitsel sinyalleri yakalamanız ve yanlış alarmları (false positives) ayırt etmeniz istenir. Bu modül, uzun uçuşlardaki dikkat sürdürülebilirliğini simüle eder.',
-    measures: [
-      'Uyanıklık (Vigilance)',
-      'Tepki Süresi',
-      'İşitsel ve Görsel Ayrıştırma'
+    nameKey: 'module_name_vigi1',
+    shortDescKey: 'vigi1_short',
+    fullDescKey: 'vigi1_full',
+    measureKeys: [
+      'measures_vigilance',
+      'measures_reaction',
+      'measures_audio_visual'
     ]
   },
   {
     id: 'ipp',
-    name: 'IPP Test',
-    shortDesc: 'Bilgi işleme hızı, dikkat ve zihinsel aritmetik yeteneklerini ölçen simülasyon.',
-    fullDesc: 'IPP (Information Processing Performance) modülü, bilişsel işlem hızınızı test eder. Karmaşık kurallara dayalı sayısal ve görsel verileri hızlıca analiz edip doğru çıktıyı üretmeniz gerekir. Çalışma belleğini (working memory) aktif olarak kullanmayı gerektirir.',
-    measures: [
-      'Bilgi İşleme Hızı',
-      'Çalışma Belleği',
-      'Zihinsel Aritmetik',
-      'Mantıksal Çıkarım'
+    nameKey: 'module_name_ipp',
+    shortDescKey: 'ipp_short',
+    fullDescKey: 'ipp_full',
+    measureKeys: [
+      'measures_processing',
+      'measures_working_memory',
+      'measures_arithmetic',
+      'measures_logical'
     ]
   },
   {
     id: 'vigi2',
-    name: 'VIGI 2',
-    shortDesc: 'Yön, hız, şekil ve renk değişimlerini anlık fark etmeye dayalı dinamik takip testi.',
-    fullDesc: 'VIGI 2, görsel dikkatin dinamik bir versiyonudur. Hareket halindeki nesnelerin özelliklerindeki (yön, hız, renk, şekil) ince değişiklikleri fark etmeniz gerekir. Bu test, görsel tarama ve değişim körlüğü (change blindness) direncini ölçer.',
-    measures: [
-      'Görsel Tarama',
-      'Dinamik Dikkat',
-      'Detay Farkındalığı'
+    nameKey: 'module_name_vigi2',
+    shortDescKey: 'vigi2_short',
+    fullDescKey: 'vigi2_full',
+    measureKeys: [
+      'measures_scanning',
+      'measures_dynamic',
+      'measures_detail'
     ]
   },
   {
     id: 'worm',
-    name: 'Spatial Worm 2D',
-    shortDesc: 'Yön komutlarını zihinsel olarak takip etmeye ve doğru rotayı seçmeye dayalı uzaysal algı simülasyonu.',
-    fullDesc: 'Spatial Worm 2D, sürekli değişen yön komutlarını zihninizde birleştirerek bir rotayı takip etmenizi ister. "Sağ", "Sol", "İleri" gibi komutları, o anki yöneliminize göre (egocentric vs allocentric) doğru yorumlamanız gerekir. Uzaysal yönelim yeteneğini en saf haliyle test eder.',
-    measures: [
-      'Uzaysal Yönelim',
-      'Zihinsel Haritalama',
-      'Komut İşleme Hızı'
+    nameKey: 'module_name_worm',
+    shortDescKey: 'worm_short',
+    fullDescKey: 'worm_full',
+    measureKeys: [
+      'measures_orientation',
+      'measures_mapping',
+      'measures_command'
     ]
   }
-];
+] as const;
 
 export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, onNavigate }) => {
-  const [selectedModule, setSelectedModule] = useState<typeof MODULES[0] | null>(null);
+  const { t } = useLanguage();
+  const [selectedModule, setSelectedModule] = useState<typeof MODULES[number] | null>(null);
   const [cubePreviewImage, setCubePreviewImage] = useState<string | null>(null);
   const [ippPreviewImage, setIppPreviewImage] = useState<string | null>(null);
   const [wormPreviewImage, setWormPreviewImage] = useState<string | null>(null);
@@ -143,11 +146,11 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
         window.location.href = data.url;
       } else {
         console.error('No payment URL returned', data);
-        alert('Ödeme sistemi şu an yanıt vermiyor. Lütfen daha sonra tekrar deneyiniz.');
+        alert(t('payment_system_error'));
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Bir hata oluştu. Lütfen bağlantınızı kontrol ediniz.');
+      alert(t('payment_connection_error'));
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +158,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
   const handleBuy = async () => {
     if (!isLegalAccepted) {
-      alert('Lütfen satın alma işlemine devam etmek için Yasal Uyarıyı okuyup kabul ediniz.');
+      alert(t('legal_warning_alert'));
       const pricingSection = document.getElementById('pricing');
       if (pricingSection) {
         pricingSection.scrollIntoView({ behavior: 'smooth' });
@@ -175,21 +178,22 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Helmet>
-        <title>SKYTEST Hazırlık - Pegasus Psikometrik Test Simülasyonu</title>
-        <meta name="description" content="SKYTEST hazırlık modülleri ile Pegasus pilotluk sınavlarına hazırlanın. DLR, matematik, fizik ve dikkat testleri simülasyonu. Cadet adayları için özel psikometrik testler." />
+        <title>{t('skytest_title')}</title>
+        <meta name="description" content={t('skytest_desc')} />
       </Helmet>
       
       {/* 1. HERO SECTION */}
       <section className="relative bg-slate-900 text-white overflow-hidden">
         {/* Navigation */}
-        <nav className="absolute top-0 left-0 w-full z-20 p-6">
+        <nav className="absolute top-0 left-0 w-full z-20 p-6 flex justify-between items-center">
             <button 
                 onClick={onBack}
                 className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
             >
                 <ChevronRight className="rotate-180" size={20} />
-                Ana Sayfa
+                {t('home')}
             </button>
+            <LanguageToggle />
         </nav>
 
         {/* Abstract Background Elements */}
@@ -204,19 +208,19 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
             <div className="w-full md:w-1/2 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-medium">
                 <Plane size={16} />
-                <span>Pilot Adayları İçin Özel</span>
+                <span>{t('special_for_pilots')}</span>
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                SKYTEST Psikometrik <span className="text-blue-400">Simülasyonu</span>
+                {t('skytest_hero_title')}
               </h1>
               
               <h2 className="text-xl md:text-2xl text-slate-300 font-light">
-                Pegasus Havayolları cadet seçim sürecinde kullanılan test stiline hazırlık
+                {t('skytest_hero_subtitle')}
               </h2>
               
               <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
-                SKYTEST, pilot adaylarının dikkat, tepki süresi ve çoklu görev becerilerini ölçen ve geliştiren simülasyonlardan oluşur.
+                {t('skytest_hero_text')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -224,7 +228,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   onClick={onStartFree}
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2"
                 >
-                  Ücretsiz Dene
+                  {t('try_free')}
                   <ChevronRight size={20} />
                 </button>
                 <button 
@@ -235,10 +239,10 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      İşleniyor...
+                      {t('processing')}
                     </>
                   ) : (
-                    '500 TL / Ay – Satın Al'
+                    t('buy_now')
                   )}
                 </button>
               </div>
@@ -255,30 +259,30 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       {/* 2. SKYTEST NEDİR? */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 max-w-4xl text-center space-y-8">
-          <h2 className="text-3xl font-bold text-slate-900">SKYTEST Nedir?</h2>
+          <h2 className="text-3xl font-bold text-slate-900">{t('what_is_skytest')}</h2>
           <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
             <p>
-              SKYTEST, havacılık psikolojisi prensiplerine dayanarak geliştirilmiş, pilot adaylarını zorlu seçim süreçlerine hazırlayan kapsamlı bir eğitim aracıdır. Sadece testleri çözmeyi değil, beyninizin bu testlerin gerektirdiği bilişsel süreçlere adapte olmasını sağlar.
+              {t('what_is_skytest_p1')}
             </p>
             <p>
-              Simülasyonlarımız, <strong>gerçek sınav temposunu</strong> ve <strong>zaman baskısını</strong> birebir yansıtacak şekilde tasarlanmıştır. Adayların sadece doğru cevabı bulması değil, bunu yoğun stres ve dikkat dağıtıcı unsurlar altında, sürdürülebilir bir performansla yapması hedeflenir.
+              {t('what_is_skytest_p2')}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <Clock className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <div className="font-semibold text-slate-800">Zaman Baskısı</div>
+                <div className="font-semibold text-slate-800">{t('time_pressure')}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <Activity className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <div className="font-semibold text-slate-800">Multitasking</div>
+                <div className="font-semibold text-slate-800">{t('multitasking')}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <Target className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <div className="font-semibold text-slate-800">Odaklanma</div>
+                <div className="font-semibold text-slate-800">{t('focus')}</div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <Brain className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                <div className="font-semibold text-slate-800">Bilişsel Güç</div>
+                <div className="font-semibold text-slate-800">{t('cognitive_power')}</div>
               </div>
             </div>
           </div>
@@ -289,8 +293,8 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       <section className="py-20 bg-slate-50 border-y border-slate-200">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900">Eğitim Modülleri</h2>
-            <p className="text-slate-600 mt-4">Seçim süreçlerinde karşılaşacağınız tüm test bataryaları</p>
+            <h2 className="text-3xl font-bold text-slate-900">{t('training_modules')}</h2>
+            <p className="text-slate-600 mt-4">{t('training_modules_desc')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -301,7 +305,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   {module.id === 'cap' && (
                     <div className="absolute top-2 right-2 z-10">
                       <span className="bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded shadow-sm">
-                        YAKINDA
+                        {t('soon')}
                       </span>
                     </div>
                   )}
@@ -396,16 +400,16 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   )}
                   {tier === 'GUEST' && !canAccessModule(module.id) && module.id !== 'cap' && module.id !== 'vigi2' && (
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center text-slate-800 font-bold text-sm">
-                      Pro ile açılır
+                      {t('open_with_pro')}
                     </div>
                   )}
                 </div>
 
                 {/* Card Content */}
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">{module.name}</h3>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{t(module.nameKey)}</h3>
                   <p className="text-slate-600 text-sm mb-6 flex-grow">
-                    {module.shortDesc}
+                    {t(module.shortDescKey)}
                   </p>
                   <button 
                     onClick={() => {
@@ -417,7 +421,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                     }}
                     className="w-full py-3 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 group-hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Detayları Gör
+                    {t('view_details')}
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -431,14 +435,14 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto bg-blue-50 rounded-3xl p-8 md:p-12 border border-blue-100">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">Bu Paket Kimler İçin Uygun?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">{t('who_is_this_for')}</h2>
             
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                "Pegasus Havayolları cadet adayları",
-                "Psikometrik testlerde hız/odak sorunu yaşayanlar",
-                "Gerçek sınav öncesi birebir prova yapmak isteyenler",
-                "Dikkat ve multitasking becerilerini geliştirmek isteyenler"
+                t('target_audience_1'),
+                t('target_audience_2'),
+                t('target_audience_3'),
+                t('target_audience_4')
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-4">
                   <div className="mt-1 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white shadow-sm">
@@ -455,23 +459,23 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       {/* 5. PRICING */}
       <section id="pricing" className="py-20 bg-slate-900 text-white text-center">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12">Hemen Hazırlanmaya Başla</h2>
+          <h2 className="text-3xl font-bold mb-12">{t('start_preparing_now')}</h2>
           
           <div className="max-w-md mx-auto bg-slate-800 rounded-3xl p-8 border border-slate-700 shadow-2xl relative overflow-hidden">
             {/* Best Value Badge */}
             <div className="absolute top-0 right-0 bg-blue-600 text-xs font-bold px-4 py-1 rounded-bl-xl text-white">
-              POPÜLER
+              {t('popular')}
             </div>
 
-            <h3 className="text-2xl font-bold mb-2">SKYTEST Paketi</h3>
+            <h3 className="text-2xl font-bold mb-2">{t('skytest_package')}</h3>
             <div className="flex items-baseline justify-center gap-1 my-6">
               <span className="text-5xl font-extrabold text-white">500</span>
-              <span className="text-xl text-slate-400">TL / Ay</span>
+              <span className="text-xl text-slate-400">{t('per_month')}</span>
             </div>
             
             <div className="space-y-4 mb-8">
-              <p className="text-sm text-slate-400">Tüm modüllere sınırsız erişim</p>
-              <p className="text-xs text-slate-500 italic">Şu anda yalnızca SKYTEST paketi aktiftir.</p>
+              <p className="text-sm text-slate-400">{t('package_feature_1')}</p>
+              <p className="text-xs text-slate-500 italic">{t('package_note')}</p>
               
               <div className="flex items-start justify-center gap-2 text-left pt-2">
                 <input 
@@ -482,7 +486,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="legal-check" className="text-xs text-slate-400 select-none cursor-pointer">
-                  <span className="text-slate-300 font-medium">Yasal Uyarıyı</span> okudum, anladım ve kabul ediyorum.
+                  {t('legal_checkbox_label')}
                   <br />
                   <button 
                     onClick={(e) => {
@@ -491,7 +495,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                     }}
                     className="text-blue-400 hover:text-blue-300 underline mt-1"
                   >
-                    Yasal Uyarıyı Oku
+                    {t('read_legal_disclaimer')}
                   </button>
                 </label>
               </div>
@@ -506,17 +510,17 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    İşleniyor...
+                    {t('processing')}
                   </>
                 ) : (
-                  'Hemen Satın Al'
+                  t('buy_now_button')
                 )}
               </button>
               <button 
                 onClick={onStartFree}
                 className="w-full py-3 text-slate-300 hover:text-white font-medium text-sm transition-colors"
               >
-                Veya Ücretsiz Dene
+                {t('or_try_free')}
               </button>
             </div>
           </div>
@@ -526,19 +530,19 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       {/* 6. COMING SOON */}
       <section className="py-16 bg-slate-50 border-t border-slate-200">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">Yakında Gelecek Paketler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">{t('coming_soon_packages')}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { name: "DLR Paketi", desc: "Lufthansa & THY süreçleri için" },
-              { name: "Mollymawk", desc: "SunExpress süreçleri için" },
-              { name: "All in One", desc: "Tüm hazırlık modülleri tek pakette" }
+              { name: t('package_dlr_name'), desc: t('package_dlr_desc') },
+              { name: t('package_mollymawk_name'), desc: t('package_mollymawk_desc') },
+              { name: t('package_allinone_name'), desc: t('package_allinone_desc') }
             ].map((pack, idx) => (
               <div key={idx} className="bg-white p-6 rounded-xl border border-slate-200 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="font-bold text-lg text-slate-800">{pack.name}</h3>
                   <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
-                    ÇOK YAKINDA
+                    {t('badge_soon_sub')}
                   </span>
                 </div>
                 <p className="text-sm text-slate-500">{pack.desc}</p>
@@ -551,36 +555,36 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       {/* BLOG LINKS */}
       <section className="py-16 bg-slate-50 border-t border-slate-200">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">Skytest Hakkında Merak Edilenler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">{t('faq_title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <button 
               onClick={() => onNavigate('SKYTEST_BLOG_1')}
               className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
             >
-              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Skytest Nedir?</h3>
-              <p className="text-sm text-slate-500">Kapsamlı rehber ve detaylar.</p>
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{t('blog_1_title')}</h3>
+              <p className="text-sm text-slate-500">{t('blog_1_desc')}</p>
               <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
-                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                {t('read_more')} <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
             <button 
               onClick={() => onNavigate('SKYTEST_PREPARATION_BLOG')}
               className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
             >
-              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Skytest Sınavına Nasıl Hazırlanılır?</h3>
-              <p className="text-sm text-slate-500">Gerçekçi hazırlık yöntemleri.</p>
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{t('blog_2_title')}</h3>
+              <p className="text-sm text-slate-500">{t('blog_2_desc')}</p>
               <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
-                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                {t('read_more')} <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
             <button 
               onClick={() => onNavigate('SKYTEST_PEGASUS_BLOG')}
               className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all text-left group"
             >
-              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">Pegasus Cadet Sürecinde Skytest</h3>
-              <p className="text-sm text-slate-500">Süreç ve gereklilikler.</p>
+              <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{t('blog_3_title')}</h3>
+              <p className="text-sm text-slate-500">{t('blog_3_desc')}</p>
               <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
-                Devamını Oku <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                {t('read_more')} <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
           </div>
@@ -590,20 +594,20 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       {/* 7. SEO CONTENT & FAQ */}
       <section className="py-16 bg-white border-t border-slate-200">
         <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Skytest Hazırlık ve Simülasyon Rehberi</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">{t('skytest_seo_title')}</h2>
             <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed space-y-4">
                 <p>
-                    <strong>Skytest hazırlık</strong> süreci, pilot adaylarının en çok zorlandığı aşamalardan biri olan psikometrik testler için kritik bir öneme sahiptir. Özellikle <strong>Pegasus</strong> gibi havayolu şirketlerinin cadet alımlarında kullandığı <strong>skytest sınavı</strong>, adayların bilişsel yeteneklerini, dikkat sürdürülebilirliğini ve stres altındaki performansını ölçer. Platformumuz, bu zorlu sürece yönelik geliştirdiği <strong>skytest psikometrik test</strong> simülasyonları ile adaylara gerçek sınav deneyimi sunar.
+                    {t('skytest_seo_p1')}
                 </p>
                 <p>
-                    <strong>Skytest Pegasus</strong> modülleri ile uyumlu olan sistemimiz, görsel hafıza, üç boyutlu düşünme, matematiksel işlem hızı ve çoklu görev (multitasking) becerilerinizi geliştirmenize yardımcı olur. Skytest sınavı hazırlık aşamasında karşılaşacağınız Cube Rotation, Flight Capacity ve VIGI gibi testler, sadece doğru cevabı bulmanızı değil, aynı zamanda hız ve doğruluğu dengede tutmanızı gerektirir.
+                    {t('skytest_seo_p2')}
                 </p>
-                <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-4">Neden Skytest Hazırlık Simülasyonu?</h3>
+                <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-4">{t('skytest_seo_why_title')}</h3>
                 <p>
-                    Pilotluk mesleği, yüksek düzeyde durumsal farkındalık ve hızlı karar verme yetisi gerektirir. Skytest simülasyonlarımız, bu yetileri ölçen standart test bataryalarının birebir kopyası niteliğindedir. Düzenli pratik yaparak, zihinsel dayanıklılığınızı artırabilir ve gerçek sınavdaki performans kaygısını minimize edebilirsiniz. Skytest Pegasus süreçlerinde başarılı olmak için sadece teorik bilgi değil, pratik ve psikomotor beceriler de büyük önem taşır.
+                    {t('skytest_seo_why_text')}
                 </p>
                 <p>
-                    Platformumuzdaki modüller, havacılık psikolojisi uzmanları tarafından analiz edilerek oluşturulmuştur. Her bir skytest psikometrik test modülü, sınavda karşınıza çıkabilecek farklı zorluk seviyelerini içerir. Böylece, skytest hazırlık sürecinizi adım adım ilerleterek, eksik olduğunuz alanları tespit edip geliştirebilirsiniz. Unutmayın, skytest sınavı bir zeka testi değil, bir yetenek ve performans testidir; doğru çalışma yöntemiyle geliştirilebilir.
+                    {t('skytest_seo_expert_text')}
                 </p>
             </div>
         </div>
@@ -613,13 +617,12 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       <section className="py-8 bg-slate-100 border-t border-slate-200">
         <div className="container mx-auto px-4 max-w-4xl text-center">
             <p className="text-xs text-slate-500 leading-relaxed">
-                CadetPrep Academy, bağımsız bir hazırlık platformudur. SkyTest, Pegasus ve diğer tüm ticari markalar ilgili hak sahiplerine aittir. 
-                Platform, herhangi bir havayolu veya resmi test sağlayıcısı ile bağlantılı değildir. 
+                {t('footer_disclaimer')}
                 <button 
                     onClick={() => onNavigate('LEGAL_DISCLAIMER')}
                     className="text-slate-600 hover:text-slate-800 underline ml-1 font-medium"
                 >
-                    Detaylı Yasal Uyarı
+                    {t('detailed_legal_disclaimer')}
                 </button>
             </p>
         </div>
@@ -628,10 +631,10 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
       <footer className="py-12 bg-[#050914] text-white">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-slate-500 max-w-2xl mx-auto">
-            CadetPrep Academy, bağımsız bir hazırlık platformudur. Herhangi bir havayolu şirketi veya resmi test organizasyonu ile bağlantılı değildir.
+            {t('footer_disclaimer')}
           </p>
           <div className="mt-4 text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} CadetPrep Academy. Tüm hakları saklıdır.
+            &copy; {new Date().getFullYear()} {t('footer_copyright')}
           </div>
         </div>
       </footer>
@@ -642,7 +645,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="text-xl font-bold text-slate-900">{selectedModule.name}</h3>
+              <h3 className="text-xl font-bold text-slate-900">{t(selectedModule.nameKey)}</h3>
               <button 
                 onClick={() => setSelectedModule(null)}
                 className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
@@ -769,19 +772,19 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-2">Modül Hakkında</h4>
+                  <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-2">{t('about_module')}</h4>
                   <p className="text-slate-700 leading-relaxed">
-                    {selectedModule.fullDesc}
+                    {t(selectedModule.fullDescKey)}
                   </p>
                 </div>
 
                 <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Bu Modül Neyi Ölçer?</h4>
+                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">{t('what_measures')}</h4>
                   <ul className="space-y-3">
-                    {selectedModule.measures.map((m, i) => (
+                    {selectedModule.measureKeys.map((m, i) => (
                       <li key={i} className="flex items-center gap-3 text-slate-700">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                        {m}
+                        {t(m)}
                       </li>
                     ))}
                   </ul>
@@ -796,7 +799,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                    disabled
                    className="px-6 py-2 bg-slate-200 text-slate-500 rounded-lg font-medium cursor-not-allowed"
                  >
-                   Yakında
+                   {t('soon')}
                  </button>
               ) : (
                 <button 
@@ -816,7 +819,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   }}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                 >
-                  Bu Modülü Dene
+                  {t('try_module')}
                 </button>
               )}
             </div>

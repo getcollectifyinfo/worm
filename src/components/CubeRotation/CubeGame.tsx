@@ -68,7 +68,6 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
   const [locale, setLocale] = useState<'tr' | 'en'>('tr');
   const [proModalVariant, setProModalVariant] = useState<'default' | 'exam-settings' | 'mini-exam-end'>('default');
   const [showSubscriptionSuccess, setShowSubscriptionSuccess] = useState(false);
-  const [subscriptionSource, setSubscriptionSource] = useState<string | null>(null);
   const [isMiniExam, setIsMiniExam] = useState(false);
   const [miniExamTimeLeft, setMiniExamTimeLeft] = useState(120);
   const [showMiniExamModal, setShowMiniExamModal] = useState(false);
@@ -81,10 +80,7 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
             refreshSession();
         }
         
-        const source = params.get('source');
-        
         setTimeout(() => {
-            setSubscriptionSource(source);
             setShowSubscriptionSuccess(true);
             // Clean URL
             window.history.replaceState({}, '', window.location.pathname);
@@ -262,19 +258,10 @@ export const CubeGame: React.FC<CubeGameProps> = ({ onExit }) => {
       <Toaster position="top-center" />
       {showSubscriptionSuccess && (
           <SubscriptionSuccess 
-              onContinue={() => {
+              onClose={() => {
                   setShowSubscriptionSuccess(false);
                   setIsSettingsOpen(true);
               }}
-              onHome={() => {
-                  if (subscriptionSource === 'mini-exam-end') {
-                      setShowSubscriptionSuccess(false);
-                  } else {
-                      setShowSubscriptionSuccess(false);
-                      onExit();
-                  }
-              }}
-              source={subscriptionSource}
           />
       )}
       {showProModal && (

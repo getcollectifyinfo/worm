@@ -35,12 +35,33 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const userId = session.client_reference_id;
+    const subscriptionId = session.subscription;
+    const customerId = session.customer;
 
     if (userId) {
       console.log(`Granting PRO access to user: ${userId}`);
+      
+      // Fetch subscription details to get period end
+      let subscriptionEnd = null;
+      if (subscriptionId) {
+        try {
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        } catch (e) {
+            console.error('Error fetching subscription details:', e);
+        }
+      }
+
       const { error } = await supabase.auth.admin.updateUserById(
         userId,
-        { app_metadata: { subscription_status: 'active' } }
+        { 
+            app_metadata: { 
+                subscription_status: 'active',
+                stripe_subscription_id: subscriptionId,
+                stripe_customer_id: customerId,
+                subscription_end: subscriptionEnd
+            } 
+        }
       );
 
       if (error) {
@@ -86,6 +107,32 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     console.error('Stripe Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/cancel-subscription', async (req, res) => {
+  const { subscriptionId } = req.body;
+  
+  if (!subscriptionId) {
+      return res.status(400).json({ error: 'Subscription ID required' });
+  }
+
+  try {
+    // Cancel at period end
+    const subscription = await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
+    
+    // Optionally update Supabase user metadata immediately to reflect 'canceling' state
+    // But we can rely on frontend state for now or webhook updates
+    
+    res.json({ 
+        status: 'success', 
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString() 
+    });
+  } catch (err) {
+    console.error('Cancel Subscription Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
