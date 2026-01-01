@@ -32,7 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
-      const redirectTo = `${window.location.origin}/simulation`;
+      // Use origin to ensure we redirect to the correct domain (localhost or production)
+      // We avoid appending paths like /simulation because they might not be whitelisted in Supabase
+      const redirectTo = window.location.origin;
       console.log('Initiating Google Login with redirect URL:', redirectTo);
       
       const { error } = await supabase.auth.signInWithOAuth({
