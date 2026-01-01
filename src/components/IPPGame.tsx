@@ -166,10 +166,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             setCurrentRule(randomRule);
             
             // Initial Base Number Generation
-            let min = 20, max = 50;
+            // Constraint: Result <= 99, Non-negative
+            let min = 10, max = 40;
             if (randomRule === 'SUBTRACT' || randomRule === 'DOUBLE_SUBTRACT') {
-                min = 200;
-                max = 350; // Ensure high enough for subtraction (max deduction ~200)
+                min = 60;
+                max = 99;
             }
             const baseNum = Math.floor(Math.random() * (max - min)) + min;
             
@@ -203,14 +204,23 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         case 'SHOWING_NEXT_NUM':
              // Generate next number and update total
              timeout = setTimeout(() => {
-                // Determine next number range
-                let nextNum = Math.floor(Math.random() * 20) + 5; // 5 to 25
+                // Determine next number range (keep it small to avoid hitting limits quickly)
+                let nextNum = Math.floor(Math.random() * 10) + 3; // 3 to 12
                 
-                // Safety check for subtraction to avoid negatives
-                if (currentRule === 'SUBTRACT') {
-                    if (calcTotal - nextNum < 0) nextNum = Math.floor(calcTotal / 2);
+                // Enforce Constraints: Result <= 99 AND Result >= 0
+                if (currentRule === 'ADD') {
+                    const maxAdd = 99 - calcTotal;
+                    if (nextNum > maxAdd) nextNum = Math.max(0, maxAdd);
+                } else if (currentRule === 'DOUBLE_ADD') {
+                    const maxAdd = Math.floor((99 - calcTotal) / 2);
+                    if (nextNum > maxAdd) nextNum = Math.max(0, maxAdd);
+                } else if (currentRule === 'SUBTRACT') {
+                    // Ensure result >= 0
+                    if (calcTotal - nextNum < 0) nextNum = calcTotal;
                 } else if (currentRule === 'DOUBLE_SUBTRACT') {
-                    if (calcTotal - (nextNum * 2) < 0) nextNum = Math.floor(calcTotal / 4);
+                    // Ensure result >= 0
+                    const maxSub = Math.floor(calcTotal / 2);
+                    if (nextNum > maxSub) nextNum = maxSub;
                 }
 
                 setDisplayedNumber(nextNum);
@@ -262,10 +272,12 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 const chances = [0.05, 0.15, 0.25, 0.40, 0.60];
                 const chance = chances[ruleChangeFreq - 1] || 0.2;
 
-                // Force rule change if total is too low for subtraction to continue safely
-                const isLowTotal = (currentRule === 'SUBTRACT' || currentRule === 'DOUBLE_SUBTRACT') && calcTotal < 100;
+                // Force rule change if total is too low for subtraction or too high for addition
+                let forceChange = false;
+                if ((currentRule === 'SUBTRACT' || currentRule === 'DOUBLE_SUBTRACT') && calcTotal < 15) forceChange = true;
+                if ((currentRule === 'ADD' || currentRule === 'DOUBLE_ADD') && calcTotal > 85) forceChange = true;
 
-                if (Math.random() < chance || isLowTotal) {
+                if (Math.random() < chance || forceChange) {
                     // CHANGE RULE -> RESET EVERYTHING
                     
                     // Filter out current rule if we have other options to ensure a visible change
@@ -277,10 +289,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     setCurrentRule(newRule);
                     
                     // New Base Number
-                    let min = 20, max = 50;
+                    // Constraint: Result <= 99, Non-negative
+                    let min = 10, max = 40;
                     if (newRule === 'SUBTRACT' || newRule === 'DOUBLE_SUBTRACT') {
-                        min = 200;
-                        max = 350;
+                        min = 60;
+                        max = 99;
                     }
                     const baseNum = Math.floor(Math.random() * (max - min)) + min;
                     
