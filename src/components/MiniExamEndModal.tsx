@@ -6,12 +6,14 @@ interface MiniExamEndModalProps {
   onClose: () => void;
   onUpgrade: () => void; // Trigger Stripe or Login -> Stripe
   onPractice: () => void;
+  isPracticeDisabled?: boolean;
 }
 
 export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
   isOpen,
   onUpgrade,
-  onPractice
+  onPractice,
+  isPracticeDisabled
 }) => {
   if (!isOpen) return null;
 
@@ -71,10 +73,15 @@ export const MiniExamEndModal: React.FC<MiniExamEndModalProps> = ({
                 </button>
 
                 <button
-                    onClick={onPractice}
-                    className="text-sm text-gray-500 hover:text-gray-300 transition-colors py-2"
+                    onClick={isPracticeDisabled ? undefined : onPractice}
+                    disabled={isPracticeDisabled}
+                    className={`text-sm transition-colors py-2 ${
+                        isPracticeDisabled 
+                        ? 'text-gray-600 cursor-not-allowed italic' 
+                        : 'text-gray-500 hover:text-gray-300'
+                    }`}
                 >
-                    Practice ile biraz daha hazırlan.
+                    {isPracticeDisabled ? 'Practice modu çok yakında!' : 'Practice ile biraz daha hazırlan.'}
                 </button>
             </div>
 

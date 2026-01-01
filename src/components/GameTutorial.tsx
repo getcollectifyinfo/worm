@@ -28,6 +28,7 @@ interface GameTutorialProps {
   onCtaClick?: () => void;
   secondaryCtaText?: string;
   onSecondaryCtaClick?: () => void;
+  isSecondaryCtaDisabled?: boolean;
   hideTitleSuffix?: boolean;
   translations?: {
     en?: I18nContent;
@@ -50,6 +51,7 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
   onCtaClick,
   secondaryCtaText,
   onSecondaryCtaClick,
+  isSecondaryCtaDisabled,
   hideTitleSuffix = false,
   translations,
   initialLocale = 'en',
@@ -168,8 +170,13 @@ export const GameTutorial: React.FC<GameTutorialProps> = ({
         <div className="p-6 border-t border-gray-700 flex justify-end bg-gray-800 rounded-b-2xl gap-3">
           {resolvedSecondaryCtaText && (
             <button 
-                onClick={onSecondaryCtaClick}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg flex items-center gap-2"
+                onClick={isSecondaryCtaDisabled ? undefined : onSecondaryCtaClick}
+                disabled={isSecondaryCtaDisabled}
+                className={`px-6 py-3 text-white rounded-xl font-bold text-lg transition-all shadow-lg flex items-center gap-2 ${
+                    isSecondaryCtaDisabled 
+                    ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                    : 'bg-gray-700 hover:bg-gray-600 hover:scale-105'
+                }`}
             >
                 {resolvedSecondaryCtaText}
             </button>

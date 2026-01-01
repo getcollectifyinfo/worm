@@ -7,6 +7,8 @@ interface GameStartMenuProps {
   onStart: () => void;
   onSettings?: () => void;
   onPractice?: () => void;
+  practiceLabel?: string;
+  isPracticeDisabled?: boolean;
   onBack: () => void;
   onLearn?: () => void;
   startLabel?: string;
@@ -20,6 +22,8 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
   onStart, 
   onSettings,
   onPractice, 
+  practiceLabel,
+  isPracticeDisabled,
   onBack,
   onLearn,
   startLabel = "EXAM MODE",
@@ -65,14 +69,21 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
         {/* PRACTICE MODE */}
         {onPractice && (
             <button 
-            onClick={onPractice}
-            className="group flex flex-col items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all hover:scale-105 shadow-lg"
+            onClick={isPracticeDisabled ? undefined : onPractice}
+            disabled={isPracticeDisabled}
+            className={`group flex flex-col items-center justify-center w-full py-3 text-white rounded-xl transition-all shadow-lg ${
+                isPracticeDisabled 
+                ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                : 'bg-blue-600 hover:bg-blue-500 hover:scale-105'
+            }`}
             >
             <div className="flex items-center gap-3">
                 <Settings size={24} />
-                <span className="text-xl font-bold">PRACTICE MODE</span>
+                <span className="text-xl font-bold">{practiceLabel || "PRACTICE MODE"}</span>
             </div>
-            <span className="text-blue-100 text-xs font-medium mt-1">Alıştırmalarla refleks kazan</span>
+            <span className={`text-xs font-medium mt-1 ${isPracticeDisabled ? 'text-gray-300' : 'text-blue-100'}`}>
+                {isPracticeDisabled ? 'Çok yakında!' : 'Alıştırmalarla refleks kazan'}
+            </span>
             </button>
         )}
 

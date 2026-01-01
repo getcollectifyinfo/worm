@@ -349,7 +349,9 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             title="CAPACITY"
             onStart={startNewGame}
             onSettings={() => setShowSettings(true)}
-            onPractice={() => setShowSettings(true)}
+            onPractice={() => {}}
+            practiceLabel="COMING SOON"
+            isPracticeDisabled={true}
             onBack={onExit}
             onLearn={() => setIsTutorialOpen(true)}
             tier={tier}
@@ -398,10 +400,8 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
                 handleUpgrade('capacity-end');
             }
         }}
-        onPractice={() => {
-             setShowMiniExamModal(false);
-             setShowSettings(true);
-        }}
+        onPractice={() => {}}
+        isPracticeDisabled={true}
       />
 
       <GameResultsModal

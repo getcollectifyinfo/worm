@@ -652,16 +652,9 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             setIsTutorialOpen(false);
             handleStart();
         }}
-        secondaryCtaText="PRACTICE"
-        onSecondaryCtaClick={() => {
-            setIsTutorialOpen(false);
-            if (tier === 'PRO') {
-                setIsSettingsOpen(true);
-            } else {
-                toast('Practice mode is available for PRO users.', { icon: '🔒' });
-                openProModal();
-            }
-        }}
+        secondaryCtaText="COMING SOON"
+        isSecondaryCtaDisabled={true}
+        onSecondaryCtaClick={() => {}}
         translations={{
           tr: {
             title: "IPP OYUNU - ÖĞREN",
@@ -681,7 +674,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
               { key: "ESC", action: "Çıkış" }
             ],
             ctaText: "Sınavı Başlat",
-            secondaryCtaText: "Alıştırma"
+            secondaryCtaText: "Çok Yakında"
           },
           en: { title: "IPP GAME - LEARN MODE" }
         }}
@@ -701,14 +694,9 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                         openProModal();
                     }
                 }}
-                onPractice={() => {
-                    if (tier === 'PRO') {
-                        setIsSettingsOpen(true);
-                    } else {
-                        toast('Practice mode is available for PRO users.', { icon: '🔒' });
-                        openProModal();
-                    }
-                }}
+                onPractice={() => {}}
+                practiceLabel="COMING SOON"
+                isPracticeDisabled={true}
                 onLearn={() => setIsTutorialOpen(true)}
                 onBack={onExit}
                 tier={tier}
@@ -728,10 +716,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 handleUpgrade('ipp-end');
             }
         }}
-        onPractice={() => {
-             setShowMiniExamModal(false);
-             setIsSettingsOpen(true);
-        }}
+        onPractice={() => {}}
+        isPracticeDisabled={true}
       />
 
       <GameResultsModal
