@@ -395,7 +395,7 @@ export const SkytestPage: React.FC<SkytestPageProps> = ({ onBack, onStartFree, o
                   </p>
                   <button 
                     onClick={() => {
-                      if (tier === 'GUEST' && !canAccessModule(module.id)) {
+                      if (tier === 'GUEST' && !canAccessModule(module.id) && module.id !== 'cap' && module.id !== 'vigi2') {
                         openProModal();
                       } else {
                         setSelectedModule(module);

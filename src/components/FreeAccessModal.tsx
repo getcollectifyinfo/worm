@@ -5,12 +5,14 @@ interface FreeAccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: () => void;
+  onGoogleLogin: () => void;
 }
 
 export const FreeAccessModal: React.FC<FreeAccessModalProps> = ({ 
   isOpen, 
   onClose, 
-  onLogin 
+  onLogin,
+  onGoogleLogin
 }) => {
   if (!isOpen) return null;
 
@@ -45,7 +47,7 @@ export const FreeAccessModal: React.FC<FreeAccessModalProps> = ({
         {/* CTA Section */}
         <div className="px-8 pb-8">
           <button 
-            onClick={onLogin}
+            onClick={onGoogleLogin}
             className="w-full py-4 bg-white hover:bg-gray-100 text-gray-900 font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />

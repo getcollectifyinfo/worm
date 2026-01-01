@@ -3,6 +3,7 @@ import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box, Plane, Ho
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 import { useGameAccess } from '../hooks/useGameAccess';
+import { useAuth } from '../hooks/useAuth';
 import { UserBadge } from './UserBadge';
 import { FreeAccessModal } from './FreeAccessModal';
 
@@ -134,6 +135,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   const [showFreeAccessModal, setShowFreeAccessModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tier } = useGameAccess();
+  const { signInWithGoogle } = useAuth();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -376,6 +378,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         onLogin={() => {
             setShowFreeAccessModal(false);
             setShowAuth(true);
+        }}
+        onGoogleLogin={() => {
+            setShowFreeAccessModal(false);
+            signInWithGoogle();
         }}
       />
     </div>
