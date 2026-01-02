@@ -13,6 +13,94 @@ export const SkytestBlogPage: React.FC<SkytestBlogPageProps> = ({ onNavigate }) 
         <title>Skytest Nedir? Pegasus Cadet Adayları İçin Rehber - CadetPrep</title>
         <meta name="description" content="Skytest nedir? Pegasus cadet adayları için Skytest sınavı rehberi. Ölçülen beceriler, hazırlık taktikleri ve simülasyonun önemi hakkında detaylı bilgi." />
         <link rel="canonical" href="https://cadetprep.com/skytest-nedir" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "SkyTest nedir?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "SkyTest, pilot adaylarının bilişsel yeteneklerini, dikkatini, çoklu görev becerisini ve psikomotor koordinasyonunu ölçmek için kullanılan bilgisayar tabanlı psikometrik testlerden oluşan bir sistemdir. Genellikle havayollarının cadet (yardımcı pilot adayı) seçim süreçlerinde yer alır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Pegasus SkyTest nedir?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Pegasus’un cadet seçim sürecinde adaylara uyguladığı test paketinin içinde SkyTest tabanlı modüller bulunabilir. Hangi testlerin, hangi sırayla ve hangi sürelerle uygulanacağı dönemsel olarak değişebilir; en güncel bilgi her zaman kurumun adaylara ilettiği dokümanlardadır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest CASE ne demek?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "CASE, “Cockpit Aptitude Screening Environment” ifadesinin kısaltmasıdır. Bu tek bir test değil; kokpit benzeri iş yükünü simüle eden, birden fazla testi içerebilen bir değerlendirme ortamı yaklaşımıdır. Bazı süreçlerde adaylar bu ortamda farklı görevleri aynı anda yürütmek zorunda kalır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest sınavı ne kadar sürer?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Süre, kurumun uyguladığı paket ve test kombinasyonuna göre değişir. Bazı süreçlerde testler kısa bloklar halinde, bazılarında daha uzun bir oturum şeklinde uygulanabilir. En doğru süre bilgisi, ilgili kurumun davet ve bilgilendirme metninde yer alır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest’te hangi testler çıkıyor?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Paketler kuruma göre değişse de genel olarak dikkat (vigilance), bölünmüş dikkat, bilgi işleme hızı, uzaysal algı/yön duygusu ve çoklu görev becerilerini ölçen test türleri görülür. CadetPrep Academy’de bu mantıklara benzer simülasyon modülleriyle pratik yapılabilir."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest zor mu?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "SkyTest “zor” olmaktan çok “alışkanlık gerektiren” bir test türüdür. İlk kez giren adaylar komut temposu, zaman baskısı ve çoklu görev yapısı nedeniyle zorlanabilir. Düzenli pratik, özellikle tepki süresi ve hata oranını belirgin şekilde iyileştirir."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest’e nasıl hazırlanılır?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "En etkili hazırlık, test mantığını öğrenmek ve gerçek sınav temposuna benzer koşullarda tekrar yapmaktır. Önce Learn/Practice ile kuralları oturtup, ardından Mini Exam ile süre baskısını deneyimlemek iyi bir sıra olur. Pro seviyesinde ise daha uzun ve zor senaryolarla sınav dayanıklılığı geliştirilir."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest ücretsiz mi?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Resmî sınavlar kurum tarafından planlanır; “ücretsiz” olup olmaması süreç ve kurum politikasına bağlıdır. CadetPrep Academy ise adaylara bazı modüllerde sınırlı süreli ücretsiz deneme ve ücretsiz üyelikle erişim seçenekleri sunar."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest Türkiye’de nerede yapılıyor?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Uygulama yeri kurumun belirlediği sınav merkezine, döneme ve organizasyona göre değişebilir. Türkiye’deki adaylar için en doğru lokasyon bilgisi, kurumun davet e-postası veya resmî bilgilendirme dokümanlarında yer alır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "SkyTest’te başarıyı en çok ne etkiler?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Doğruluk kadar tepki süresi de önemlidir. Bu yüzden yalnızca doğru yapmak değil, bunu zaman baskısı altında sürdürebilmek gerekir. Düzenli pratik ve gerçek tempo denemeleri, performansı en hızlı artıran iki faktördür."
+                }
+              }
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* Header / Navigation Bar (Simplified for Blog) */}
@@ -197,6 +285,74 @@ export const SkytestBlogPage: React.FC<SkytestBlogPageProps> = ({ onNavigate }) 
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </button>
             </div>
+          </div>
+          
+          <hr className="my-12 border-slate-200" />
+
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Sıkça Sorulan Sorular (SkyTest)</h2>
+          <p className="text-slate-600 mb-8 italic text-sm">
+            Aşağıdaki yanıtlar genel bilgilendirme amaçlıdır. SkyTest uygulaması ve kapsamı kurumlara göre değişebilir.
+          </p>
+
+          <div className="space-y-6 not-prose">
+            {[
+              {
+                q: "SkyTest nedir?",
+                a: "SkyTest, pilot adaylarının bilişsel yeteneklerini, dikkatini, çoklu görev becerisini ve psikomotor koordinasyonunu ölçmek için kullanılan bilgisayar tabanlı psikometrik testlerden oluşan bir sistemdir. Genellikle havayollarının cadet (yardımcı pilot adayı) seçim süreçlerinde yer alır."
+              },
+              {
+                q: "Pegasus SkyTest nedir?",
+                a: "Pegasus’un cadet seçim sürecinde adaylara uyguladığı test paketinin içinde SkyTest tabanlı modüller bulunabilir. Ama hangi testlerin, hangi sırayla ve hangi sürelerle uygulanacağı dönemsel olarak değişebilir; en güncel bilgi her zaman kurumun adaylara ilettiği dokümanlardadır."
+              },
+              {
+                q: "SkyTest CASE ne demek?",
+                a: "CASE, “Cockpit Aptitude Screening Environment” ifadesinin kısaltmasıdır. Bu, tek bir test değil; kokpit benzeri iş yükünü simüle eden, birden fazla testi içerebilen bir değerlendirme ortamı yaklaşımıdır. Bazı süreçlerde adaylar bu ortamda farklı görevleri aynı anda yürütmek zorunda kalır."
+              },
+              {
+                q: "SkyTest sınavı ne kadar sürer?",
+                a: "Süre, kurumun uyguladığı paket ve test kombinasyonuna göre değişir. Bazı süreçlerde testler kısa bloklar halinde, bazılarında daha uzun bir oturum şeklinde uygulanabilir. En doğru süre bilgisi, ilgili kurumun davet ve bilgilendirme metninde yer alır."
+              },
+              {
+                q: "SkyTest’te hangi testler çıkıyor?",
+                a: "Paketler kuruma göre değişse de genel olarak dikkat (vigilance), bölünmüş dikkat, bilgi işleme hızı, uzaysal algı/yön duygusu ve çoklu görev becerilerini ölçen test türleri görülür. CadetPrep Academy’de bu mantıklara benzer simülasyon modülleriyle pratik yapılabilir."
+              },
+              {
+                q: "SkyTest zor mu?",
+                a: "SkyTest “zor” olmaktan çok “alışkanlık gerektiren” bir test türüdür. İlk kez giren adaylar komut temposu, zaman baskısı ve çoklu görev yapısı nedeniyle zorlanabilir. Düzenli pratik, özellikle tepki süresi ve hata oranını belirgin şekilde iyileştirir."
+              },
+              {
+                q: "SkyTest’e nasıl hazırlanılır?",
+                a: "En etkili hazırlık, test mantığını öğrenmek ve gerçek sınav temposuna benzer koşullarda tekrar yapmaktır. Önce Learn/Practice ile kuralları oturtup, ardından Mini Exam ile süre baskısını deneyimlemek iyi bir sıra olur. Pro seviyesinde ise daha uzun ve zor senaryolarla sınav dayanıklılığı geliştirilir."
+              },
+              {
+                q: "SkyTest ücretsiz mi?",
+                a: "Resmî sınavlar kurum tarafından planlanır; “ücretsiz” olup olmaması süreç ve kurum politikasına bağlıdır. CadetPrep Academy ise adaylara bazı modüllerde sınırlı süreli ücretsiz deneme ve ücretsiz üyelikle erişim seçenekleri sunar."
+              },
+              {
+                q: "SkyTest Türkiye’de nerede yapılıyor?",
+                a: "Uygulama yeri kurumun belirlediği sınav merkezine, döneme ve organizasyona göre değişebilir. Türkiye’deki adaylar için en doğru lokasyon bilgisi, kurumun davet e-postası veya resmî bilgilendirme dokümanlarında yer alır."
+              },
+              {
+                q: "SkyTest’te başarıyı en çok ne etkiler?",
+                a: "Doğruluk kadar tepki süresi de önemlidir. Bu yüzden yalnızca “doğru yapmak” değil, bunu zaman baskısı altında sürdürebilmek gerekir. Düzenli pratik ve gerçek tempo denemeleri, performansı en hızlı artıran iki faktördür."
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="bg-slate-50 p-6 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Soru {idx + 1}: {item.q}</h3>
+                <p className="text-slate-600 leading-relaxed">{item.a}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center not-prose">
+            <h4 className="text-xl font-bold text-slate-900 mb-3">SkyTest mantığını uygulamalı görmek ister misin?</h4>
+            <p className="text-slate-600 mb-6">SkyTest simülasyonlarında ücretsiz deneme ile başlayabilirsin.</p>
+            <button 
+              onClick={() => onNavigate('SKYTEST_UCRETSIZ')}
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+            >
+              SkyTest Ücretsiz Denemeyi Başlat
+            </button>
           </div>
 
         </article>
