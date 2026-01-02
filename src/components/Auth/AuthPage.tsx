@@ -48,21 +48,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, isEmbedded = fals
         
         // If email confirmation is disabled, user is logged in automatically
         if (data.session) {
-            // Notify backend about new registration
-            try {
-              fetch('/api/notify-registration', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  email: data.user?.email,
-                  userId: data.user?.id,
-                  provider: 'email'
-                })
-              }).catch(err => console.error('Registration notification failed:', err));
-            } catch (e) {
-              console.error('Registration notification error:', e);
-            }
-
             onSuccess();
         } else {
             // Should not happen if email confirmation is disabled, but handle just in case
