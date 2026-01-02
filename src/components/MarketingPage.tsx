@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, ArrowRight, Play, LogOut } from 'lucide-react';
 import { NewsletterModal } from './NewsletterModal';
 import { UserBadge } from './UserBadge';
+import { ContactSection } from './ContactSection';
 import { useGameAccess } from '../hooks/useGameAccess';
 import type { User } from '@supabase/supabase-js';
 
@@ -289,6 +290,9 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
         </div>
       </section>
       )}
+
+      {/* Contact Section */}
+      <ContactSection />
 
       {/* Footer */}
       <footer className="py-12 bg-[#0B1120] border-t border-white/5 text-center text-gray-500">
