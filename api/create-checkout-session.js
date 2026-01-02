@@ -39,10 +39,10 @@ export default async function handler(req, res) {
           price_data: {
             currency: 'try',
             product_data: {
-              name: 'Skytest Paketi (Aylık)',
+              name: 'Skytest Paketi (Aylık - Test)',
               description: 'Tüm modüllere sınırsız erişim (VIGI, IPP, Cube Rotation vb.)',
             },
-            unit_amount: 50000, // 500.00 TL
+            unit_amount: 500, // 5.00 TL for testing
             recurring: {
               interval: 'month',
             },
