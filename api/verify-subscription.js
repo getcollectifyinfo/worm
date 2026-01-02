@@ -49,54 +49,89 @@ export default async function handler(req, res) {
     // 2. Check Stripe directly
     let activeSubscription = null;
     let debugInfo = [];
+    
+    // Add Key Prefix to Debug Info
+    const keyPrefix = process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 8) : 'MISSING';
+    debugInfo.push(`Stripe Key Prefix: ${keyPrefix}`);
 
-    // STRATEGY A: Search by client_reference_id (Most Reliable)
+    // STRATEGY A: Search by client_reference_id
     try {
-        const searchResults = await stripe.checkout.sessions.search({
-            query: `client_reference_id:'${user.id}'`,
-            limit: 1
-        });
-        
-        if (searchResults.data.length > 0) {
-            const session = searchResults.data[0];
-            debugInfo.push(`Found session: ${session.id}`);
-            if (session.subscription) {
-                const sub = await stripe.subscriptions.retrieve(session.subscription);
-                if (sub.status === 'active' || sub.status === 'trialing') {
-                    activeSubscription = sub;
-                    debugInfo.push(`Found active sub via session: ${sub.id}`);
-                } else {
-                    debugInfo.push(`Sub ${sub.id} status is ${sub.status}`);
+        // Fallback for older Stripe library versions that don't support search
+        if (typeof stripe.checkout.sessions.search === 'function') {
+            const searchResults = await stripe.checkout.sessions.search({
+                query: `client_reference_id:'${user.id}'`,
+                limit: 1
+            });
+            
+            if (searchResults.data.length > 0) {
+                const session = searchResults.data[0];
+                debugInfo.push(`Found session (via search): ${session.id}`);
+                if (session.subscription) {
+                    const sub = await stripe.subscriptions.retrieve(session.subscription);
+                    if (sub.status === 'active' || sub.status === 'trialing') {
+                        activeSubscription = sub;
+                        debugInfo.push(`Found active sub via session: ${sub.id}`);
+                    } else {
+                        debugInfo.push(`Sub ${sub.id} status is ${sub.status}`);
+                    }
                 }
+            } else {
+                debugInfo.push(`No session found via search for client_reference_id:${user.id}`);
             }
         } else {
-            debugInfo.push(`No session found for client_reference_id:${user.id}`);
+            // Manual Fallback: List recent sessions and filter in memory
+            // This is less efficient but works on older API versions
+            debugInfo.push('stripe.checkout.sessions.search not available, using fallback list()');
+            const recentSessions = await stripe.checkout.sessions.list({
+                limit: 100, // Fetch last 100 sessions
+            });
+            
+            const session = recentSessions.data.find(s => s.client_reference_id === user.id);
+            if (session) {
+                debugInfo.push(`Found session (via list fallback): ${session.id}`);
+                if (session.subscription) {
+                     // Check if subscription object is expanded or ID
+                     const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+                     const sub = await stripe.subscriptions.retrieve(subId);
+                     
+                     if (sub.status === 'active' || sub.status === 'trialing') {
+                        activeSubscription = sub;
+                        debugInfo.push(`Found active sub via fallback list: ${sub.id}`);
+                    }
+                }
+            } else {
+                debugInfo.push('No matching session found in last 100 sessions');
+            }
         }
     } catch (searchErr) {
-        debugInfo.push(`Search error: ${searchErr.message}`);
+        debugInfo.push(`Search/List error: ${searchErr.message}`);
     }
 
     // STRATEGY B: Search by Email (Fallback)
     if (!activeSubscription) {
-        const customers = await stripe.customers.list({
-            email: user.email,
-            limit: 5
-        });
-
-        debugInfo.push(`Found ${customers.data.length} customers with email ${user.email}`);
-
-        for (const customer of customers.data) {
-            const subscriptions = await stripe.subscriptions.list({
-                customer: customer.id,
-                status: 'active',
-                limit: 1
+        try {
+            const customers = await stripe.customers.list({
+                email: user.email,
+                limit: 5
             });
-            
-            if (subscriptions.data.length > 0) {
-                activeSubscription = subscriptions.data[0];
-                debugInfo.push(`Found active sub ${activeSubscription.id} via email`);
-                break;
+
+            debugInfo.push(`Found ${customers.data.length} customers with email ${user.email}`);
+
+            for (const customer of customers.data) {
+                const subscriptions = await stripe.subscriptions.list({
+                    customer: customer.id,
+                    status: 'active',
+                    limit: 1
+                });
+                
+                if (subscriptions.data.length > 0) {
+                    activeSubscription = subscriptions.data[0];
+                    debugInfo.push(`Found active sub ${activeSubscription.id} via email`);
+                    break;
+                }
             }
+        } catch (emailErr) {
+            debugInfo.push(`Email search error: ${emailErr.message}`);
         }
     }
 
