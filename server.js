@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -12,6 +13,34 @@ const app = express();
 const port = 3001;
 
 app.use(cors());
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendNotificationEmail = async (subject, text) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Email credentials not set. Skipping email notification.');
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: 'ergunakin@gmail.com',
+      subject: `[CadetPrep] ${subject}`,
+      text: text,
+    });
+    console.log(`Email sent: ${subject}`);
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+};
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(

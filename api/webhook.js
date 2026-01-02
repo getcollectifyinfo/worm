@@ -93,6 +93,12 @@ export default async function handler(req, res) {
         res.status(500).json({ error: 'Failed to update user' });
         return;
       }
+
+      // Send email notification for new subscription
+      await sendNotificationEmail(
+        'Yeni Abonelik!',
+        `Kullanıcı (ID: ${userId}) yeni bir abonelik başlattı.\nSubscription ID: ${subscriptionId}\nBitiş Tarihi: ${subscriptionEnd}`
+      );
     }
   }
 

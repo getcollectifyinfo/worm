@@ -30,6 +30,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Check for new user registration and send notification
+  useEffect(() => {
+    if (user && user.created_at) {
+      const checkNewUser = async () => {
+        try {
+          const createdAt = new Date(user.created_at);
+          const now = new Date();
+          const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+          const key = `registration_notification_sent_${user.id}`;
+
+          // If created within last 2 minutes and not notified locally
+          if (diffMinutes < 2 && !localStorage.getItem(key)) {
+              // Mark as sent immediately to prevent double firing
+              localStorage.setItem(key, 'true');
+              
+              await fetch('/api/notify-registration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: user.email,
+                  userId: user.id,
+                  provider: user.app_metadata?.provider || 'unknown'
+                })
+              });
+          }
+        } catch (err) {
+          console.error('Failed to notify registration:', err);
+        }
+      };
+      checkNewUser();
+    }
+  }, [user]);
+
   const signInWithGoogle = async () => {
     try {
       // Use origin to ensure we redirect to the correct domain (localhost or production)
