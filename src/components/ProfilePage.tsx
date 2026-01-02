@@ -80,12 +80,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     }
   };
 
-  const [syncDebug, setSyncDebug] = useState<string | null>(null);
-
   const handleSyncSubscription = async () => {
     if (!session?.access_token) return;
     setIsSyncing(true);
-    setSyncDebug(null);
     try {
         const res = await fetch('/api/verify-subscription', {
             method: 'POST',
@@ -102,16 +99,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                 if (refreshSession) {
                     await refreshSession();
                 }
-                setSyncDebug(null);
             } else {
-                setSyncDebug(`Sync Result: ${data.status}. Debug: ${JSON.stringify(data.debug)}`);
+                console.warn('Sync result:', data.status, data.debug);
             }
         } else {
-             setSyncDebug(`Sync Error: ${data.error} ${data.details || ''}`);
+             console.error('Sync error:', data.error, data.details);
         }
     } catch (e) {
         console.error(e);
-        setSyncDebug('Network or Server Error during sync.');
     } finally {
         setIsSyncing(false);
     }
@@ -220,12 +215,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                         {t('sync_status')}
                     </button>
                 </div>
-
-                {syncDebug && (
-                    <div className="mb-4 p-3 bg-slate-950/50 rounded-lg text-xs font-mono text-slate-400 break-all border border-slate-800">
-                        {syncDebug}
-                    </div>
-                )}
 
                 {isPro ? (
                     <div className="space-y-6 relative z-10">
