@@ -34,6 +34,11 @@ import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { LegalDisclaimerPage } from './components/LegalDisclaimerPage';
 import { ProfilePage } from './components/ProfilePage';
+import { SkytestUcretsizPage } from './components/SEO/SkytestUcretsizPage';
+import { SkytestIndirPage } from './components/SEO/SkytestIndirPage';
+import { SkytestPegasusPage } from './components/SEO/SkytestPegasusPage';
+import { SkytestTurkiyePage } from './components/SEO/SkytestTurkiyePage';
+import { SkytestCasePage } from './components/SEO/SkytestCasePage';
 import { SmartLoginGate } from './components/Auth/SmartLoginGate';
 import { useAuth } from './hooks/useAuth';
 import { useGameAccess } from './hooks/useGameAccess';
@@ -96,6 +101,21 @@ function SnakeApp() {
     }
     if (typeof window !== 'undefined' && window.location.pathname === '/terms') {
       return 'TERMS_OF_SERVICE';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-ucretsiz') {
+      return 'SKYTEST_UCRETSIZ';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-indir') {
+      return 'SKYTEST_INDIR';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-pegasus') {
+      return 'SKYTEST_PEGASUS';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-turkiye') {
+      return 'SKYTEST_TURKIYE';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-case') {
+      return 'SKYTEST_CASE';
     }
     if (typeof window !== 'undefined' && window.location.pathname === '/simulation') {
       return 'LANDING';
@@ -919,6 +939,16 @@ function SnakeApp() {
     content = <IPPGame onExit={() => setCurrentPage('LANDING')} />;
   } else if (currentPage === 'CUBE') {
     content = <CubeGame onExit={() => setCurrentPage('LANDING')} />;
+  } else if (currentPage === 'SKYTEST_UCRETSIZ') {
+    content = <SkytestUcretsizPage onNavigate={setCurrentPage} />;
+  } else if (currentPage === 'SKYTEST_INDIR') {
+    content = <SkytestIndirPage onNavigate={setCurrentPage} />;
+  } else if (currentPage === 'SKYTEST_PEGASUS') {
+    content = <SkytestPegasusPage onNavigate={setCurrentPage} />;
+  } else if (currentPage === 'SKYTEST_TURKIYE') {
+    content = <SkytestTurkiyePage onNavigate={setCurrentPage} />;
+  } else if (currentPage === 'SKYTEST_CASE') {
+    content = <SkytestCasePage onNavigate={setCurrentPage} />;
   } else {
     content = (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
