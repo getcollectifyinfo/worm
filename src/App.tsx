@@ -736,6 +736,15 @@ function SnakeApp() {
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Only prevent default if we're in the game mode (not just browsing the site)
+    // AND if the active element is NOT an input or textarea
+    const isInputActive = document.activeElement instanceof HTMLInputElement || 
+                          document.activeElement instanceof HTMLTextAreaElement;
+
+    if (isInputActive) {
+      return; // Let inputs handle their own keys
+    }
+
     // Prevent default scrolling for arrows and space
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
       e.preventDefault();
