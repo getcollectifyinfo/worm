@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     
     // Determine base URL dynamically or fallback
     // In Vercel, req.headers.origin or referer usually works
-    const origin = req.headers.origin || 'https://cadetprep.vercel.app'; // Fallback to your likely prod URL or localhost
+    const origin = req.headers.origin || 'https://cadetprep.academy'; // Fallback to your likely prod URL or localhost
 
     const session = await stripe.checkout.sessions.create({
       client_reference_id: userId,
