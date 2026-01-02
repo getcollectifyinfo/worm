@@ -80,9 +80,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     }
   };
 
+  const [syncDebug, setSyncDebug] = useState<string | null>(null);
+
   const handleSyncSubscription = async () => {
     if (!session?.access_token) return;
     setIsSyncing(true);
+    setSyncDebug(null);
     try {
         const res = await fetch('/api/verify-subscription', {
             method: 'POST',
@@ -92,18 +95,35 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             }
         });
         
+        const data = await res.json();
+
         if (res.ok) {
-            if (refreshSession) {
-                await refreshSession();
+            if (data.status === 'active') {
+                if (refreshSession) {
+                    await refreshSession();
+                }
+                setSyncDebug(null);
+            } else {
+                setSyncDebug(`Sync Result: ${data.status}. Debug: ${JSON.stringify(data.debug)}`);
             }
-            // Optional: Show success feedback
+        } else {
+             setSyncDebug(`Sync Error: ${data.error} ${data.details || ''}`);
         }
     } catch (e) {
         console.error(e);
+        setSyncDebug('Network or Server Error during sync.');
     } finally {
         setIsSyncing(false);
     }
   };
+
+  useEffect(() => {
+    if (user && tier !== 'PRO' && !isSyncing) {
+        // Auto-check subscription status on profile load if not Pro
+        handleSyncSubscription();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tier]);
 
   const benefits = [
     t('benefits_1'),
@@ -186,23 +206,29 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             <div className={`rounded-2xl p-6 border relative overflow-hidden ${isPro ? 'bg-slate-900/80 border-yellow-500/30' : 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700'}`}>
                 {isPro && <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none -mr-10 -mt-10"></div>}
                 
-                <h2 className={`text-xl font-semibold mb-6 flex items-center gap-2 ${isPro ? 'text-yellow-400' : 'text-white'}`}>
-                    {isPro ? <Crown size={24} /> : <CreditCard size={24} className="text-slate-400" />}
-                    {isPro ? t('membership_status') : t('upgrade_to_pro')}
-                </h2>
+                <div className="flex justify-between items-start mb-6">
+                    <h2 className={`text-xl font-semibold flex items-center gap-2 ${isPro ? 'text-yellow-400' : 'text-white'}`}>
+                        {isPro ? <Crown size={24} /> : <CreditCard size={24} className="text-slate-400" />}
+                        {isPro ? t('membership_status') : t('upgrade_to_pro')}
+                    </h2>
+                    <button 
+                        onClick={handleSyncSubscription}
+                        disabled={isSyncing}
+                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors bg-slate-800/50 px-2 py-1 rounded-lg border border-slate-700"
+                    >
+                        <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+                        {t('sync_status')}
+                    </button>
+                </div>
+
+                {syncDebug && (
+                    <div className="mb-4 p-3 bg-slate-950/50 rounded-lg text-xs font-mono text-slate-400 break-all border border-slate-800">
+                        {syncDebug}
+                    </div>
+                )}
 
                 {isPro ? (
                     <div className="space-y-6 relative z-10">
-                        <div className="flex justify-end">
-                            <button 
-                                onClick={handleSyncSubscription}
-                                disabled={isSyncing}
-                                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
-                            >
-                                <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-                                {t('sync_status')}
-                            </button>
-                        </div>
                         <div className="bg-yellow-500/5 rounded-xl p-5 border border-yellow-500/20">
                             <p className="text-yellow-200/80 mb-1 uppercase tracking-wider text-xs font-bold">{t('current_plan')}</p>
                             <p className="text-3xl font-bold text-yellow-400">{t('skytest_pro')}</p>
