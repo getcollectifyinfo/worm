@@ -39,10 +39,10 @@ export default async function handler(req, res) {
           price_data: {
             currency: 'try',
             product_data: {
-              name: 'Skytest Paketi (Aylık - Test)',
+              name: 'Skytest Paketi (Aylık)',
               description: 'Tüm modüllere sınırsız erişim (VIGI, IPP, Cube Rotation vb.)',
             },
-            unit_amount: 500, // 5.00 TL for testing
+            unit_amount: 50000, // 500.00 TL
             recurring: {
               interval: 'month',
             },
@@ -55,6 +55,10 @@ export default async function handler(req, res) {
         const base = returnUrl || `${origin}/`;
         try {
           const urlObj = new URL(base);
+          // Clean up existing parameters to prevent duplication
+          urlObj.searchParams.delete('success');
+          urlObj.searchParams.delete('canceled');
+          
           urlObj.searchParams.append('success', 'true');
           return urlObj.toString();
         } catch (e) {
@@ -66,6 +70,10 @@ export default async function handler(req, res) {
         const base = returnUrl || `${origin}/`;
         try {
           const urlObj = new URL(base);
+          // Clean up existing parameters to prevent duplication
+          urlObj.searchParams.delete('success');
+          urlObj.searchParams.delete('canceled');
+
           urlObj.searchParams.append('canceled', 'true');
           return urlObj.toString();
         } catch (e) {
