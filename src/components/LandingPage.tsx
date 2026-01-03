@@ -301,7 +301,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
   }
 
   return (
-    <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8 relative">
+    <div className="w-full min-h-screen bg-[#1a1a1a] flex flex-col items-center gap-12 p-8 relative">
       <div className="absolute top-8 left-8 flex items-center gap-4">
         <button
           onClick={onGoHome}
@@ -404,6 +404,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             signInWithGoogle();
         }}
       />
+
+      <footer className="w-full py-6 mt-auto border-t border-gray-800 text-center text-gray-500">
+        <div className="flex justify-center gap-6 text-sm">
+           <a href="/privacy" className="hover:text-white transition-colors">Gizlilik Politikası</a>
+           <a href="/terms" className="hover:text-white transition-colors">Kullanım Koşulları</a>
+           <a href="/yasal-uyari" className="hover:text-white transition-colors">Yasal Uyarı</a>
+        </div>
+        <p className="mt-2 text-xs">© 2026 CadetPrep Academy</p>
+      </footer>
     </div>
   );
 };

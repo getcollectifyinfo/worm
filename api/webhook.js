@@ -1,6 +1,7 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 // Vercel specific config to disable body parsing
 export const config = {
@@ -14,6 +15,34 @@ const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
 );
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendNotificationEmail = async (subject, text) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Email credentials not set. Skipping email notification.');
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: 'ergunakin@gmail.com',
+      subject: `[CadetPrep] ${subject}`,
+      text: text,
+    });
+    console.log(`Email sent: ${subject}`);
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+};
 
 // Helper to read raw body
 async function buffer(readable) {

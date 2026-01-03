@@ -297,11 +297,11 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
       {/* Footer */}
       <footer className="py-12 bg-[#0B1120] border-t border-white/5 text-center text-gray-500">
         <div className="container mx-auto px-4">
-          <p className="mb-4">© 2024 CadetPrep Academy. Tüm hakları saklıdır.</p>
+          <p className="mb-4">© 2026 CadetPrep Academy. Tüm hakları saklıdır.</p>
           <div className="flex justify-center gap-6 text-sm">
-             <button onClick={() => onNavigate('PRIVACY_POLICY')} className="hover:text-white transition-colors">Gizlilik Politikası</button>
-             <button onClick={() => onNavigate('TERMS_OF_SERVICE')} className="hover:text-white transition-colors">Kullanım Koşulları</button>
-             <button onClick={() => onNavigate('LEGAL_DISCLAIMER')} className="hover:text-white transition-colors">Yasal Uyarı</button>
+             <a href="/privacy" className="hover:text-white transition-colors">Gizlilik Politikası</a>
+             <a href="/terms" className="hover:text-white transition-colors">Kullanım Koşulları</a>
+             <a href="/yasal-uyari" className="hover:text-white transition-colors">Yasal Uyarı</a>
           </div>
         </div>
       </footer>
