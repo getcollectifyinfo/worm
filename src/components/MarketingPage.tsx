@@ -301,7 +301,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
           <div className="flex flex-wrap justify-center gap-6 text-sm font-medium">
              <a href="/privacy" className="text-gray-300 hover:text-white transition-colors opacity-100">Gizlilik Politikası</a>
              <a href="/terms" className="text-gray-300 hover:text-white transition-colors opacity-100">Kullanım Koşulları</a>
-             <a href="/#contact" className="text-gray-300 hover:text-white transition-colors opacity-100">İletişim</a>
+             <a href="/yasal-uyari" className="text-gray-300 hover:text-white transition-colors opacity-100">Yasal Uyarı</a>
           </div>
         </div>
       </footer>
