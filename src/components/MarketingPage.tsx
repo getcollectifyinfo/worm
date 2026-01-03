@@ -295,13 +295,13 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
       <ContactSection />
 
       {/* Footer */}
-      <footer className="py-12 bg-[#0B1120] border-t border-white/5 text-center text-gray-500">
+      <footer className="py-12 bg-[#0B1120] border-t border-white/5 text-center text-gray-400 relative z-10">
         <div className="container mx-auto px-4">
           <p className="mb-4">© 2026 CadetPrep Academy. Tüm hakları saklıdır.</p>
-          <div className="flex justify-center gap-6 text-sm">
-             <a href="/privacy" className="hover:text-white transition-colors">Gizlilik Politikası</a>
-             <a href="/terms" className="hover:text-white transition-colors">Kullanım Koşulları</a>
-             <a href="/yasal-uyari" className="hover:text-white transition-colors">Yasal Uyarı</a>
+          <div className="flex flex-wrap justify-center gap-6 text-sm font-medium">
+             <a href="/privacy" className="text-gray-300 hover:text-white transition-colors opacity-100">Gizlilik Politikası</a>
+             <a href="/terms" className="text-gray-300 hover:text-white transition-colors opacity-100">Kullanım Koşulları</a>
+             <a href="/#contact" className="text-gray-300 hover:text-white transition-colors opacity-100">İletişim</a>
           </div>
         </div>
       </footer>

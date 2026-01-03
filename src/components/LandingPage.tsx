@@ -405,11 +405,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         }}
       />
 
-      <footer className="w-full py-6 mt-auto border-t border-gray-800 text-center text-gray-500">
-        <div className="flex justify-center gap-6 text-sm">
-           <a href="/privacy" className="hover:text-white transition-colors">Gizlilik Politikası</a>
-           <a href="/terms" className="hover:text-white transition-colors">Kullanım Koşulları</a>
-           <a href="/yasal-uyari" className="hover:text-white transition-colors">Yasal Uyarı</a>
+      <footer className="w-full py-6 mt-auto border-t border-gray-800 text-center text-gray-400 relative z-10">
+        <div className="flex flex-wrap justify-center gap-6 text-sm font-medium">
+           <a href="/privacy" className="text-gray-300 hover:text-white transition-colors opacity-100">Gizlilik Politikası</a>
+           <a href="/terms" className="text-gray-300 hover:text-white transition-colors opacity-100">Kullanım Koşulları</a>
+           <a href="/#contact" className="text-gray-300 hover:text-white transition-colors opacity-100">İletişim</a>
         </div>
         <p className="mt-2 text-xs">© 2026 CadetPrep Academy</p>
       </footer>
